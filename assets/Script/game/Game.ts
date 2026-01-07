@@ -262,7 +262,7 @@ export class Game extends BaseNodeCom {
             this.AchievetheGoal.push(temp);
         }
         console.log("this.AchievetheGoal",this.AchievetheGoal)
-        // let steps = this.data.moveCount - 10 > 0 ? this.data.moveCount - 10 : this.data.moveCount;
+        // let steps = this.data.RewardCount - 10 > 0 ? this.data.RewardCount - 10 : this.data.RewardCount;
         // this.stepCount = steps;
         this.updateTargetCount();
         // this.updateStep();
