@@ -1,0 +1,261 @@
+/**
+ * 基础弹出界面
+ */
+// 原始导入语句
+// const { ccclass, property } = cc._decorator;
+
+// 修改后的导入语句
+import { _decorator, Component, Node, EventTouch, isValid, Rect, Vec2, tween, TweenAction, Tween, UITransform, UIOpacity } from 'cc';
+const { ccclass, property } = _decorator;
+
+@ccclass
+export default class PopupView extends Component {
+
+    // 原始属性声明
+    // private _maskNode: cc.Node = null;//蒙层
+    // contentNode: cc.Node;
+
+    // 修改后的属性声明
+    private _maskNode: Node = null;//蒙层
+    contentNode: Node;
+
+    private _showMask: boolean;//是否显示蒙层
+    private _maskOpacity: number = 0;//蒙层不透明度
+    private destroyCallback: Function;
+    private _closeOnTouchOutside: boolean;//是否点击外面关闭
+    private _closeOnKeyBack: boolean;//是否点击返回键关闭
+    
+    // 原始属性声明
+    // private _showAction: cc.Action;
+    // private _showActionTarget: cc.Node;
+    // private _dismissAction: cc.Action;
+    // private _dismissActionTarget: cc.Node
+    
+    // 原始动画属性声明
+    // private _showAction: FiniteTimeAction;
+    // private _showActionTarget: Node;
+    // private _dismissAction: FiniteTimeAction;
+    // private _dismissActionTarget: Node
+    
+    // 修改后的动画属性声明 - 使用tween动画系统
+    private _showAction: Tween<Node>;
+    private _showActionTarget: Node;
+    private _dismissAction: Tween<Node>;
+    private _dismissActionTarget: Node
+    private _localZOrder: number = 0;
+
+    onLoad() {
+        this._maskNode = this.node.getChildByName("mask");
+        if (this._maskNode) {
+            this._maskNode.active = this._showMask;
+            this._maskNode.getComponent(UIOpacity).opacity = this._maskOpacity;
+            // 原始事件监听
+            // this._maskNode.on(cc.Node.EventType.TOUCH_START, this.onTouchMask, this);
+            // this._maskNode.on(cc.Node.EventType.TOUCH_END, this.onTouchMask, this);
+            
+            // 修改后的事件监听
+            this._maskNode.on(Node.EventType.TOUCH_START, this.onTouchMask, this);
+            this._maskNode.on(Node.EventType.TOUCH_END, this.onTouchMask, this);
+        }
+    }
+
+    onDestroy() {
+        if (this._maskNode) {
+            // 原始事件监听
+            // this._maskNode.off(cc.Node.EventType.TOUCH_START, this.onTouchMask, this);
+            // this._maskNode.off(cc.Node.EventType.TOUCH_END, this.onTouchMask, this);
+            
+            // 修改后的事件监听
+            this._maskNode.off(Node.EventType.TOUCH_START, this.onTouchMask, this);
+            this._maskNode.off(Node.EventType.TOUCH_END, this.onTouchMask, this);
+        }
+        if (this.destroyCallback) {
+            this.destroyCallback(this);
+        }
+    }
+
+    // 原始事件处理方法
+    // onTouchMask(event: cc.Event.EventTouch) {
+    //     event.stopPropagation();
+    //     if (event.type == cc.Node.EventType.TOUCH_END
+    //         && this.closeOnTouchOutside
+    //         && this.contentNode
+    //         && !cc.rectContainsPoint(this.contentNode.getBoundingBoxToWorld(), event.getLocation())) {
+    //         this.dismiss();
+    //     }
+    // }
+
+    // 修改后的事件处理方法
+    onTouchMask(event: EventTouch) {
+        event.propagationStopped = true;
+        if (event.type == Node.EventType.TOUCH_END
+            && this.closeOnTouchOutside
+            && this.contentNode
+            && !this.contentNode.getComponent(UITransform).getBoundingBoxToWorld().contains(event.getLocation())) {
+            this.dismiss();
+        }
+    }
+
+    // 原始show方法
+    // show(parent: cc.Node) {
+    //     if (!cc.isValid(this) || !cc.isValid(parent)) {
+    //         return;
+    //     }
+    //     this.node.parent = parent;
+    //     this.node.zIndex=this.localZOrder;// || 0);
+    //     if (cc.isValid(this._showActionTarget) && cc.isValid(this._showAction)) {
+    //         this._showActionTarget.stopAllActions();
+    //         this._showActionTarget.runAction(this._showAction);
+    //     }
+    // }
+    
+    // 原始show方法（基于旧动画系统）
+    // show(parent: Node) {
+    //     if (!isValid(this) || !isValid(parent)) {
+    //         return;
+    //     }
+    //     this.node.parent = parent;
+    //     this.node.zIndex=this.localZOrder;// || 0);
+    //     if (isValid(this._showActionTarget) && isValid(this._showAction)) {
+    //         this._showActionTarget.stopAllActions();
+    //         this._showActionTarget.runAction(this._showAction);
+    //     }
+    // }
+    
+    // 修改后的show方法 - 使用tween动画系统
+    show(parent: Node) {
+        if (!isValid(this) || !isValid(parent)) {
+            return;
+        }
+        this.node.parent = parent;
+        // this.node.setSiblingIndex(this._localZOrder);// || 0);
+        if (isValid(this._showActionTarget) && isValid(this._showAction)) {
+            tween(this._showActionTarget).stop().then(this._showAction).start();
+        }
+    }
+
+    // 原始dismiss方法
+    // dismiss() {
+    //     if (!cc.isValid(this.node)) {
+    //         return;
+    //     }
+    //     if (cc.isValid(this._dismissActionTarget) && cc.isValid(this._dismissAction)) {
+    //         this._dismissActionTarget.stopAllActions();
+    //         this._dismissActionTarget.runAction(this._dismissAction);
+    //     } else {
+    //         this.doDismiss();
+    //     }
+    // }
+    
+    // 原始dismiss方法（基于旧动画系统）
+    // dismiss() {
+    //     if (!isValid(this.node)) {
+    //         return;
+    //     }
+    //     if (isValid(this._dismissActionTarget) && isValid(this._dismissAction)) {
+    //         this._dismissActionTarget.stopAllActions();
+    //         this._dismissActionTarget.runAction(this._dismissAction);
+    //     } else {
+    //         this.doDismiss();
+    //     }
+    // }
+    
+    // 修改后的dismiss方法 - 使用tween动画系统
+    dismiss() {
+        if (!isValid(this.node)) {
+            return;
+        }
+        if (isValid(this._dismissActionTarget) && isValid(this._dismissAction)) {
+            tween(this._dismissActionTarget).stop().then(this._dismissAction).start();
+        } else {
+            this.doDismiss();
+        }
+    }
+
+    private doDismiss() {
+        this.node.destroy();
+    }
+
+    setMask(showMask: boolean, maskOpacity) {
+        this._showMask = showMask;
+        this._maskOpacity = maskOpacity;
+    }
+
+    // 原始setShowAction方法
+    // setShowAction(action: cc.FiniteTimeAction, target: cc.Node) {
+    //     if (cc.isValid(target) && cc.isValid(action)) {
+    //         this._showAction = action;
+    //         this._showActionTarget = target;
+    //     }
+    // }
+    
+    // 原始setShowAction方法（基于旧动画系统）
+    // setShowAction(action: FiniteTimeAction, target: Node) {
+    //     if (isValid(target) && isValid(action)) {
+    //         this._showAction = action;
+    //         this._showActionTarget = target;
+    //     }
+    // }
+    
+    // 修改后的setShowAction方法 - 使用tween动画系统
+    setShowAction(action: Tween<Node>, target: Node) {
+        if (isValid(target) && isValid(action)) {
+            this._showAction = action;
+            this._showActionTarget = target;
+        }
+    }
+
+    // 原始setDismissAction方法
+    // setDismissAction(action: cc.FiniteTimeAction, target: cc.Node) {
+    //     if (cc.isValid(target) && cc.isValid(action)) {
+    //         this._dismissAction = cc.sequence(action, cc.callFunc(() => { this.doDismiss(); }));
+    //         this._dismissActionTarget = target;
+    //     }
+    // }
+    
+    // 原始setDismissAction方法（基于旧动画系统）
+    // setDismissAction(action: FiniteTimeAction, target: Node) {
+    //     if (isValid(target) && isValid(action)) {
+    //         this._dismissAction = sequence(action, callFunc(() => { this.doDismiss(); }));
+    //         this._dismissActionTarget = target;
+    //     }
+    // }
+    
+    // 修改后的setDismissAction方法 - 使用tween动画系统
+    setDismissAction(action: Tween<Node>, target: Node) {
+        if (isValid(target) && isValid(action)) {
+            this._dismissAction = tween(target)
+                .then(action)
+                .call(() => { this.doDismiss(); });
+            this._dismissActionTarget = target;
+        }
+    }
+
+    setOnDestroyCallback(callback: Function) {
+        this.destroyCallback = callback;
+    }
+
+    set closeOnTouchOutside(value: boolean) {
+        this._closeOnTouchOutside = value;
+    }
+
+    get closeOnTouchOutside(): boolean {
+        return this._closeOnTouchOutside;
+    }
+
+    set closeOnKeyBack(value: boolean) {
+        this._closeOnKeyBack = value;
+    }
+
+    get closeOnKeyBack(): boolean {
+        return this._closeOnKeyBack;
+    }
+
+    set localZOrder(localZOrder: number) {
+        this._localZOrder = localZOrder;
+    }
+
+    get localZOrder() {
+        return this._localZOrder;
+    }
+}
