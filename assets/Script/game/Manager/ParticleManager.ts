@@ -77,12 +77,12 @@ export class ParticleManager extends Component {
      */
     public preloadParticle(prefab: Prefab, key: string, preloadCount: number = 3): void {
         if (!prefab || !key) {
-            console.error('Prefab or key is invalid.');
+           // console.error('Prefab or key is invalid.');
             return;
         }
 
         if (this.particlePools.has(key)) {
-            console.warn(`Particle pool for key "${key}" already exists.`);
+          //  console.warn(`Particle pool for key "${key}" already exists.`);
             return;
         }
 
@@ -95,7 +95,7 @@ export class ParticleManager extends Component {
         }
 
         this.particlePools.set(key, { prefab, pool, preloadCount });
-        console.log(`Preloaded ${preloadCount} particles for key "${key}".`);
+       // console.log(`Preloaded ${preloadCount} particles for key "${key}".`);
     }
 
     /**
@@ -105,23 +105,23 @@ export class ParticleManager extends Component {
      */
     public getParticle(key: string): Node | null {
         if (!this.particlePools.has(key)) {
-            console.error(`Particle pool for key "${key}" does not exist.`);
+          //  console.error(`Particle pool for key "${key}" does not exist.`);
             return null;
         }
 
         const config = this.particlePools.get(key)!;
         let particleNode: Node;
 
-        console.log(`[ParticleManager] Get particle for key "${key}", pool size: ${config.pool.size()}`);
+       // console.log(`[ParticleManager] Get particle for key "${key}", pool size: ${config.pool.size()}`);
         
         if (config.pool.size() > 0) {
             // 从对象池获取
             particleNode = config.pool.get() as Node;
-            console.log(`[ParticleManager] Got particle from pool for key "${key}", remaining pool size: ${config.pool.size()}`);
+           // console.log(`[ParticleManager] Got particle from pool for key "${key}", remaining pool size: ${config.pool.size()}`);
         } else {
             // 对象池为空，创建新节点
             particleNode = instantiate(config.prefab);
-            console.log(`[ParticleManager] Instantiated new particle for key "${key}" (pool was empty).`);
+           // console.log(`[ParticleManager] Instantiated new particle for key "${key}" (pool was empty).`);
         }
 
         return particleNode;
@@ -189,7 +189,7 @@ export class ParticleManager extends Component {
      */
     public releaseParticle(key: string, particleNode: Node): void {
         if (!key || !particleNode) {
-            console.error('Key or particle node is invalid.');
+          //  console.error('Key or particle node is invalid.');
             return;
         }
 
@@ -200,7 +200,7 @@ export class ParticleManager extends Component {
 
         // 检查对象池是否存在
         if (!this.particlePools.has(key)) {
-            console.error(`Particle pool for key "${key}" does not exist.`);
+         //   console.error(`Particle pool for key "${key}" does not exist.`);
             particleNode.destroy();
             return;
         }
@@ -210,11 +210,11 @@ export class ParticleManager extends Component {
 
         // 释放节点回对象池
         const config = this.particlePools.get(key)!;
-        console.log(`[ParticleManager] Before releasing particle for key "${key}", pool size: ${config.pool.size()}`);
+       // console.log(`[ParticleManager] Before releasing particle for key "${key}", pool size: ${config.pool.size()}`);
         particleNode.active = false;
         particleNode.removeFromParent();
         config.pool.put(particleNode);
-        console.log(`[ParticleManager] After releasing particle for key "${key}", pool size: ${config.pool.size()}`);
+      //  console.log(`[ParticleManager] After releasing particle for key "${key}", pool size: ${config.pool.size()}`);
     }
 
     /**
@@ -223,7 +223,7 @@ export class ParticleManager extends Component {
      */
     public clearPool(key: string): void {
         if (!this.particlePools.has(key)) {
-            console.error(`Particle pool for key "${key}" does not exist.`);
+          //  console.error(`Particle pool for key "${key}" does not exist.`);
             return;
         }
 
@@ -240,7 +240,7 @@ export class ParticleManager extends Component {
             }
         }
         
-        console.log(`Cleared particle pool for key "${key}".`);
+      //  console.log(`Cleared particle pool for key "${key}".`);
     }
 
     /**
@@ -260,7 +260,7 @@ export class ParticleManager extends Component {
         }
         this.activeParticles.clear();
         
-        console.log('Cleared all particle pools.');
+     //   console.log('Cleared all particle pools.');
     }
 
     /**

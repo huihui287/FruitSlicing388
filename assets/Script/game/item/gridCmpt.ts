@@ -94,6 +94,9 @@ export class gridCmpt extends Component {
         if (count == 0) {
             this.node.getChildByName('ok').active = true;
         }
+        else {
+            this.node.getChildByName('ok').active = false;
+        }
     }
 
     showGou(bool: boolean) {

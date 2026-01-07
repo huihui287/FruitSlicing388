@@ -87,7 +87,7 @@ export interface mapData {
 export interface LevelData {
     mapCount: number,
     blockCount: number,
-    moveCount: number,
+    RewardCount: number,
     scores: number[],
     blockRatio: number[],
     mapData: mapData[]

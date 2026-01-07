@@ -176,7 +176,7 @@ export class DownGridManager extends Component {
         } else {
             gridNode = instantiate(this.gridDownPre);
             this.node.addChild(gridNode);
-            console.log("创建新的水果方块节点", gridNode);
+        //    console.log("创建新的水果方块节点", gridNode);
         }
         const randomType = Math.floor(Math.random() * 5); // GridType有6种类型（0-5）
         const gridComponent = gridNode.getComponent(gridDownCmpt);

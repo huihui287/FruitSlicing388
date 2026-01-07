@@ -17,6 +17,10 @@ class config {
         // return +StorageHelper.getData(StorageHelperKey.Level, 1);
         return GameData.loadData(GameData.Level, 1);
     }
+    setCurLevel(lv: number) {
+        App.gameCtr.curLevel = lv;
+        GameData.saveData(GameData.Level, lv);
+    }
 
     async getLevelData(id: number | string): Promise<LevelData> {
         let data = await this.getGridData(id);
@@ -34,7 +38,7 @@ class config {
         data.mapData[0].m_id = list;
         return data;
     }
-
+  //"201": 201,//3,
     handleIdArr(id: number) {
         let numObj = {
             "201": 201,//3,
@@ -73,11 +77,7 @@ class config {
         if (idArr[idx] > Constant.NormalType) {//是障碍物
             return ctArr[idx];
         }
-
-        let count = ctArr[idx] + 10;
-        if (ctArr[idx] < 10) {
-            count = ctArr[idx] + 30;
-        }
+        let count = ctArr[idx] * App.gameCtr.curLevel * 2;
         return count;
     }
 }

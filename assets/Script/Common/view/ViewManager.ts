@@ -101,7 +101,8 @@ export default class ViewManager extends Component {
         if (PopupView.closeOnKeyBack) {
             this.PopupViewList.push(PopupView);
         }
-        if (ViewManager.getPopupView(PopupView.name) != PopupView) {
+        let  oo=ViewManager.getPopupView(PopupView.name);
+        if (oo!=null&&oo.name != PopupView.name) {
             ViewManager.dismiss(PopupView.name);
         }
         if (PopupView.name) {

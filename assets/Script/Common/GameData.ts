@@ -96,16 +96,16 @@ static loadData(key: string, defaultValue: any): any {
     }
     
 }
-// 保存单个值
-GameData.saveData('Level', 10);
+// // 保存单个值
+// GameData.saveData('Level', 10);
 
-// 保存JSON数组
-GameData.saveData('pifu', [0, 1, 2]);
+// // 保存JSON数组
+// GameData.saveData('pifu', [0, 1, 2]);
 
-// 保存JSON对象
-GameData.saveData('userInfo', { name: 'Player', level: 5 });
+// // 保存JSON对象
+// GameData.saveData('userInfo', { name: 'Player', level: 5 });
 
-// 加载数据
-const level = GameData.loadData('Level', 0);
-const pifu = GameData.loadData('pifu', [0]);
-const userInfo = GameData.loadData('userInfo', { name: 'Guest', level: 1 });
+// // 加载数据
+// const level = GameData.loadData('Level', 0);
+// const pifu = GameData.loadData('pifu', [0]);
+// const userInfo = GameData.loadData('userInfo', { name: 'Guest', level: 1 });

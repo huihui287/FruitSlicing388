@@ -2,6 +2,7 @@ import { _decorator, Component, Node, ProgressBar } from 'cc';
 import CM from '../channel/CM';
 import LoaderManeger from '../sysloader/LoaderManeger';
 import { App } from '../Controller/app';
+import { LevelConfig } from '../Tools/levelConfig';
 const { ccclass, property } = _decorator;
 
 @ccclass('Start')
@@ -13,7 +14,8 @@ export class Start extends Component {
     start() {
         new CM(CM.CH_ZJ);
         new LoaderManeger();
-
+        LevelConfig.setCurLevel(1);
+        App.gameCtr.curLevel = LevelConfig.getCurLevel();
         // 初始化时加载分包
         this.loadSubPackages();
     }

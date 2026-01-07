@@ -1,5 +1,6 @@
 // import { NetManager } from "../network/netManager";
 import ViewManager from "../Common/view/ViewManager";
+import { LevelConfig } from "../Tools/levelConfig";
 import { GameCtr } from "./GameCtr";
 import { SingletonClass } from "./singletonClass";
 import { director } from "cc";
@@ -20,6 +21,8 @@ class GameApp extends SingletonClass<GameApp> {
         // App.user.init();
         // this.audio.init(canvas);
         // this.view.init(canvas);
+        LevelConfig.setCurLevel(1);
+        App.gameCtr.curLevel = LevelConfig.getCurLevel();
         this.gameCtr.init();
         //StorageHelper.initData();
     }
