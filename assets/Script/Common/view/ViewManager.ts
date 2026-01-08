@@ -145,7 +145,7 @@ export default class ViewManager extends Component {
         closeOnTouchOutside = false,//是否点击外面空白区域关闭界面
         closeOnKeyBack = false,//是否响应返回键关闭界面
         mask = true,//是否有蒙层覆盖
-        maskOpacity = 255,//蒙层不透明度
+        maskOpacity = 155,//蒙层不透明度
         transitionShow = false,//是否显示打开过渡动画
         transitionDismiss = true,//是否显示关闭过渡动画
         showAction = null as Tween<Node>,
@@ -208,7 +208,7 @@ export default class ViewManager extends Component {
         closeOnTouchOutside = false,//是否点击外面空白区域关闭界面
         closeOnKeyBack = false,//是否响应返回键关闭界面
         mask = true,//是否有蒙层覆盖
-        maskOpacity = 255,//蒙层不透明度
+        maskOpacity = 155,//蒙层不透明度
         transitionShow = false,//是否显示打开过渡动画
         transitionDismiss = true,//是否显示关闭过渡动画
         showAction = null as Tween<Node>,
@@ -360,7 +360,7 @@ export default class ViewManager extends Component {
             name: data.title || ViewManager.View.PromptDialog,
             localZOrder: ViewManager.LocalZOrder.PromptDialog,
             mask: true,
-            maskOpacity: 200,
+            maskOpacity: 155,
             transitionShow: data.transition
         });
     }

@@ -316,7 +316,8 @@ export class Game extends BaseNodeCom {
         //达成游戏目标，胜利
         if (count == this.AchievetheGoal.length) {
             this.isWin = true;
-            this.DownGridMgr.pauseFall();
+    
+            EventManager.emit(EventName.Game.Pause);
             this.getRewardBombs();
             LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
                 let resultNode = instantiate(prefab);
@@ -348,7 +349,8 @@ export class Game extends BaseNodeCom {
 
     /** 过关，处理奖励炸弹 */
     async handleRewardAnim() {
-        this.DownGridMgr.resumeFall();
+ 
+        EventManager.emit(EventName.Game.Resume);
         this.loadExtraData(LevelConfig.nextLevel());
         for (let i = 0; i < this.rewardBombs.length; i++) {
             let bomb = this.rewardBombs[i];
@@ -440,15 +442,13 @@ export class Game extends BaseNodeCom {
     }
 
     evtContinueGame() {
-        // this.stepCount += 5;
         this.isStartChange = false;
         this.isStartTouch = false;
-        // this.updateStep();
         this.updateToolsInfo();
         
         // 恢复水果下落
         if (this.DownGridMgr) {
-            this.DownGridMgr.resumeFall();
+            EventManager.emit(EventName.Game.Resume);
         }
     }
     
@@ -456,7 +456,7 @@ export class Game extends BaseNodeCom {
     evtGameOver() {
         console.log("Game over: Handling game failure");
         this.isWin = false;
-        this.DownGridMgr.pauseFall();
+        EventManager.emit(EventName.Game.Pause);
         this.getRewardBombs();
         // 加载并显示结果界面
         LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
@@ -480,19 +480,7 @@ export class Game extends BaseNodeCom {
         this.handleProtected();
         if (this.isStartChange) return;
         if (this.isStartTouch) return;
-        // if (this.stepCount <= 0) {
-        //     ViewManager.toast("步数不足");
-        //     // App.view.openView(ViewName.Single.eResultView, this.level, false);
-        //     LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
-        //         let resultNode = instantiate(prefab);
-        //         ViewManager.show({
-        //             node: resultNode,
-        //             name: "ResultView",
-        //             data: { level: this.level, isWin: false }
-        //         });
-        //     });
-        //     return;
-        // }
+ 
         let pos = this.gridNode.getComponent(UITransform).convertToNodeSpaceAR(new Vec3(p.x, p.y, 1));
         let bc = this.checkClickOnBlock(pos);
         this.curTwo = [];
@@ -1508,8 +1496,15 @@ export class Game extends BaseNodeCom {
         this.loadExtraData(LevelConfig.getCurLevel());
     }
     onClick_testBtn() {
-        this.loadExtraData(LevelConfig.getCurLevel());
-        // this.handleLastSteps();
+        // 测试暂停功能
+        EventManager.emit(EventName.Game.Pause);
+        console.log("发送暂停事件");
+        
+        // 3秒后自动继续
+        setTimeout(() => {
+            EventManager.emit(EventName.Game.Resume);
+            console.log("发送继续事件");
+        }, 3000);
     }
 
     /** 设置 */

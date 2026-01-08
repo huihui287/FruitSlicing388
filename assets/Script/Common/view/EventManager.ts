@@ -21,7 +21,7 @@ export default class EventManager {
     private static _eventMap: Map<string, EventListener[]> = new Map();
     
     // 是否启用调试模式
-    private static _debugMode: boolean = false;
+    private static _debugMode: boolean = true;
     
     /**
      * 设置调试模式

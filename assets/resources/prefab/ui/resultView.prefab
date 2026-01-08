@@ -142,7 +142,7 @@
         "__id__": 54
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 244
@@ -635,7 +635,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 2,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 201,
@@ -815,7 +815,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 2,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 201,
@@ -1138,7 +1138,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 1,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 94,

@@ -65,7 +65,7 @@ class config {
     }
 
     async getGridData(id: number | string): Promise<LevelData> {
-        if (id > 1700) id = (+id % 1700) + 1;
+        if (+id > 1700) id = (+id % 1700) + 1;
         // let json: JsonAsset = await ResLoadHelper.loadCommonAssetSync(`config/${id}`, JsonAsset);
         let json: JsonAsset = await LoaderManeger.instance.loadJSON(`config/${id}`) as JsonAsset;
         let loadData = json['json'] as LevelData;

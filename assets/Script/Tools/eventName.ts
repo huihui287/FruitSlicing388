@@ -64,6 +64,10 @@ export namespace EventName {
         GameOver = "GameOver",
         /** 继续游戏 */
         ContinueGame = "ContinueGame",
+        /** 暂停游戏 */
+        Pause = "Pause",
+        /** 恢复游戏 */
+        Resume = "Resume",
     }
 
     export enum UI {

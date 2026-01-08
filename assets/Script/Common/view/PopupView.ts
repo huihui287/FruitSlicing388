@@ -11,31 +11,15 @@ const { ccclass, property } = _decorator;
 @ccclass
 export default class PopupView extends Component {
 
-    // 原始属性声明
-    // private _maskNode: cc.Node = null;//蒙层
-    // contentNode: cc.Node;
-
     // 修改后的属性声明
     private _maskNode: Node = null;//蒙层
     contentNode: Node;
 
-    private _showMask: boolean;//是否显示蒙层
+    private _showMask: boolean = true;//是否显示蒙层，默认为true
     private _maskOpacity: number = 0;//蒙层不透明度
     private destroyCallback: Function;
     private _closeOnTouchOutside: boolean;//是否点击外面关闭
     private _closeOnKeyBack: boolean;//是否点击返回键关闭
-    
-    // 原始属性声明
-    // private _showAction: cc.Action;
-    // private _showActionTarget: cc.Node;
-    // private _dismissAction: cc.Action;
-    // private _dismissActionTarget: cc.Node
-    
-    // 原始动画属性声明
-    // private _showAction: FiniteTimeAction;
-    // private _showActionTarget: Node;
-    // private _dismissAction: FiniteTimeAction;
-    // private _dismissActionTarget: Node
     
     // 修改后的动画属性声明 - 使用tween动画系统
     private _showAction: Tween<Node>;
@@ -48,11 +32,9 @@ export default class PopupView extends Component {
         this._maskNode = this.node.getChildByName("mask");
        if (isValid(this._maskNode)) {
             this._maskNode.active = this._showMask;
+            console.log("PopupView onLoad:", this._showMask, this._maskOpacity);
             this._maskNode.getComponent(UIOpacity).opacity = this._maskOpacity;
-            // 原始事件监听
-            // this._maskNode.on(cc.Node.EventType.TOUCH_START, this.onTouchMask, this);
-            // this._maskNode.on(cc.Node.EventType.TOUCH_END, this.onTouchMask, this);
-            
+
             // 修改后的事件监听
             this._maskNode.on(Node.EventType.TOUCH_START, this.onTouchMask, this);
             this._maskNode.on(Node.EventType.TOUCH_END, this.onTouchMask, this);
@@ -114,6 +96,13 @@ export default class PopupView extends Component {
     setMask(showMask: boolean, maskOpacity) {
         this._showMask = showMask;
         this._maskOpacity = maskOpacity;
+        
+        // 如果_maskNode已经存在，立即更新其状态
+        if (isValid(this._maskNode)) {
+            this._maskNode.active = this._showMask;
+            this._maskNode.getComponent(UIOpacity).opacity = this._maskOpacity;
+            console.log("PopupView setMask:", this._showMask, this._maskOpacity);
+        }
     }
 
     // 原始setShowAction方法

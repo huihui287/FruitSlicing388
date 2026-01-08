@@ -48,11 +48,8 @@ export class DownGridManager extends Component {
     private isGenerating: boolean = false;
     
     // 暂停功能相关变量
-    /** 暂停状态标志：控制水果方块的下落是否暂停 */
+    /** 暂停状态标志：控制水果方块的下落是否暂停 结束和暂停都是它 */
     private isPaused: boolean = false;
-    
-    /** 游戏失败状态标志 */
-    private isGameOver: boolean = false;
     
     /** 路径可用性检查定时器ID */
     private pathCheckIntervalId: any = null;
@@ -78,9 +75,18 @@ export class DownGridManager extends Component {
      * 生命周期方法：组件销毁时调用
      */
     onDestroy() {
+        // 移除事件监听
+        EventManager.off(EventName.Game.Pause, this.pauseFall, this);
+        EventManager.off(EventName.Game.Resume, this.resumeFall, this);
         this.clearAllGrids();
     }
 
+    protected onLoad(): void {
+        // 监听暂停事件
+        EventManager.on(EventName.Game.Pause, this.pauseFall, this);
+        // 监听继续事件
+        EventManager.on(EventName.Game.Resume, this.resumeFall, this);
+    }
     /**
      * 加载水果方块预制体
      * 异步从resources目录加载水果方块预制体资源
@@ -292,7 +298,7 @@ export class DownGridManager extends Component {
      */
     update(deltaTime: number) {
         // 检查是否暂停或游戏已经失败
-        if (this.isPaused || this.isGameOver) return;
+        if (this.isPaused) return;
         
         // 首先检查最靠近底部的水果（索引为0的元素），优化性能
         if (this.activeGrids.length > 0) {
@@ -320,16 +326,14 @@ export class DownGridManager extends Component {
             }
         }
     }
-    
+
     /**
      * 游戏失败处理
      */
     private gameOver() {
-        if (this.isGameOver) return;
-        
-        this.isGameOver = true;
+        if (this.isPaused) return;
+        this.isPaused = true;
         console.log("Game over: Fruit reached the bottom line!");
-        
         // 发送游戏失败事件
         EventManager.emit(EventName.Game.GameOver);
     }
@@ -483,7 +487,7 @@ export class DownGridManager extends Component {
      * @param gridNode 要回收的水果方块节点
      */
     public recycleGridByNode(gridNode: Node) {
-        if (gridNode && this.activeGrids.includes(gridNode)) {
+        if (gridNode && this.activeGrids.indexOf(gridNode) !== -1) {
             this.recycleGrid(gridNode);
         }
     }
