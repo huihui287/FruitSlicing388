@@ -3,6 +3,8 @@ import { Constant, GridType } from '../../Tools/enumConst';
 import { gridCmpt } from '../item/gridCmpt';
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { gridDownCmpt } from '../item/gridDownCmpt';
+import EventManager from '../../Common/view/EventManager';
+import { EventName } from '../../Tools/eventName';
 
 const { ccclass, property } = _decorator;
 
@@ -48,6 +50,9 @@ export class DownGridManager extends Component {
     // 暂停功能相关变量
     /** 暂停状态标志：控制水果方块的下落是否暂停 */
     private isPaused: boolean = false;
+    
+    /** 游戏失败状态标志 */
+    private isGameOver: boolean = false;
     
     /** 路径可用性检查定时器ID */
     private pathCheckIntervalId: any = null;
@@ -286,8 +291,20 @@ export class DownGridManager extends Component {
      * 处理所有活跃水果方块的下落
      */
     update(deltaTime: number) {
-        // 检查是否暂停
-        if (this.isPaused) return;
+        // 检查是否暂停或游戏已经失败
+        if (this.isPaused || this.isGameOver) return;
+        
+        // 首先检查最靠近底部的水果（索引为0的元素），优化性能
+        if (this.activeGrids.length > 0) {
+            const lowestGrid = this.activeGrids[0];
+            if (this.fallProgressMap.has(lowestGrid)) {
+                const currentY = lowestGrid.position.y;
+                if (currentY < 130) {
+                    this.gameOver();
+                    return;
+                }
+            }
+        }
         
         // 遍历所有活跃的水果方块
         for (const gridNode of this.activeGrids) {
@@ -296,16 +313,25 @@ export class DownGridManager extends Component {
                 // 计算当前下落距离
                 const currentPosition = gridNode.position;
                 const newY = currentPosition.y - (this.fallSpeed * deltaTime);
-                
+                           
                 // 更新位置
                 gridNode.setPosition(v3(currentPosition.x, newY, 0));
                 
-                // 检查是否需要回收
-                if (newY < -600) {
-                    this.recycleGrid(gridNode);
-                }
             }
         }
+    }
+    
+    /**
+     * 游戏失败处理
+     */
+    private gameOver() {
+        if (this.isGameOver) return;
+        
+        this.isGameOver = true;
+        console.log("Game over: Fruit reached the bottom line!");
+        
+        // 发送游戏失败事件
+        EventManager.emit(EventName.Game.GameOver);
     }
 
     /**

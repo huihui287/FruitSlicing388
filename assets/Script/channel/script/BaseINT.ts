@@ -1,4 +1,4 @@
-interface BaseINT {
+export interface BaseINT {
 
     createVideoAd();
     showVideoAd();

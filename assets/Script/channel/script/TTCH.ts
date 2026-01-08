@@ -1,4 +1,5 @@
 import BaseCH from "./BaseCH";
+import { BaseINT } from "./BaseINT";
 import ChannelDB from "../ChannelDB";
 // import OperationManager from "../../dbmodule/OperationManager";
 // import SwitchManager from "../../global/SwitchManager";
@@ -45,12 +46,13 @@ export default class TTCH extends BaseCH implements BaseINT {
         this.getSystem();
         this.getLaunchOptions();
         this.onShowAlways();
-        // this.createBannerAd();
-        // this.createVideoAd();
-        // this.createInterstitialAd();
+        this.createBannerAd();
+        this.createVideoAd();
+        this.createInterstitialAd();
         this.getGameRecorderManager();
         this.checkUpdate();
         this.onHide();
+        console.log("头条渠道初始化完成");
     }
 
     /**

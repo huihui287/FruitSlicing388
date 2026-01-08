@@ -25,8 +25,7 @@ export namespace EventName {
         AddStarScore = "AddStarScore",
         /** 刷新金币 */
         UpdataGold = "UpdataGold",
-        /** 刷新网格 */
-        ContinueGame = "ContinueGame",
+    
         /** 提示道具 */
         RefreshTools = "RefreshTools",
         /** 跳过道具 */
@@ -57,6 +56,14 @@ export namespace EventName {
        // GotoShop = "GotoShopgg",
         /** 全局倒计时 */
         TIMER_DOWN = "TIMER_DOWN",
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /** 发送奖励 */
+        SendReward = "SendReward",
+        /** 游戏失败 */
+        GameOver = "GameOver",
+        /** 继续游戏 */
+        ContinueGame = "ContinueGame",
     }
 
     export enum UI {

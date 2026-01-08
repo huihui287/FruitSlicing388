@@ -1,16 +1,18 @@
 import ChannelDB from "../ChannelDB";
+import { BaseINT } from "./BaseINT";
 // import Global from "../../global/Global";
 // // import TotalTypeManager from "../../script/TotalTypeManager";
 // import TotalTypeManager from "../../dbmodule/TotalTypeManager";
 /**
  * 通用渠道接口
  */
-export default class BaseCH {
+export default class BaseCH implements BaseINT {
 
     /**当前渠道 */
     ch = null;
-
-    private loadingTimeoutId = null;
+    
+    /**视频广告实例 */
+    videoAd = null;
 
     constructor(channel) {
         this.ch = channel;
@@ -98,16 +100,62 @@ export default class BaseCH {
 
     /**显示加载框*/
     showLoading(time = 3000, callback = null) {
+    }
+    
+    /**创建视频广告*/
+    createVideoAd() {
+    }
+    
+    /**显示视频广告*/
+    showVideoAd(callback = null) {
+    }
+    
+    /**创建banner广告*/
+    createBannerAd() {
+    }
+    
+    /**销毁banner广告*/
+    destroyBannerAd() {
+    }
+    
+    /**显示banner广告*/
+    showBannerAd() {
+    }
+    
+    /**隐藏banner广告*/
+    hideBannerAd() {
+    }
+    
+    /**分包加载*/
+    loadSubPackages(name: string, callback: Function, progressCallback?: Function) {
         if (this.ch) {
-            this.ch.showLoading({
-                title: '加载中...',
-                success(res) {
-                    this.loadTimeoutId = setTimeout(() => {
-                        this.hideLoading();
-                        if (callback) callback();
-                    }, time);
-                },
-            })
+            // 调用渠道的分包加载方法
+            if (this.ch.loadSubpackage) {
+                this.ch.loadSubpackage({
+                    name: name,
+                    success: () => {
+                        console.log('分包加载成功:', name);
+                        if (callback) callback(true);
+                    },
+                    fail: (err) => {
+                        console.error('分包加载失败:', name, err);
+                        if (callback) callback(false, err);
+                    },
+                    progress: (res) => {
+                        if (progressCallback) {
+                            progressCallback(res.progress, res.totalBytesWritten, res.totalBytesExpectedToWrite);
+                        }
+                    }
+                });
+            } else {
+                // 没有分包加载方法，直接调用回调
+                console.warn('当前渠道不支持分包加载');
+                if (callback) callback(true);
+            }
+        } else {
+            // 渠道未初始化
+            console.error('渠道未初始化，无法加载分包');
+            if (callback) callback(false, 'channel not initialized');
         }
     }
 
@@ -181,17 +229,6 @@ export default class BaseCH {
         //         complete() { }
         //     });
         // }
-    }
-
-    /**
-     * 分包加载
-     * @param name 分包名称
-     * @param callback 加载完成回调
-     * @param progressCallback 进度更新回调 (progress: number, totalBytesWritten: number, totalBytesExpectedToWrite: number)
-     */
-    loadSubPackages(name: string, callback: Function, progressCallback?: Function) {
-        console.log("BaseCH loadSubPackages:", name);
-        if (callback) callback(true, null, 100);
     }
 
 }

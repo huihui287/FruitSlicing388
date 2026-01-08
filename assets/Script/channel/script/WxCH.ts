@@ -1,4 +1,5 @@
 import BaseCH from "./BaseCH";
+import { BaseINT } from "./BaseINT";
 import ChannelDB from "../ChannelDB";
 // import OperationManager from "../../dbmodule/OperationManager";
 // import SwitchManager from "../../global/SwitchManager";

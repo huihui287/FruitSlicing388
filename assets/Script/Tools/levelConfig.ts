@@ -11,6 +11,7 @@ class config {
         // StorageHelper.setData(StorageHelperKey.Level, lv + 1);
         GameData.saveData(GameData.Level, lv + 1);
         App.gameCtr.curLevel = lv + 1;
+        return App.gameCtr.curLevel;
     }
 
     getCurLevel() {

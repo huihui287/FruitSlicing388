@@ -1,7 +1,7 @@
 {
     "mapCount": 1,
     "blockCount": 5,
-    "RewardCount": 20,
+    "RewardCount": 5,
     "scores": [
         300,
         3000,
@@ -20,7 +20,7 @@
                 2
             ],
             "m_ct": [
-                20
+                1
             ],
             "m_mk": [
                 20

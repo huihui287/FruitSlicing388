@@ -46,7 +46,7 @@ export default class PopupView extends Component {
 
     onLoad() {
         this._maskNode = this.node.getChildByName("mask");
-        if (this._maskNode) {
+       if (isValid(this._maskNode)) {
             this._maskNode.active = this._showMask;
             this._maskNode.getComponent(UIOpacity).opacity = this._maskOpacity;
             // 原始事件监听
@@ -60,11 +60,7 @@ export default class PopupView extends Component {
     }
 
     onDestroy() {
-        if (this._maskNode) {
-            // 原始事件监听
-            // this._maskNode.off(cc.Node.EventType.TOUCH_START, this.onTouchMask, this);
-            // this._maskNode.off(cc.Node.EventType.TOUCH_END, this.onTouchMask, this);
-            
+        if (isValid(this._maskNode)) {
             // 修改后的事件监听
             this._maskNode.off(Node.EventType.TOUCH_START, this.onTouchMask, this);
             this._maskNode.off(Node.EventType.TOUCH_END, this.onTouchMask, this);
@@ -74,16 +70,6 @@ export default class PopupView extends Component {
         }
     }
 
-    // 原始事件处理方法
-    // onTouchMask(event: cc.Event.EventTouch) {
-    //     event.stopPropagation();
-    //     if (event.type == cc.Node.EventType.TOUCH_END
-    //         && this.closeOnTouchOutside
-    //         && this.contentNode
-    //         && !cc.rectContainsPoint(this.contentNode.getBoundingBoxToWorld(), event.getLocation())) {
-    //         this.dismiss();
-    //     }
-    // }
 
     // 修改后的事件处理方法
     onTouchMask(event: EventTouch) {
@@ -96,31 +82,6 @@ export default class PopupView extends Component {
         }
     }
 
-    // 原始show方法
-    // show(parent: cc.Node) {
-    //     if (!cc.isValid(this) || !cc.isValid(parent)) {
-    //         return;
-    //     }
-    //     this.node.parent = parent;
-    //     this.node.zIndex=this.localZOrder;// || 0);
-    //     if (cc.isValid(this._showActionTarget) && cc.isValid(this._showAction)) {
-    //         this._showActionTarget.stopAllActions();
-    //         this._showActionTarget.runAction(this._showAction);
-    //     }
-    // }
-    
-    // 原始show方法（基于旧动画系统）
-    // show(parent: Node) {
-    //     if (!isValid(this) || !isValid(parent)) {
-    //         return;
-    //     }
-    //     this.node.parent = parent;
-    //     this.node.zIndex=this.localZOrder;// || 0);
-    //     if (isValid(this._showActionTarget) && isValid(this._showAction)) {
-    //         this._showActionTarget.stopAllActions();
-    //         this._showActionTarget.runAction(this._showAction);
-    //     }
-    // }
     
     // 修改后的show方法 - 使用tween动画系统
     show(parent: Node) {
@@ -133,32 +94,6 @@ export default class PopupView extends Component {
             tween(this._showActionTarget).stop().then(this._showAction).start();
         }
     }
-
-    // 原始dismiss方法
-    // dismiss() {
-    //     if (!cc.isValid(this.node)) {
-    //         return;
-    //     }
-    //     if (cc.isValid(this._dismissActionTarget) && cc.isValid(this._dismissAction)) {
-    //         this._dismissActionTarget.stopAllActions();
-    //         this._dismissActionTarget.runAction(this._dismissAction);
-    //     } else {
-    //         this.doDismiss();
-    //     }
-    // }
-    
-    // 原始dismiss方法（基于旧动画系统）
-    // dismiss() {
-    //     if (!isValid(this.node)) {
-    //         return;
-    //     }
-    //     if (isValid(this._dismissActionTarget) && isValid(this._dismissAction)) {
-    //         this._dismissActionTarget.stopAllActions();
-    //         this._dismissActionTarget.runAction(this._dismissAction);
-    //     } else {
-    //         this.doDismiss();
-    //     }
-    // }
     
     // 修改后的dismiss方法 - 使用tween动画系统
     dismiss() {

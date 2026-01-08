@@ -93,19 +93,16 @@ export class Game extends BaseNodeCom {
     private curTwo: gridCmpt[] = [];
     /** 游戏状态：是否开始交换方块 */
     private isStartChange: boolean = false;
-
-    /** 游戏数据：当前剩余步数 */
-    // private stepCount: number = 0;
     /** 游戏数据：关卡配置数据 */
     private data: LevelData = null;
     /** 游戏数据：目标消除数量数组 */
     private AchievetheGoal: any[] = [];
     /** 游戏数据：当前得分 */
-    private curScore: number = 0;
-    /** 游戏数据：当前星级 */
-    private starCount: number = 0;    
+    private curScore: number = 0; 
     /** 游戏状态：是否胜利 */
     private isWin: boolean = false;
+    /** 奖励炸弹数据：存储生成的炸弹类型和数量 */
+    private rewardBombs: {type: number, count: number}[] = [];
     /** 火箭对象池 */
     private rocketPool: Node[] = [];
     /** 火箭池容量 */
@@ -152,7 +149,7 @@ export class Game extends BaseNodeCom {
         this.startDownGrid();
 
 
-
+/////////////////////////////
 
     }
     /** 开始下落 */
@@ -170,9 +167,7 @@ export class Game extends BaseNodeCom {
             this.DownGridMgr.fallSpeed = 20;
 
             // 开始生成
-
             this.DownGridMgr.startGenerate();
-
               
               // 动态调整参数
             //   setTimeout(() => {
@@ -209,6 +204,11 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.TouchEnd, this.evtTouchEnd, this);
         EventManager.on(EventName.Game.ContinueGame, this.evtContinueGame, this);
         EventManager.on(EventName.Game.Restart, this.evtRestart, this);
+
+        /** 接收奖励消息 */
+        EventManager.on(EventName.Game.SendReward, this.handleRewardAnim, this);
+        /** 接收游戏失败消息 */
+        EventManager.on(EventName.Game.GameOver, this.evtGameOver, this);
     }
 
     /** 初始化 */
@@ -222,25 +222,7 @@ export class Game extends BaseNodeCom {
             this.rocketPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/rocket');
              await this.initLayout();
         }
-
-
-
-
-        // let data = this.data;
-        // let idArr = data.mapData[0].m_id;
-        // for (let i = 0; i < idArr.length; i++) {
-        //     let count = LevelConfig.getLevelTargetCount(data.mapData, i);
-        //     let temp = [idArr[i], count];
-        //     this.AchievetheGoal.push(temp);
-        // }
-        // LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
-        //     let resultNode = instantiate(prefab);
-        //     ViewManager.show({
-        //         node: resultNode,
-        //         name: "ResultView",
-        //         data: { level: LevelConfig.getCurLevel(), isWin: true, AchievetheGoal: this.AchievetheGoal }
-        //     });
-        // });
+        this.isWin = false;
     }
     /*********************************************  UI information *********************************************/
     /*********************************************  UI information *********************************************/
@@ -284,7 +266,6 @@ export class Game extends BaseNodeCom {
         console.log("this.AchievetheGoal",this.AchievetheGoal)
     
         this.updateTargetCount();
-        this.updateScorePercent();
         this.updateToolsInfo();
     }
     /** 道具信息 */
@@ -322,21 +303,6 @@ export class Game extends BaseNodeCom {
         });
         this.checkResult();
     }
-    /** 更新星级进度和积分 */
-    updateScorePercent() {
-        let arr = this.data.scores;
-        let percent = this.curScore / arr[arr.length - 1] < 1 ? this.curScore / arr[arr.length - 1] : 1;
-        let width = 190 * percent;
-        this.spPro.getComponent(UITransform).width = width;
-        this.star.children.forEach((item, idx) => {
-            let per = arr[idx] / arr[arr.length - 1];
-            item.setPosition(v3(per * 180, 0, 1));
-            item.getChildByName('s').active = this.curScore >= arr[idx];
-            if (this.curScore >= arr[idx]) {
-                this.starCount = idx + 1;
-            }
-        });
-    }
 
     /** 结束检测 */
     checkResult() {
@@ -347,21 +313,54 @@ export class Game extends BaseNodeCom {
                 count++;
             }
         }
+        //达成游戏目标，胜利
         if (count == this.AchievetheGoal.length) {
-            this.isWin = true;  
-            this.handleLastSteps();
+            this.isWin = true;
+            this.DownGridMgr.pauseFall();
+            this.getRewardBombs();
+            LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
+                let resultNode = instantiate(prefab);
+                ViewManager.show({
+                    node: resultNode,
+                    name: "ResultView",
+                    data: { level: LevelConfig.getCurLevel(), isWin: true, rewardBombs: this.rewardBombs }
+                });
+            });
         }
 
     }
 
-    /** 过关，处理剩余步数 */
-    async handleLastSteps() {
+    getRewardBombs() {
+        // 清空之前的奖励炸弹数据
+        this.rewardBombs = [];
         for (let i = 0; i < this.data.RewardCount; i++) {
-            await ToolsHelper.delayTime(0.1);
-            this.throwTools();
+            // 生成随机炸弹类型 (8-11对应Bomb枚举的四种炸弹类型)
+            let bombType = Math.floor(Math.random() * 4) + 8;
+            // 保存炸弹类型和数量
+            const existingBomb = this.rewardBombs.find(b => b.type === bombType);
+            if (existingBomb) {
+                existingBomb.count++;
+            } else {
+                this.rewardBombs.push({ type: bombType, count: 1 });
+            }
         }
+    }
+
+    /** 过关，处理奖励炸弹 */
+    async handleRewardAnim() {
+        this.DownGridMgr.resumeFall();
+        this.loadExtraData(LevelConfig.nextLevel());
+        for (let i = 0; i < this.rewardBombs.length; i++) {
+            let bomb = this.rewardBombs[i];
+            for (let j = 0; j < bomb.count; j++) {
+                await ToolsHelper.delayTime(0.1);
+                this.throwTools(bomb.type);
+            }
+        }
+
         await ToolsHelper.delayTime(1);
         this.checkAllBomb();
+
     }
 
     /** 检测网格中是否还有炸弹 */
@@ -379,21 +378,10 @@ export class Game extends BaseNodeCom {
         }
         await ToolsHelper.delayTime(1);
         if (!isHaveBomb) {
-            // let view = App.view.getViewByName(ViewName.Single.eResultView);
-            let view = ViewManager.getPopupView("ResultView");
             console.log("没有炸弹了，一切都结束了")
-            if (!view) {
-                
-                LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
-                    let resultNode = instantiate(prefab);
-                    ViewManager.show({
-                        node: resultNode,
-                        name: "ResultView",
-                        data: { level: LevelConfig.getCurLevel(), isWin: true, AchievetheGoal: this.AchievetheGoal}
-                    });
-                });
-            }
+
         }
+
     }
 
     throwTools(bombType: number = -1, worldPosition: Vec3 = null) {
@@ -457,6 +445,28 @@ export class Game extends BaseNodeCom {
         this.isStartTouch = false;
         // this.updateStep();
         this.updateToolsInfo();
+        
+        // 恢复水果下落
+        if (this.DownGridMgr) {
+            this.DownGridMgr.resumeFall();
+        }
+    }
+    
+    /** 处理游戏失败事件 */
+    evtGameOver() {
+        console.log("Game over: Handling game failure");
+        this.isWin = false;
+        this.DownGridMgr.pauseFall();
+        this.getRewardBombs();
+        // 加载并显示结果界面
+        LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
+            let resultNode = instantiate(prefab);
+            ViewManager.show({
+                node: resultNode,
+                name: "ResultView",
+                data: { level: LevelConfig.getCurLevel(), isWin: false ,rewardBombs:this.rewardBombs}
+            });
+        });
     }
 
     /*********************************************  gameLogic *********************************************/
@@ -905,7 +915,7 @@ export class Game extends BaseNodeCom {
         let tp = ele.type;
         let worldPosition = ele.node.worldPosition
         this.flyItem(tp, worldPosition);
-        this.addScoreByType(tp);
+       // this.addScoreByType(tp);
         
         this.blockArr[ele.h][ele.v] = null;
         ele.node.destroy();
@@ -1006,7 +1016,7 @@ export class Game extends BaseNodeCom {
             let tp = ele.type;
             let worldPosition = ele.node.worldPosition
             // this.flyItem(tp, worldPosition);
-            this.addScoreByType(tp);
+           // this.addScoreByType(tp);
             tween(ele.node).to(0.1, { position: this.blockPosArr[center.h][center.v] }).call((target) => {
                 let gt = target.getComponent(gridCmpt);
                 console.log(gt.h, gt.v)
@@ -1444,17 +1454,18 @@ export class Game extends BaseNodeCom {
         this.isStartChange = false;
         this.isStartTouch = false;
         this.curScore = 0;
-      //  this.isWin = false;
+        this.isWin = false;
     }
-    /** 加积分 */
-    addScoreByType(type: number) {
-        if (type > this.data.blockRatio.length - 1) {
-            type = this.data.blockRatio.length - 1;
-        }
-        let score = this.data.blockRatio[type];
-        this.curScore += score;
-        this.updateScorePercent();
-    }
+    
+    // /** 加积分 */
+    // addScoreByType(type: number) {
+    //     if (type > this.data.blockRatio.length - 1) {
+    //         type = this.data.blockRatio.length - 1;
+    //     }
+    //     let score = this.data.blockRatio[type];
+    //     this.curScore += score;
+    //     this.updateScorePercent();
+    // }
     /** 飞舞动画 */
     async flyItem(type: number, pos: Vec3) {
         let idx = this.data.mapData[0].m_id.indexOf(type);
