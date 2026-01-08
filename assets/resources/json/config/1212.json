@@ -1,1 +1,33 @@
-{"mapCount": 1, "blockCount": 5, "RewardCount": 38, "scores": [1545, 5150, 10300], "blockRatio": [100, 100, 100, 100, 100], "mapData": [{"m_id": [400, 418], "m_ct": [8, 22], "m_mk": [8, 22]}]}
+{
+    "mapCount": 1,
+    "blockCount": 5,
+    "RewardCount": 38,
+    "scores": [
+        1545,
+        5150,
+        10300
+    ],
+    "blockRatio": [
+        100,
+        100,
+        100,
+        100,
+        100
+    ],
+    "mapData": [
+        {
+            "m_id": [
+                400,
+                418
+            ],
+            "m_ct": [
+                8,
+                22
+            ],
+            "m_mk": [
+                8,
+                22
+            ]
+        }
+    ]
+}

@@ -93,8 +93,7 @@ export class Game extends BaseNodeCom {
     private curTwo: gridCmpt[] = [];
     /** 游戏状态：是否开始交换方块 */
     private isStartChange: boolean = false;
-    /** 关卡数据：当前关卡 */
-    private level: number = 1;
+
     /** 游戏数据：当前剩余步数 */
     // private stepCount: number = 0;
     /** 游戏数据：关卡配置数据 */
@@ -146,8 +145,9 @@ export class Game extends BaseNodeCom {
         this.video4 = this.viewList.get('bottom/proppenal/tool4/video4');
         this.scheduleOnce(() => {
             this.handleTimePro();
-        }, 3)
-        this.loadExtraData(this.level);
+        }, 3);
+        LevelConfig.setCurLevel(1);
+        this.loadExtraData(LevelConfig.getCurLevel());
         this.addEvents();
         this.startDownGrid();
     }
@@ -210,12 +210,10 @@ export class Game extends BaseNodeCom {
     /** 初始化 */
     async loadExtraData(lv: number) {
         // Advertise.showInterstitialAds();
-        this.level = lv;
         this.data = await LevelConfig.getLevelData(lv);
         App.gameCtr.blockCount = this.data.blockCount;
         this.setLevelInfo();
         if (!this.gridPre) {
-
             this.gridPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
             this.rocketPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/rocket');
              await this.initLayout();
@@ -338,11 +336,11 @@ export class Game extends BaseNodeCom {
             // win
             this.isWin = true;
             // if (this.stepCount > 0) {
-                //丢炸弹
-                this.handleLastSteps();
+            //丢炸弹
+            this.handleLastSteps();
             // }
             // else {
-               
+
             //     LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
             //         let resultNode = instantiate(prefab);
             //         ViewManager.show({
@@ -351,7 +349,7 @@ export class Game extends BaseNodeCom {
             //             data: { level: this.level, isWin: true, AchievetheGoal: this.AchievetheGoal, starCount: this.starCount }
             //         });
             //     });
-                
+
             // }
         }
         // else if (this.stepCount <= 0 && count != this.AchievetheGoal.length) {
@@ -410,7 +408,7 @@ export class Game extends BaseNodeCom {
                     ViewManager.show({
                         node: resultNode,
                         name: "ResultView",
-                        data: { level: this.level, isWin: true, AchievetheGoal: this.AchievetheGoal, starCount: this.starCount }
+                        data: { level: LevelConfig.getCurLevel(), isWin: true, AchievetheGoal: this.AchievetheGoal, starCount: this.starCount }
                     });
                 });
             }
@@ -1463,7 +1461,7 @@ export class Game extends BaseNodeCom {
     }
 
     clearData() {
-        App.gameCtr.resetHdeList(this.level);
+        App.gameCtr.resetHdeList(LevelConfig.getCurLevel());
         if (this.blockArr.length < 1) return;
         for (let i = 0; i < this.H; i++) {
             for (let j = 0; j < this.V; j++) {
@@ -1478,7 +1476,7 @@ export class Game extends BaseNodeCom {
         this.isStartChange = false;
         this.isStartTouch = false;
         this.curScore = 0;
-        this.isWin = false;
+      //  this.isWin = false;
     }
     /** 加积分 */
     addScoreByType(type: number) {
@@ -1528,10 +1526,10 @@ export class Game extends BaseNodeCom {
     /*********************************************  btn *********************************************/
     /*********************************************  btn *********************************************/
     evtRestart() {
-        this.loadExtraData(this.level);
+        this.loadExtraData(LevelConfig.getCurLevel());
     }
     onClick_testBtn() {
-        this.loadExtraData(this.level);
+        this.loadExtraData(LevelConfig.getCurLevel());
         // this.handleLastSteps();
     }
 
