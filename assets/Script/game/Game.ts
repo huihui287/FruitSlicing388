@@ -150,6 +150,10 @@ export class Game extends BaseNodeCom {
         this.loadExtraData(LevelConfig.getCurLevel());
         this.addEvents();
         this.startDownGrid();
+
+
+
+
     }
     /** 开始下落 */
     async startDownGrid() {
@@ -218,7 +222,25 @@ export class Game extends BaseNodeCom {
             this.rocketPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/rocket');
              await this.initLayout();
         }
-  
+
+
+
+
+        // let data = this.data;
+        // let idArr = data.mapData[0].m_id;
+        // for (let i = 0; i < idArr.length; i++) {
+        //     let count = LevelConfig.getLevelTargetCount(data.mapData, i);
+        //     let temp = [idArr[i], count];
+        //     this.AchievetheGoal.push(temp);
+        // }
+        // LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
+        //     let resultNode = instantiate(prefab);
+        //     ViewManager.show({
+        //         node: resultNode,
+        //         name: "ResultView",
+        //         data: { level: LevelConfig.getCurLevel(), isWin: true, AchievetheGoal: this.AchievetheGoal }
+        //     });
+        // });
     }
     /*********************************************  UI information *********************************************/
     /*********************************************  UI information *********************************************/
@@ -260,10 +282,8 @@ export class Game extends BaseNodeCom {
             this.AchievetheGoal.push(temp);
         }
         console.log("this.AchievetheGoal",this.AchievetheGoal)
-        // let steps = this.data.RewardCount - 10 > 0 ? this.data.RewardCount - 10 : this.data.RewardCount;
-        // this.stepCount = steps;
+    
         this.updateTargetCount();
-        // this.updateStep();
         this.updateScorePercent();
         this.updateToolsInfo();
     }
@@ -318,11 +338,6 @@ export class Game extends BaseNodeCom {
         });
     }
 
-    /** 更新步数 */
-    // updateStep() {
-    //     if (this.stepCount < 0) this.stepCount = 0;
-    //     CocosHelper.updateLabelText(this.lbStep, this.stepCount);
-    // }
     /** 结束检测 */
     checkResult() {
         if (this.isWin) return;
@@ -333,48 +348,14 @@ export class Game extends BaseNodeCom {
             }
         }
         if (count == this.AchievetheGoal.length) {
-            // win
-            this.isWin = true;
-            // if (this.stepCount > 0) {
-            //丢炸弹
+            this.isWin = true;  
             this.handleLastSteps();
-            // }
-            // else {
-
-            //     LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
-            //         let resultNode = instantiate(prefab);
-            //         ViewManager.show({
-            //             node: resultNode,
-            //             name: "ResultView",
-            //             data: { level: this.level, isWin: true, AchievetheGoal: this.AchievetheGoal, starCount: this.starCount }
-            //         });
-            //     });
-
-            // }
         }
-        // else if (this.stepCount <= 0 && count != this.AchievetheGoal.length) {
-        //     //lose
-        //     // App.view.openView(ViewName.Single.eResultView, this.level, false);
-        //     LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
-        //         let resultNode = instantiate(prefab);
-        //         ViewManager.show({
-        //             node: resultNode,
-        //             name: "ResultView",
-        //             data: { level: this.level, isWin: false }
-        //         });
-        //     });
-        // }
+
     }
 
     /** 过关，处理剩余步数 */
     async handleLastSteps() {
-        // let step = this.stepCount;
-        // for (let i = 0; i < step; i++) {
-        //     await ToolsHelper.delayTime(0.1);
-        //     this.stepCount--;
-        //     this.updateStep();
-        //     this.throwTools();
-        // }
         for (let i = 0; i < this.data.RewardCount; i++) {
             await ToolsHelper.delayTime(0.1);
             this.throwTools();
@@ -402,13 +383,13 @@ export class Game extends BaseNodeCom {
             let view = ViewManager.getPopupView("ResultView");
             console.log("没有炸弹了，一切都结束了")
             if (!view) {
-                // App.view.openView(ViewName.Single.eResultView, this.level, true, this.AchievetheGoal, this.starCount);
+                
                 LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
                     let resultNode = instantiate(prefab);
                     ViewManager.show({
                         node: resultNode,
                         name: "ResultView",
-                        data: { level: LevelConfig.getCurLevel(), isWin: true, AchievetheGoal: this.AchievetheGoal, starCount: this.starCount }
+                        data: { level: LevelConfig.getCurLevel(), isWin: true, AchievetheGoal: this.AchievetheGoal}
                     });
                 });
             }
@@ -1418,20 +1399,7 @@ export class Game extends BaseNodeCom {
                     continue;
                 }
                 count++;
-
-                /** 障碍物 */
                 let type = -1;
-                // let targetlist = this.AchievetheGoal[targetIdx];
-                // if (targetlist) {
-                //     if (targetCount < targetlist[1]) {
-                //         type = targetlist[0];
-                //         targetCount++;
-                //     }
-                //     else {
-                //         targetIdx++;
-                //         targetCount = 0;
-                //     }
-                // }
                 if (this.blockArr[i][j]) 
                     continue;
                 let block = this.addBlock(i, j, pos, type);

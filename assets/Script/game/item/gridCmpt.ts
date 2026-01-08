@@ -95,6 +95,7 @@ export class gridCmpt extends Component {
             this.node.getChildByName('ok').active = true;
         }
         else {
+            lb.active = true;
             this.node.getChildByName('ok').active = false;
         }
     }

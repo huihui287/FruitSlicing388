@@ -17,6 +17,7 @@ import ToastView from "./ToastView";
 import AudioManager from "../AudioManager";
 import PopupView from "./PopupView";
 import { _decorator, Component, Node, Prefab, Color, isValid, instantiate, director, Director, tween, TweenAction, Vec3, Tween } from 'cc';
+import BaseDialog from "./BaseDialog";
 // 原始导入语句
 // import { _decorator, Component, Node, EventTouch, isValid, Rect, Vec2 } from 'cc';
 
@@ -170,7 +171,13 @@ export default class ViewManager extends Component {
                 || popupView.node.getChildByName("ContentNode")
                 || popupView.node;
         }
-
+       // 将data参数传递给具体的界面组件
+        if (popupView.contentNode && data && Object.keys(data).length > 0) {
+            let contentComponent = popupView.contentNode.getComponent(BaseDialog);
+            if (contentComponent) {
+                contentComponent.setData(data);
+            }
+        }
         // 修复参数传递，使用修改后的popupView变量
         ViewManager.showPopupView({
             popupView: popupView,
@@ -188,6 +195,7 @@ export default class ViewManager extends Component {
             dismissAction,
             dismissActionTarget
         });
+
         return popupView;
     }
 
