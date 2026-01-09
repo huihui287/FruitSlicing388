@@ -146,21 +146,20 @@ export class Game extends BaseNodeCom {
         LevelConfig.setCurLevel(1);
         this.loadExtraData(LevelConfig.getCurLevel());
         this.addEvents();
-        this.startDownGrid();
 
-
-/////////////////////////////
-
+        /////////////////////////////
     }
     /** 开始下落 */
     async startDownGrid() {
         // 初始化DownCubeManager
         try {
+            // 先清理现有水果方块，避免等待预制体加载导致延迟
+            this.DownGridMgr.clearAllGrids();
+            
             await this.DownGridMgr.createGrid();
             if (!this.DownGridMgr['gridDownPre']) {
                 return;
             }
-            this.DownGridMgr.clearAllGrids();
 
             // 配置参数
             this.DownGridMgr.totalGridCount = 1000;
@@ -169,21 +168,18 @@ export class Game extends BaseNodeCom {
             // 开始生成
             this.DownGridMgr.startGenerate();
               
-              // 动态调整参数
+            // 动态调整参数
             //   setTimeout(() => {
             //       this.DownGridMgr.setFallSpeed(200); // 加快下落速度           
-            //   }, 3000);
-              
+            //   }, 3000);  
             //   // 暂停下落
             //   setTimeout(() => {
             //       this.DownGridMgr.pauseFall(); // 暂停所有grid的下落
             //   }, 15000);
-              
             //   // 继续下落
             //   setTimeout(() => {
             //       this.DownGridMgr.resumeFall(); // 继续所有grid的下落
             //   }, 20000);
-              
             //   // 停止生成
             //   setTimeout(() => {
             //       this.DownGridMgr.stopGenerate();
@@ -191,24 +187,22 @@ export class Game extends BaseNodeCom {
         } catch (error) {
             console.error("初始化DownCubeManager失败:", error);
         }
-      
-      
     }
 
-    addEvents() {
-       // super.addEvents();
-         console.log("步数不足");
- 
+    addEvents() { 
         EventManager.on(EventName.Game.TouchStart, this.evtTouchStart, this);
         EventManager.on(EventName.Game.TouchMove, this.evtTouchMove, this);
         EventManager.on(EventName.Game.TouchEnd, this.evtTouchEnd, this);
-        EventManager.on(EventName.Game.ContinueGame, this.evtContinueGame, this);
-        EventManager.on(EventName.Game.Restart, this.evtRestart, this);
+        EventManager.on(EventName.Game.RestartGame, this.evtRestart, this);
+
 
         /** 接收奖励消息 */
         EventManager.on(EventName.Game.SendReward, this.handleRewardAnim, this);
         /** 接收游戏失败消息 */
         EventManager.on(EventName.Game.GameOver, this.evtGameOver, this);
+        /** 看完视频接收继续游戏消息 */
+        EventManager.on(EventName.Game.ContinueGame, this.evtContinueGame, this);
+
     }
 
     /** 初始化 */
@@ -217,11 +211,17 @@ export class Game extends BaseNodeCom {
         this.data = await LevelConfig.getLevelData(lv);
         App.gameCtr.blockCount = this.data.blockCount;
         this.setLevelInfo();
-        if (!this.gridPre) {
+        if (lv == 1) {
+
             this.gridPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
             this.rocketPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/rocket');
-             await this.initLayout();
+            await this.initLayout();
+            this.startDownGrid();
         }
+        else {
+
+        }
+     
         this.isWin = false;
     }
     /*********************************************  UI information *********************************************/
@@ -445,7 +445,7 @@ export class Game extends BaseNodeCom {
         this.isStartChange = false;
         this.isStartTouch = false;
         this.updateToolsInfo();
-        
+        this.eliminateFrontNRows();
         // 恢复水果下落
         if (this.DownGridMgr) {
             EventManager.emit(EventName.Game.Resume);
@@ -456,7 +456,6 @@ export class Game extends BaseNodeCom {
     evtGameOver() {
         console.log("Game over: Handling game failure");
         this.isWin = false;
-        EventManager.emit(EventName.Game.Pause);
         this.getRewardBombs();
         // 加载并显示结果界面
         LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
@@ -1492,8 +1491,9 @@ export class Game extends BaseNodeCom {
     /*********************************************  btn *********************************************/
     /*********************************************  btn *********************************************/
     /*********************************************  btn *********************************************/
+    // 重新开始游戏就是重头开始
     evtRestart() {
-        this.loadExtraData(LevelConfig.getCurLevel());
+        this.loadExtraData(1);
     }
     onClick_testBtn() {
         // 测试暂停功能
@@ -1505,6 +1505,27 @@ export class Game extends BaseNodeCom {
             EventManager.emit(EventName.Game.Resume);
             console.log("发送继续事件");
         }, 3000);
+    }
+    
+    /**
+     *消除最前面3排水果方块
+     */
+    eliminateFrontNRows(rowsNum: number = 6) {
+        // 假设 this.downGridManager 是 DownGridManager 的实例
+        if (this.DownGridMgr) {
+            const eliminatedPositions = this.DownGridMgr.eliminateFrontRows(rowsNum);
+
+            eliminatedPositions.forEach((pos, index) => {
+                // 释放特效粒子
+                let particle = this.particleManager.playParticle('particle', new Vec3(pos.x, pos.y, pos.z));
+                particle.children.forEach(item => {
+                    item.active = +item.name == pos.type;
+                    item.getComponent(ParticleSystem2D).resetSystem();
+                });
+                // 粒子特效播放完成后回收
+                this.particleManager.ParticleWithTimer('particle', particle);
+            });
+        }
     }
 
     /** 设置 */

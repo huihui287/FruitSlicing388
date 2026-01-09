@@ -11,8 +11,6 @@ export namespace EventName {
         EndMove = "EndMove",
         /** 点击到的方块 */
         TouchTile = "TouchTile",
-        /** 重新开始 */
-        Restart = "Restart",
         /** 刷新层数 */
         RefreshCurLevel = "RefreshCurLevel",
         /** 下一关 */
@@ -68,6 +66,8 @@ export namespace EventName {
         Pause = "Pause",
         /** 恢复游戏 */
         Resume = "Resume",
+        /** 重新开始 */
+        RestartGame = "RestartGame",
     }
 
     export enum UI {

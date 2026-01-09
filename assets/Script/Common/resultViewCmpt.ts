@@ -134,4 +134,10 @@ export class ResultViewCmpt extends BaseDialog  {
         // App.backHome(true);
         this.dismiss();
     }
+    onClick_RestartGameBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        EventManager.emit(EventName.Game.RestartGame);
+        this.dismiss();
+    }
+    
 }

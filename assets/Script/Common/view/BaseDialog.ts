@@ -74,13 +74,12 @@ export default class BaseDialog extends Component {
         // 修改后的图集显示逻辑 - 调用提取的方法
         this._updateShareUI();
 
-        EventManager.on("QHUAN", this.QHUAN, this);
     }
 
-    // 修改后的QHUAN方法 - 调用提取的方法
-    QHUAN() {
-        this._updateShareUI();
-    }
+    // // 修改后的QHUAN方法 - 调用提取的方法
+    // QHUAN() {
+    //     this._updateShareUI();
+    // }
 
     // 提取的图集显示逻辑方法
     private _updateShareUI() {
@@ -148,7 +147,7 @@ export default class BaseDialog extends Component {
         } else {
             this.node.destroy();
         }
-        EventManager.off("QHUAN", this.QHUAN, this);
+       // EventManager.off("QHUAN", this.QHUAN, this);
     }
 
     protected addEvent() {

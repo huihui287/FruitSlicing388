@@ -78,7 +78,7 @@ class config {
         if (idArr[idx] > Constant.NormalType) {//是障碍物
             return ctArr[idx];
         }
-        let count = ctArr[idx] * App.gameCtr.curLevel * 2;
+        let count = ctArr[idx] ;//* App.gameCtr.curLevel * 2
         return count;
     }
 }

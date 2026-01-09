@@ -5,11 +5,20 @@ import LoaderManeger from '../../sysloader/LoaderManeger';
 import { gridDownCmpt } from '../item/gridDownCmpt';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
-
+    /**
+     * 表示被回收方块的信息接口
+     */
+    interface GridPosition {
+        x: number;
+        y: number;
+        z: number;
+        type: number;
+    }   
 const { ccclass, property } = _decorator;
 
 @ccclass('DownGridManager')
 export class DownGridManager extends Component {
+ 
     /** 预制体引用：水果方块预制体 */
     private gridDownPre: Prefab = null;
     /** 预制体引用：粒子特效预制体 */
@@ -183,10 +192,12 @@ export class DownGridManager extends Component {
         let gridNode: Node;
         if (this.gridPool.length > 0) {
             gridNode = this.gridPool.pop();
+            this.node.addChild(gridNode);
             gridNode.active = true;
         } else {
             gridNode = instantiate(this.gridDownPre);
             this.node.addChild(gridNode);
+             gridNode.active = true;
         //    console.log("创建新的水果方块节点", gridNode);
         }
         const randomType = Math.floor(Math.random() * 5); // GridType有6种类型（0-5）
@@ -392,12 +403,19 @@ export class DownGridManager extends Component {
             }
         }
 
-        // 重置状态
+        // 先设置为不活跃，确保立即隐藏
         gridNode.active = false;
+
+        // 从父节点移除
+        if (gridNode.parent) {
+            gridNode.removeFromParent();
+        }
+
+        // 重置位置
         gridNode.setPosition(v3(0, 0, 0));
         
         // 清空子节点或重置组件状态
-        const gridComponent = gridNode.getComponent(gridCmpt);
+        const gridComponent = gridNode.getComponent(gridDownCmpt);
         if (gridComponent) {
             // 重置水果方块组件状态
             gridComponent.reset();
@@ -414,20 +432,32 @@ export class DownGridManager extends Component {
      * 清空所有水果方块
      */
     public clearAllGrids() {
-        // 停止生成
+        // 立即停止生成
         this.stopGenerate();
         
-        // 回收所有活跃水果方块
+        // 立即从屏幕上移除所有活跃的水果方块并放回对象池
         for (const grid of this.activeGrids) {
-            this.recycleGrid(grid);
+            // 先设置为不活跃，确保立即隐藏
+            grid.active = false;
+            // 从父节点移除
+            if (grid.parent) {
+                grid.removeFromParent();
+            }
+            // 重置组件状态
+            const gridComponent = grid.getComponent(gridDownCmpt);
+            if (gridComponent) {
+                gridComponent.reset();
+            }
+            // 重置位置
+            grid.setPosition(v3(0, 0, 0));
+            // 放回对象池
+            this.gridPool.push(grid);
         }
+        
+        // 清空活跃数组
         this.activeGrids = [];
         
-        // 清空对象池
-        for (const grid of this.gridPool) {
-            grid.destroy();
-        }
-        this.gridPool = [];
+        // 已经在放回对象池时完成了节点状态重置，这里不需要重复操作
         
         // 清空下落进度信息
         this.fallProgressMap.clear();
@@ -490,6 +520,131 @@ export class DownGridManager extends Component {
         if (gridNode && this.activeGrids.indexOf(gridNode) !== -1) {
             this.recycleGrid(gridNode);
         }
+    }
+
+    /**
+     * 消除最前面的几排水果方块
+     * 从性能优化角度设计：
+     * 1. 避免多次遍历活跃列表
+     * 2. 使用Set提高查找效率
+     * 3. 批量处理路径映射更新
+     * 4. 复用现有回收逻辑
+     * 
+     * @param rows 要消除的排数，默认为3排
+     * @returns 被回收的水果方块的坐标位置数组
+     */
+    public eliminateFrontRows(rows: number = 3): GridPosition[] {
+        if (this.activeGrids.length === 0 || rows <= 0) {
+            return [];
+        }
+
+        // 1. 收集所有活跃水果方块的Y坐标和节点映射
+        const gridYSorted: { y: number; node: Node }[] = [];
+        const yToGridsMap: Map<number, Node[]> = new Map();
+        
+        for (const gridNode of this.activeGrids) {
+            if (this.fallProgressMap.has(gridNode)) {
+                const y = Math.floor(gridNode.position.y); // 向下取整，忽略小数部分提高性能
+                gridYSorted.push({ y, node: gridNode });
+                
+                // 按Y坐标分组
+                if (!yToGridsMap.has(y)) {
+                    yToGridsMap.set(y, []);
+                }
+                yToGridsMap.get(y)!.push(gridNode);
+            }
+        }
+
+        if (gridYSorted.length === 0) {
+            return [];
+        }
+
+        // 2. 按Y坐标从低到高排序（最前面的水果方块Y值最小）
+        gridYSorted.sort((a, b) => a.y - b.y);
+
+        // 3. 计算每排的Y坐标范围，确定要消除的Y值
+        const gridHeight = this.gridHeight;
+        const firstRowY = gridYSorted[0].y;
+        const eliminateThresholdY = firstRowY + (rows * gridHeight);
+
+        // 4. 收集所有需要消除的水果方块
+        const gridsToEliminate = new Set<Node>();
+        for (const { y, node } of gridYSorted) {
+            if (y < eliminateThresholdY) {
+                gridsToEliminate.add(node);
+            } else {
+                break; // 因为已经排序，后面的Y值更大，不需要继续检查
+            }
+        }
+
+        if (gridsToEliminate.size === 0) {
+            return [];
+        }
+
+        // 5. 更新路径最后一个水果方块映射
+        // 遍历所有路径，检查该路径的最后一个水果方块是否在要消除的列表中
+        for (const [pathIndex, lastGrid] of this.pathLastGridMap.entries()) {
+            if (gridsToEliminate.has(lastGrid)) {
+                // 如果该路径的最后一个水果方块要被消除，需要找到新的最后一个水果方块
+                let newLastGrid: Node | null = null;
+                let maxY = -Infinity;
+                
+                // 获取当前路径的出生点位X坐标（用于判断同一路径）
+                const birthPoint = this.BirthPoint.children[pathIndex];
+                if (birthPoint) {
+                    const pathX = birthPoint.worldPosition.x;
+                    
+                    // 在活跃列表中查找该路径上未被消除且Y值最大的水果方块
+                    // 通过比较X坐标是否在同一位置来判断是否在同一路径
+                    for (const gridNode of this.activeGrids) {
+                        if (!gridsToEliminate.has(gridNode)) {
+                            const gridComponent = gridNode.getComponent(gridDownCmpt);
+                            if (gridComponent) {
+                                // 比较X坐标，允许一定的误差范围
+                                const gridX = gridNode.worldPosition.x;
+                                const isSamePath = Math.abs(gridX - pathX) < 0.1;
+                                
+                                if (isSamePath) {
+                                    const y = gridNode.position.y;
+                                    if (y > maxY) {
+                                        maxY = y;
+                                        newLastGrid = gridNode;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (newLastGrid) {
+                    this.pathLastGridMap.set(pathIndex, newLastGrid);
+                } else {
+                    this.pathLastGridMap.delete(pathIndex);
+                }
+            }
+        }
+
+        // 6. 批量回收水果方块并收集坐标和类型
+        const eliminatedPositions: GridPosition[] = [];
+        for (const gridNode of gridsToEliminate) {
+            // 获取类型信息
+            const gridComponent = gridNode.getComponent(gridDownCmpt);
+            const type = gridComponent ? gridComponent.type : -1;
+            
+            // 收集坐标和类型
+            const position = gridNode.position;
+            eliminatedPositions.push({
+                x: position.x,
+                y: position.y,
+                z: position.z,
+                type: type
+            });
+            
+            // 回收方块
+            this.recycleGrid(gridNode);
+        }
+
+        return eliminatedPositions;
     }
 
 }

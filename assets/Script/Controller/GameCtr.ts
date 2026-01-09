@@ -51,10 +51,16 @@ export class GameCtr extends SingletonClass<GameCtr> {
             }
 
         }
-        if (this.defaultHidelist[lv - 1]) {
-            this.hideList = this.defaultHidelist[lv - 1];
+        ////////////////////////////////////
+        //每次棋盘不变
+        if (this.defaultHidelist[0]) {
+            this.hideList = this.defaultHidelist[0];
             return;
         }
+        // if (this.defaultHidelist[lv - 1]) {
+        //     this.hideList = this.defaultHidelist[lv - 1];
+        //     return;
+        // }
         if (this.hideFullList.length == 0) {
             this.hideList = this.defaultHidelist[0];
             return;
