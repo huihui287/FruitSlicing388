@@ -93,6 +93,8 @@ export class Game extends BaseNodeCom {
     private curTwo: gridCmpt[] = [];
     /** 游戏状态：是否开始交换方块 */
     private isStartChange: boolean = false;
+    /** 游戏状态：是否正在检查消除 */
+    private isChecking: boolean = false;
     /** 游戏数据：关卡配置数据 */
     private data: LevelData = null;
     /** 游戏数据：目标消除数量数组 */
@@ -541,7 +543,12 @@ export class Game extends BaseNodeCom {
 
     /** 是否是炸弹 */
     async handleBomb(bc: gridCmpt, isResult: boolean = false) {
+        if (this.isChecking) {
+            return false;
+        }
+        
         if (this.isBomb(bc)) {
+            this.isChecking = true;
             let bombList = [];
             let list2 = [];
             let list: gridCmpt[] = await this.getBombList(bc);
@@ -579,6 +586,9 @@ export class Game extends BaseNodeCom {
     /** 获取炸弹炸掉的糖果列表 */
     async getBombList(bc: gridCmpt): Promise<gridCmpt[]> {
         let list: gridCmpt[] = [];
+        // 保护：确保节点仍然存在
+        if (!bc.node || !bc.node.isValid) return [];
+
         switch (bc.type) {
             case Bomb.hor:
                 for (let i = 0; i < this.H; i++) {
@@ -749,6 +759,7 @@ export class Game extends BaseNodeCom {
             this.resetSelected();
             this.isStartChange = false;
             this.isStartTouch = false;
+            this.isChecking = false;
             if (isResult) {
                 console.log(isResult);
                 this.checkAllBomb();
