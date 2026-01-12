@@ -368,6 +368,21 @@ export class DownGridManager extends Component {
     }
 
     /**
+     * 检查最靠近底部的水果Y坐标是否小于400
+     * @returns 如果最靠近底部的水果Y坐标小于400返回true，否则返回false
+     */
+    public isLowestGridBelowThreshold(): boolean {
+        if (this.activeGrids.length === 0) {
+            return false;
+        }
+        
+        const lowestGrid = this.activeGrids[0];
+        const currentY = lowestGrid.position.y;
+        
+        return currentY < 400;
+    }
+
+    /**
      * 设置下落速度
      */
     public setFallSpeed(speed: number) {

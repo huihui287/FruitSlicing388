@@ -1,4 +1,4 @@
-import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat } from 'cc';
+import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid } from 'cc';
 // 如果 enumConst.ts 已改名或迁移，请根据实际路径调整
 // 例如：'../../const/EnumConst' 或 '../../const/Enum'
 //import { Advertise } from '../../wx/advertise';//广告
@@ -109,6 +109,8 @@ export class Game extends BaseNodeCom {
     private rocketPool: Node[] = [];
     /** 火箭池容量 */
     private rocketPoolCapacity: number = 20;
+    /** 玩家血量 */
+    private playerHealth: number = 100;
     onLoad() {
         for (let i = 1; i < 5; i++) {
             this[`onClick_addBtn${i}`] = this.onClickAddButton.bind(this);
@@ -306,6 +308,13 @@ export class Game extends BaseNodeCom {
         this.checkResult();
     }
 
+    onUpdate(dt: number) {
+       if (isValid(this.DownGridMgr)) {
+            if (this.DownGridMgr.isLowestGridBelowThreshold()) {
+                
+            }
+       }
+    }
     /** 结束检测 */
     checkResult() {
         if (this.isWin) return;
