@@ -73,6 +73,8 @@ export class Game extends BaseNodeCom {
     private video3: Node = null;
     /** UI引用：道具4视频按钮 */
     private video4: Node = null;
+        /** 警告图片 */
+    private Alert: Node = null;
     /** 预制体引用：网格方块预制体 */
     private gridPre: Prefab = null;    
     /** 预制体引用：火箭特效预制体 */
@@ -144,6 +146,7 @@ export class Game extends BaseNodeCom {
         this.video2 = this.viewList.get('bottom/proppenal/tool2/video2');
         this.video3 = this.viewList.get('bottom/proppenal/tool3/video3');
         this.video4 = this.viewList.get('bottom/proppenal/tool4/video4');
+        this.Alert = this.viewList.get('ui/Alert');
         this.scheduleOnce(() => {
             this.handleTimePro();
         }, 3);
@@ -274,9 +277,9 @@ export class Game extends BaseNodeCom {
     }
     /** 道具信息 */
     updateToolsInfo() {
-        let bombCount = GameData.loadData(GameData.BombHor, 0);
-        let horCount = GameData.loadData(GameData.BombVer, 0);
-        let verCount = GameData.loadData(GameData.BombBomb, 0);
+        let bombCount = GameData.loadData(GameData.BombBomb, 0);
+        let verCount = GameData.loadData(GameData.BombVer, 0);
+        let horCount = GameData.loadData(GameData.BombHor, 0);
         let allCount = GameData.loadData(GameData.BombAllSame, 0);
         CocosHelper.updateLabelText(this.lbTool1, bombCount);
         CocosHelper.updateLabelText(this.lbTool2, horCount);
@@ -308,13 +311,21 @@ export class Game extends BaseNodeCom {
         this.checkResult();
     }
 
-    onUpdate(dt: number) {
-       if (isValid(this.DownGridMgr)) {
+    protected update(dt: number): void {
+        if (isValid(this.DownGridMgr) && isValid(this.Alert)) {
             if (this.DownGridMgr.isLowestGridBelowThreshold()) {
-                
+                if (!this.Alert.active) {
+                    this.Alert.active = true;
+                }
             }
-       }
+            else {
+                if (this.Alert.active) {
+                    this.Alert.active = false;
+                }
+            }
+        }
     }
+
     /** 结束检测 */
     checkResult() {
         if (this.isWin) return;
@@ -363,16 +374,26 @@ export class Game extends BaseNodeCom {
  
         EventManager.emit(EventName.Game.Resume);
         this.loadExtraData(LevelConfig.nextLevel());
+        
+        // 将奖励道具存储到玩家道具库存中
         for (let i = 0; i < this.rewardBombs.length; i++) {
             let bomb = this.rewardBombs[i];
-            for (let j = 0; j < bomb.count; j++) {
-                await ToolsHelper.delayTime(0.1);
-                this.throwTools(bomb.type);
-            }
+            // 将道具数量添加到玩家库存
+            GameData.setBomb(bomb.type, bomb.count);
         }
+        
+        // 更新道具显示
+        this.updateToolsInfo();
+        // for (let i = 0; i < this.rewardBombs.length; i++) {
+        //     let bomb = this.rewardBombs[i];
+        //     for (let j = 0; j < bomb.count; j++) {
+        //         await ToolsHelper.delayTime(0.1);
+        //         this.throwTools(bomb.type);
+        //     }
+        // }
 
-        await ToolsHelper.delayTime(1);
-        this.checkAllBomb();
+        // await ToolsHelper.delayTime(1);
+        // this.checkAllBomb();
 
     }
 
@@ -398,35 +419,32 @@ export class Game extends BaseNodeCom {
     }
 
     throwTools(bombType: number = -1, worldPosition: Vec3 = null) {
-        AudioManager.getInstance().playSound("prop_missle")
+        AudioManager.getInstance().playSound("prop_missle");
         let originPos = worldPosition || this.lbStep.worldPosition;
-        let p1 = this.effNode.getComponent(UITransform).convertToNodeSpaceAR(originPos);
-        
-        // 使用ParticleManager播放特效，替代原有的粒子池逻辑
-        // 参数说明：
-        // 'gameParticle' - 特效标识（与预加载时的key对应）
-        // p1 - 播放位置
-        // Quat.IDENTITY - 播放旋转（默认无旋转）
-        // this.effNode - 父节点（特效容器）
-        // 1 - 生命周期（秒），与原动画时长一致
-        const particle = this.particleManager.playParticle('particle', p1, Quat.IDENTITY, null);
         
         let item: gridCmpt = this.getRandomBlock();
-        if (item) {
-            let p2 = this.effNode.getComponent(UITransform).convertToNodeSpaceAR(item.node.worldPosition);
-            this.resetTimeInterval();
-            tween(particle).to(1, { position: p2 }).call(() => {
-                // 特效播放完成后，手动回收特效
-                if (particle && particle.parent) {
-                    this.particleManager.releaseParticle('particle', particle);
-                }
-                let rand = bombType == -1 ? Math.floor(Math.random() * 3) + 8 : bombType;
-                item && item.setType(rand);
-            }).start();
-        } else {
-            // 如果没有找到合适的方块，1秒后回收特效
-            this.particleManager.ParticleWithTimer('particle', particle);
+        if (!item) {
+            console.log("没有找到合适的方块");
+            return;
         }
+        
+        let gridnode: Node = item.node;
+        
+        const bulletParticle = this.particleManager.playParticle('bulletParticle', originPos);
+        if (!bulletParticle) {
+            console.log("创建子弹特效失败");
+            return;
+        }
+        
+        this.resetTimeInterval();
+        
+        MoveManager.getInstance().moveToTargetWithBezier(bulletParticle, gridnode, 0.6, () => {
+            if (bulletParticle && bulletParticle.parent) {
+                this.particleManager.releaseParticle('bulletParticle', bulletParticle);
+            }
+            let rand = bombType == -1 ? Math.floor(Math.random() * 3) + 8 : bombType;
+            item.setType(rand);
+        });
     }
 
     getRandomBlock(maxAttempts: number = 100) {
@@ -1428,11 +1446,11 @@ export class Game extends BaseNodeCom {
         await ToolsHelper.delayTime(0.8);
         // this.checkAgain();
         /** 进入游戏选择的道具炸弹 */
-        let list = App.gameCtr.toolsArr;
-        for (let i = 0; i < list.length; i++) {
-            this.throwTools(list[i]);
-        }
-        App.gameCtr.toolsArr = [];
+        // let list = App.gameCtr.toolsArr;
+        // for (let i = 0; i < list.length; i++) {
+        //     this.throwTools(list[i]);
+        // }
+        // App.gameCtr.toolsArr = [];
     }
 
     addBlock(i: number, j: number, pos: Vec3 = null, type: number = -1) {
@@ -1636,6 +1654,7 @@ export class Game extends BaseNodeCom {
             ViewManager.toast("操作太快")
             return;
         }
+        
         AudioManager.getInstance().playSound('button_click');
         if (this.isUsingBomb) return;
         this.isUsingBomb = true;
@@ -1665,7 +1684,7 @@ export class Game extends BaseNodeCom {
             return;
         }
         GameData.setBomb(type, -1); 
-        let pos = btnNode.worldPosition;
+        let pos = this.gridMgr.node.getComponent(UITransform).convertToNodeSpaceAR(btnNode.worldPosition);
         this.throwTools(type, pos);
         this.updateToolsInfo();
     }
