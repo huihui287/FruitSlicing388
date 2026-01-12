@@ -1,4 +1,4 @@
-import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid } from 'cc';
+import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid, ProgressBar } from 'cc';
 // 如果 enumConst.ts 已改名或迁移，请根据实际路径调整
 // 例如：'../../const/EnumConst' 或 '../../const/Enum'
 //import { Advertise } from '../../wx/advertise';//广告
@@ -75,6 +75,8 @@ export class Game extends BaseNodeCom {
     private video4: Node = null;
         /** 警告图片 */
     private Alert: Node = null;
+    /** UI引用：血量进度条节点 */
+    private spHealth: Node = null;
     /** 预制体引用：网格方块预制体 */
     private gridPre: Prefab = null;    
     /** 预制体引用：火箭特效预制体 */
@@ -147,6 +149,8 @@ export class Game extends BaseNodeCom {
         this.video3 = this.viewList.get('bottom/proppenal/tool3/video3');
         this.video4 = this.viewList.get('bottom/proppenal/tool4/video4');
         this.Alert = this.viewList.get('ui/Alert');
+      
+        this.spHealth = this.viewList.get('ui/spHealth');
         this.scheduleOnce(() => {
             this.handleTimePro();
         }, 3);
@@ -209,7 +213,8 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.GameOver, this.evtGameOver, this);
         /** 看完视频接收继续游戏消息 */
         EventManager.on(EventName.Game.ContinueGame, this.evtContinueGame, this);
-
+        /** 接收扣血消息 */
+        EventManager.on(EventName.Game.Damage, this.evtDamage, this);
     }
 
     /** 初始化 */
@@ -274,6 +279,9 @@ export class Game extends BaseNodeCom {
     
         this.updateTargetCount();
         this.updateToolsInfo();
+        // 初始化血量显示
+        this.playerHealth = 100;
+        this.updateHealthDisplay();
     }
     /** 道具信息 */
     updateToolsInfo() {
@@ -478,6 +486,36 @@ export class Game extends BaseNodeCom {
         // 恢复水果下落
         if (this.DownGridMgr) {
             EventManager.emit(EventName.Game.Resume);
+        }
+    }
+    
+    /** 处理扣血事件 */
+    evtDamage(damage: number) {
+        if (this.isWin || !this.isValid) return;
+        
+        // 扣除血量
+        this.playerHealth -= damage;
+        if (this.playerHealth < 0) {
+            this.playerHealth = 0;
+        }
+        
+        // 更新血量显示
+        this.updateHealthDisplay();
+        
+        // 检查是否游戏结束
+        if (this.playerHealth <= 0) {
+            EventManager.emit(EventName.Game.GameOver);
+        }
+    }
+    
+    /** 更新血量显示 */
+    updateHealthDisplay() {
+
+        if (this.spHealth) {
+            const healthProgress = this.spHealth.getComponent(ProgressBar);
+            if (healthProgress) {
+                healthProgress.progress = this.playerHealth / 100;
+            }
         }
     }
     

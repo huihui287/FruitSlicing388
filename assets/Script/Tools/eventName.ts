@@ -68,6 +68,8 @@ export namespace EventName {
         Resume = "Resume",
         /** 重新开始 */
         RestartGame = "RestartGame",
+        /** 扣血 */
+        Damage = "Damage",
     }
 
     export enum UI {

@@ -44,6 +44,18 @@ export class DownGridManager extends Component {
     })
     public fallSpeed: number = 100;
 
+    @property({
+        type: Number,
+        tooltip: "每次水果到达底部扣除的血量"
+    })
+    public damagePerFruit: number = 10;
+
+    @property({
+        type: Number,
+        tooltip: "游戏结束的血量阈值"
+    })
+    public gameOverHealthThreshold: number = 0;
+
     // 内部变量
     /** 已生成的水果方块总数：跟踪当前已生成的水果方块数量 */
     private generatedCount: number = 0;
@@ -308,20 +320,11 @@ export class DownGridManager extends Component {
      * 处理所有活跃水果方块的下落
      */
     update(deltaTime: number) {
-        // 检查是否暂停或游戏已经失败
+        // 检查是否暂停
         if (this.isPaused) return;
         
-        // 首先检查最靠近底部的水果（索引为0的元素），优化性能
-        if (this.activeGrids.length > 0) {
-            const lowestGrid = this.activeGrids[0];
-            if (this.fallProgressMap.has(lowestGrid)) {
-                const currentY = lowestGrid.position.y;
-                if (currentY < 130) {
-                    this.gameOver();
-                    return;
-                }
-            }
-        }
+        // 检查是否有水果到达底部
+        let hasReachedBottom = false;
         
         // 遍历所有活跃的水果方块
         for (const gridNode of this.activeGrids) {
@@ -334,19 +337,18 @@ export class DownGridManager extends Component {
                 // 更新位置
                 gridNode.setPosition(v3(currentPosition.x, newY, 0));
                 
+                // 检查是否到达底部（Y < 130）
+                if (newY < 130) {
+                    hasReachedBottom = true;
+                }
             }
         }
-    }
-
-    /**
-     * 游戏失败处理
-     */
-    private gameOver() {
-        if (this.isPaused) return;
-        this.isPaused = true;
-        console.log("Game over: Fruit reached the bottom line!");
-        // 发送游戏失败事件
-        EventManager.emit(EventName.Game.GameOver);
+        
+        // 如果有水果到达底部，消除最下面一排并发送扣血事件
+        if (hasReachedBottom) {
+            this.eliminateFrontRows(1);
+            EventManager.emit(EventName.Game.Damage, this.damagePerFruit);
+        }
     }
 
     /**
