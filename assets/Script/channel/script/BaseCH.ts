@@ -125,6 +125,8 @@ export default class BaseCH implements BaseINT {
     /**隐藏banner广告*/
     hideBannerAd() {
     }
+    /**分享*/
+    share(callback: Function = null) {}
     
     /**分包加载*/
     loadSubPackages(name: string, callback: Function, progressCallback?: Function) {

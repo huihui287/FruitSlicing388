@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, v3, instantiate, tween } from 'cc';
+import { _decorator, Component, Node, Prefab, v3, instantiate, tween, isValid } from 'cc';
 import { Constant, GridType } from '../../Tools/enumConst';
 import { gridCmpt } from '../item/gridCmpt';
 import LoaderManeger from '../../sysloader/LoaderManeger';
@@ -99,6 +99,7 @@ export class DownGridManager extends Component {
         // 移除事件监听
         EventManager.off(EventName.Game.Pause, this.pauseFall, this);
         EventManager.off(EventName.Game.Resume, this.resumeFall, this);
+        EventManager.off(EventName.Game.GridCanBeRecycled, this.onGridCanBeRecycled, this);
         this.clearAllGrids();
     }
 
@@ -107,6 +108,8 @@ export class DownGridManager extends Component {
         EventManager.on(EventName.Game.Pause, this.pauseFall, this);
         // 监听继续事件
         EventManager.on(EventName.Game.Resume, this.resumeFall, this);
+        // 监听水果方块可以被回收事件
+        EventManager.on(EventName.Game.GridCanBeRecycled, this.onGridCanBeRecycled, this);
     }
     /**
      * 加载水果方块预制体
@@ -399,6 +402,19 @@ export class DownGridManager extends Component {
     }
 
     /**
+     * 处理水果方块可以被回收的事件
+     * @param gridNode 可以被回收的水果方块节点
+     */
+    private onGridCanBeRecycled(gridNode: Node): void {
+        // 检查该节点是否在活跃列表中
+        const index = this.activeGrids.indexOf(gridNode);
+        if (index > -1) {
+            // 使用指定的回收接口回收水果方块
+            this.recycleGrid(gridNode);
+        }
+    }
+
+    /**
      * 回收水果方块到对象池
      */
     private recycleGrid(gridNode: Node) {
@@ -521,10 +537,11 @@ export class DownGridManager extends Component {
             }
         }
 
-        // 如果找到合适的水果方块，将其锁定
-        if (frontGrid) {
-            this.lockedGrids.add(frontGrid);
-        }
+        // // 如果找到合适的水果方块，将其锁定
+        // if (frontGrid) {
+            
+        //     this.lockedGrids.add(frontGrid);
+        // }
 
         return frontGrid;
     }
@@ -539,6 +556,30 @@ export class DownGridManager extends Component {
         }
     }
 
+    /**
+     * 通过类型扣除虚拟血量
+     * @param frontGrid: Node 水果方块类型
+     * @param damage 扣除的虚拟血量值
+     * @returns 是否有水果方块的虚拟血量被扣除到小于等于0
+     */
+    public damageVirtualHealthByType(frontGrid: Node, damage: number = 1): boolean {
+            if (!isValid(frontGrid)) {
+                return ;
+             }
+        const gridComponent = frontGrid.getComponent(gridDownCmpt);
+        if (!gridComponent)
+            return false;
+
+        // 扣除虚拟血量
+        gridComponent.virtualHealth -= damage;
+
+        // 当虚拟血量小于等于0时，将其加入到被锁定列表
+        if (gridComponent.virtualHealth <= 0) {
+            this.lockedGrids.add(frontGrid);
+        }
+    }
+
+    
     /**
      * 消除最前面的几排水果方块
      * 从性能优化角度设计：

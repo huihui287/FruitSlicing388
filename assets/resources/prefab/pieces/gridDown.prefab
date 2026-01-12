@@ -384,7 +384,7 @@
       "__id__": 11
     },
     "_children": [],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 13
@@ -3136,7 +3136,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "lb",
+    "_name": "healthBl",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -3157,8 +3157,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 0,
-      "y": 0,
+      "x": 27.234,
+      "y": -15.761,
       "z": 0
     },
     "_lrot": {
@@ -3198,7 +3198,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 0,
+      "width": 21.0999755859375,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -3234,7 +3234,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "",
+    "_string": "x2",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 20,

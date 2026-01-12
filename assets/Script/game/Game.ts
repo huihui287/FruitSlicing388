@@ -11,7 +11,7 @@ import { App } from '../Controller/app';
 import { CocosHelper } from '../Tools/cocosHelper';
 import { LevelConfig } from '../Tools/levelConfig';
 import { EventName } from '../Tools/eventName';
-import { Bomb, Constant, LevelData, PageIndex } from '../Tools/enumConst';
+import { Bomb, Constant, LevelData, PageIndex, GameState } from '../Tools/enumConst';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
@@ -21,6 +21,7 @@ import { DownGridManager } from './Manager/DownGridManager';
 import { ParticleManager } from './Manager/ParticleManager';
 import { MoveManager } from './Manager/MoveManager';
 import { gridDownCmpt } from './item/gridDownCmpt';
+import CM from '../channel/CM';
 
 const { ccclass, property } = _decorator;
 
@@ -106,7 +107,9 @@ export class Game extends BaseNodeCom {
     /** 游戏数据：当前得分 */
     private curScore: number = 0; 
     /** 游戏状态：是否胜利 */
-    private isWin: boolean = false;
+    // private isWin: boolean = false;
+    /** 游戏状态：使用枚举替代 */
+    private gameState: GameState = GameState.PLAYING;
     /** 奖励炸弹数据：存储生成的炸弹类型和数量 */
     private rewardBombs: {type: number, count: number}[] = [];
     /** 火箭对象池 */
@@ -234,7 +237,8 @@ export class Game extends BaseNodeCom {
 
         }
      
-        this.isWin = false;
+        // this.isWin = false;
+        this.gameState = GameState.PLAYING;
     }
     /*********************************************  UI information *********************************************/
     /*********************************************  UI information *********************************************/
@@ -336,7 +340,7 @@ export class Game extends BaseNodeCom {
 
     /** 结束检测 */
     checkResult() {
-        if (this.isWin) return;
+        if (this.gameState === GameState.WIN || this.gameState === GameState.GAME_OVER) return;
         let count = 0;
         for (let i = 0; i < this.AchievetheGoal.length; i++) {
             if (this.AchievetheGoal[i][1] == 0) {
@@ -345,7 +349,8 @@ export class Game extends BaseNodeCom {
         }
         //达成游戏目标，胜利
         if (count == this.AchievetheGoal.length) {
-            this.isWin = true;
+            // this.isWin = true;
+            this.gameState = GameState.WIN;
     
             EventManager.emit(EventName.Game.Pause);
             this.getRewardBombs();
@@ -491,7 +496,7 @@ export class Game extends BaseNodeCom {
     
     /** 处理扣血事件 */
     evtDamage(damage: number) {
-        if (this.isWin || !this.isValid) return;
+        if (this.gameState === GameState.WIN || this.gameState === GameState.GAME_OVER || !this.isValid) return;
         
         // 扣除血量
         this.playerHealth -= damage;
@@ -504,6 +509,7 @@ export class Game extends BaseNodeCom {
         
         // 检查是否游戏结束
         if (this.playerHealth <= 0) {
+            this.gameState = GameState.GAME_OVER;
             EventManager.emit(EventName.Game.GameOver);
         }
     }
@@ -522,7 +528,9 @@ export class Game extends BaseNodeCom {
     /** 处理游戏失败事件 */
     evtGameOver() {
         console.log("Game over: Handling game failure");
-        this.isWin = false;
+        // this.isWin = false;
+        this.gameState = GameState.GAME_OVER;
+        this.DownGridMgr.pauseFall();
         this.getRewardBombs();
         // 加载并显示结果界面
         LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
@@ -941,39 +949,40 @@ export class Game extends BaseNodeCom {
 
         // 查找上面的水果方块能找到没有被锁定 同类型的水果方块
         let node2 = this.DownGridMgr.getFrontGridByType(ele.type);
+          //扣除虚拟血量
+        this.DownGridMgr.damageVirtualHealthByType(node2, ele.attack);
         if (node2) {
             //每消除一个grid都会向上面飞一个子弹 击中上面移动下来的gridDown
             let bulletParticle = this.particleManager.playParticle('bulletParticle', this.blockPosArr[ele.h][ele.v]);
-            // particle.children.forEach(item => {
-            //     item.active = +item.name == ele.type;
-            //     item.getComponent(ParticleSystem2D).resetSystem();
-            // })
 
             MoveManager.getInstance().moveToTargetWithBezier(bulletParticle, node2, 1, () => {
-                // 子弹击中目标，回收目标节点
-                if (node2) {
-                    // 检查目标节点是否还有父节点（确保它还存在）
-                    if (node2.parent) {
+                // 子弹击中目标，回收目标节点 // 检查目标节点是否还有父节点（确保它还存在）
+                if (node2 && node2.parent) {
+                    let Com = node2.getComponent(gridDownCmpt);
+                    //grid死亡
+                    if (Com.takeDamage(ele.attack)==false) {
+                        Com.showDamageAm();
+                    } else {
                         //子弹击中目标粒子
                         let particle = this.particleManager.playParticle('particle', node2.getPosition());
-                        let ttype = node2.getComponent(gridDownCmpt);
+
                         particle.children.forEach(item => {
-                            item.active = +item.name == ttype.type;
+                            item.active = +item.name == Com.type;
                             item.getComponent(ParticleSystem2D).resetSystem();
                         })
                         // 粒子特效播放完成后回收
                         this.particleManager.ParticleWithTimer('particle', particle);
+
                         // 回收目标节点
                         this.DownGridMgr.recycleGridByNode(node2);
-                        console.log("Target node recycled");
                     }
+
                 }
                 // 子弹粒子指定回收（用户要求的显式回收）
                 this.particleManager.releaseParticle('bulletParticle', bulletParticle);
             });
         }
         
-  
         //飞需要果子
         let tp = ele.type;
         let worldPosition = ele.node.worldPosition
@@ -1517,7 +1526,6 @@ export class Game extends BaseNodeCom {
         this.isStartChange = false;
         this.isStartTouch = false;
         this.curScore = 0;
-        this.isWin = false;
     }
     
     // /** 加积分 */
@@ -1660,8 +1668,52 @@ export class Game extends BaseNodeCom {
                 type = Bomb.allSame;
                 break;
         }
-        App.backStart(false, PageIndex.shop);
-        // GlobalFuncHelper.setBomb(type,1);
+
+        // 检查渠道管理器是否初始化
+        if (!CM.mainCH) {
+            console.error("渠道管理器未初始化");
+            return;
+        }
+
+        // 显示选择弹窗：看视频或分享
+        CM.mainCH.showModal('获取道具', '请选择获取道具的方式', true, (isConfirm: boolean) => {
+            if (isConfirm) {
+                // 确定：看视频
+                if (CM.mainCH.showVideoAd) {
+                    // 确保视频广告已创建
+                    if (!CM.mainCH.videoAd) {
+                        CM.mainCH.createVideoAd();
+                    }
+                    // 显示视频广告
+                    CM.mainCH.showVideoAd((isSuccess: boolean) => {
+                        if (isSuccess) {
+                            GameData.setBomb(type, 1);
+                            this.updateToolsInfo();
+                        }
+                    });
+                } else {
+                    // 视频广告不可用，使用分享
+                    this.shareToGetProp(type);
+                }
+            } else {
+                // 取消：分享
+                this.shareToGetProp(type);
+            }
+        });
+    }
+
+    /** 通过分享获取道具 */
+    private shareToGetProp(type: number) {
+        if (CM.mainCH && CM.mainCH.share) {
+            CM.mainCH.share((isSuccess: boolean) => {
+                if (isSuccess) {
+                    GameData.setBomb(type, 1);
+                    this.updateToolsInfo();
+                }
+            });
+        } else {
+            console.error("分享功能不可用");
+        }
     }
 
     onClickVideoButton(btnNode: Node) {
@@ -1681,8 +1733,17 @@ export class Game extends BaseNodeCom {
                 type = Bomb.allSame;
                 break;
         }
-       // Advertise.showVideoAds();
-
+        
+        // 调用渠道的视频广告方法
+        if (CM.mainCH && CM.mainCH.showVideoAd) {
+            CM.mainCH.showVideoAd((isSuccess: boolean) => {
+                if (isSuccess) {
+                    // 视频观看成功，增加道具数量
+                    GameData.setBomb(type, 1);
+                    this.updateToolsInfo();
+                }
+            });
+        }
     }
     /** 道具使用状态：防止道具重复使用的标记 */
     private isUsingBomb: boolean = false;

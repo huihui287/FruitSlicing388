@@ -11,6 +11,7 @@ export class gridCmpt extends Component {
     public v: number = 0;
     public type: number = -1;
     public obstacleValue: number = 0;
+    public attack: number = 1; // 攻击
     public data: { h: number, v: number }
 
     public initData(h: number, v: number, type: number = -1) {
@@ -119,7 +120,8 @@ export class gridCmpt extends Component {
         this.h = 0;
         this.v = 0;
         this.obstacleValue = 0;
-        
+             this.attack = 1; // 重置攻击等级   
+
         // 隐藏所有图标
         this.node.getChildByName('icon').children.forEach(item => {
             item.active = false;

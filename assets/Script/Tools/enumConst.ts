@@ -113,3 +113,15 @@ export enum PageIndex {
     share,
     setting,
 }
+
+/** 游戏状态枚举 */
+export enum GameState {
+    /** 游戏进行中 */
+    PLAYING = 0,
+    /** 游戏胜利 */
+    WIN,
+    /** 游戏失败 */
+    GAME_OVER,
+    /** 游戏暂停 */
+    PAUSED,
+}

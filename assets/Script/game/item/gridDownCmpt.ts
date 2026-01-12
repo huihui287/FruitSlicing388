@@ -2,6 +2,9 @@ import { _decorator, Component, Node, Vec3, UITransform, Label } from 'cc';
 import { App } from '../../Controller/app';
 import { ToolsHelper } from '../../Tools/toolsHelper';
 import { GridType } from '../../Tools/enumConst';
+import EventManager from '../../Common/view/EventManager';
+import { EventName } from '../../Tools/eventName';
+import { LevelConfig } from '../../Tools/levelConfig';
 
 const { ccclass, property } = _decorator;
 
@@ -10,14 +13,81 @@ export class gridDownCmpt extends Component {
 
     /** 水果方块类型：用于标识不同种类的水果方块 */
     public type: GridType = GridType.STRAWBERRY;
+
+    /** 血量：用于标识水果方块的生命值 */
+    public health: number = 1;
+    /** 虚拟血量：用于被选中时扣除 */
+    public virtualHealth: number = 5;
+    private healthBl:Label=  null;
+    /**
+     * 增加血量
+     * @param amount 增加的血量值
+     */
+    public addHealth(amount: number): void {
+        this.health += amount;
+        this.updateHealthDisplay();
+    }
+
+    showDamageAm() {
+
+    }
+    /**
+     * 受到伤害
+     * @param damage 受到的伤害值
+     * @returns 是否可以被回收（血量小于等于0）
+     */
+    public takeDamage(damage: number): boolean {
+        this.health -= damage;
+        this.updateHealthDisplay();
+        if (this.health <= 0) {
+            // 发送消息通知管理器该水果方块可以被回收
+            EventManager.emit(EventName.Game.GridCanBeRecycled, this.node);
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * 组件加载时调用
+     */
+    onLoad(): void {
+        // 初始化healthBl引用
+        this.healthBl = this.node.getChildByName('healthBl')?.getComponent(Label);
+
+    }
+
+    /**
+     * 根据当前等级设置血量
+     * @param level 等级
+     * @param baseHealth 基础血量
+     * @param levelCoefficient 等级系数
+     * @returns 计算后的血量（整数）
+     */
+    public setHealthByLevel(level: number = LevelConfig.getCurLevel(), baseHealth: number = 1, levelCoefficient: number = 0.5): void {
+        // 计算血量：基础血量 + (等级-1) * 系数，结果取整
+        const calculatedHealth = Math.round(baseHealth + ((level-1) * levelCoefficient));
+        // 确保血量至少为基础血量
+        const maxHealth = Math.max(baseHealth, calculatedHealth);
+        // 在 baseHealth 和 maxHealth 之间取随机整数
+        const finalHealth = Math.floor(Math.random() * (maxHealth - baseHealth + 1)) + baseHealth;
+        
+        this.setHealth(finalHealth);
+        this.virtualHealth = finalHealth;
+    }
+
     /**
      * 初始化水果方块数据
      * @param type 水果方块类型
      */
     public initData(type: GridType = GridType.STRAWBERRY): void {
         this.type = type;
+        // 根据当前等级设置血量
+        this.setHealthByLevel();
+        this.virtualHealth = this.health;
         
         this._showIconByType(this.type);
+        // 初始化血量显示
+        this.updateHealthDisplay();
     }
     
     /**
@@ -25,8 +95,15 @@ export class gridDownCmpt extends Component {
      */
     onDisable(): void {
         this.type = GridType.STRAWBERRY;
-    }
 
+        // 清除所有定时器，避免内存泄漏
+        this.unscheduleAllCallbacks();
+    }
+    
+    setHealth(health: number) {
+        this.health = health;
+        this.updateHealthDisplay();
+    }
     /**
      * 显示位置信息（预留方法）
      */
@@ -47,27 +124,6 @@ export class gridDownCmpt extends Component {
         const curPos = this.node.position;
         
         return Math.abs(pos.x - curPos.x) <= width / 2 && Math.abs(pos.y - curPos.y) <= width / 2;
-    }
-
-    /**
-     * 设置选中状态
-     * @param bool 是否选中
-     */
-    setSelected(bool: boolean): void {
-        if (!this.isValid) return;
-        
-        const iconNode = this.node.getChildByName('icon');
-        if (iconNode) {
-            iconNode.children.forEach(item => {
-                if (item.active) {
-                    const selectedNode = item.getChildByName('s');
-                    if (selectedNode) {
-                        selectedNode.active = bool;
-                        selectedNode.scale = bool ? new Vec3(1.08, 1.08, 1) : new Vec3(1.0, 1.0, 1);
-                    }
-                }
-            });
-        }
     }
 
     /**
@@ -104,11 +160,24 @@ export class gridDownCmpt extends Component {
     }
 
     /**
+     * 更新血量显示
+     */
+    private updateHealthDisplay(): void {
+        if (this.healthBl) {
+            this.healthBl.string = this.health.toString();
+        }
+    }
+
+    /**
      * 重置水果方块状态
      */
     public reset(): void {
         this.type = GridType.STRAWBERRY;
-        
+        this.setHealth(1);
+        this.virtualHealth = this.health;
+
+        // 清除所有定时器，避免内存泄漏
+        this.unscheduleAllCallbacks();
         // 隐藏所有图标
         const iconNode = this.node.getChildByName('icon');
         if (iconNode) {
@@ -125,9 +194,7 @@ export class gridDownCmpt extends Component {
                 node.active = false;
             }
         });
-        
-        // 重置选中状态
-        this.setSelected(false);
+
     }
 
     /**
@@ -145,4 +212,6 @@ export class gridDownCmpt extends Component {
             }
         });
     }
+
+    
 }

@@ -70,6 +70,8 @@ export namespace EventName {
         RestartGame = "RestartGame",
         /** 扣血 */
         Damage = "Damage",
+        /** 水果方块可以被回收 */
+        GridCanBeRecycled = "GridCanBeRecycled",
     }
 
     export enum UI {
@@ -78,4 +80,5 @@ export namespace EventName {
         /** 移动摄像机 */
         MoveCarmera = "MoveCarmera",
     }
+    
 }
