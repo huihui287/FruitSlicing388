@@ -25,8 +25,17 @@ import CM from '../channel/CM';
 
 const { ccclass, property } = _decorator;
 
+/**
+ * 游戏主逻辑类
+ * 负责处理游戏核心机制，包括方块消除、水果下落、游戏状态管理等
+ * @description 游戏主控制器，管理游戏的整个生命周期
+ */
 @ccclass('Game')
 export class Game extends BaseNodeCom {
+    /*********************************************  游戏核心组件  *********************************************/
+    /*********************************************  游戏核心组件  *********************************************/
+    /*********************************************  游戏核心组件  *********************************************/
+
     /** UI引用：网格管理器组件 */
     private gridMgr: gridManagerCmpt = null;
     /** UI引用：下落方块管理器组件 */
@@ -34,6 +43,10 @@ export class Game extends BaseNodeCom {
     /** UI引用：特效管理器 */
     private particleManager: ParticleManager = null;
     
+    /*********************************************  UI引用  *********************************************/
+    /*********************************************  UI引用  *********************************************/
+    /*********************************************  UI引用  *********************************************/
+
     /** UI引用：网格容器节点 */
     private gridNode: Node = null;
     /** UI引用：特效容器节点 */
@@ -74,14 +87,19 @@ export class Game extends BaseNodeCom {
     private video3: Node = null;
     /** UI引用：道具4视频按钮 */
     private video4: Node = null;
-        /** 警告图片 */
+    /** 警告图片 */
     private Alert: Node = null;
     /** UI引用：血量进度条节点 */
-    private spHealth: Node = null;
+    private spHealth: Node = null;    
     /** 预制体引用：网格方块预制体 */
     private gridPre: Prefab = null;    
     /** 预制体引用：火箭特效预制体 */
     private rocketPre: Prefab = null;
+
+    /*********************************************  游戏状态和数据  *********************************************/
+    /*********************************************  游戏状态和数据  *********************************************/
+    /*********************************************  游戏状态和数据  *********************************************/
+
     /** 游戏网格：二维数组存储所有方块节点 */
     private blockArr: Node[][] = []
     /** 网格位置：二维数组存储所有方块的目标位置 */
@@ -118,15 +136,24 @@ export class Game extends BaseNodeCom {
     private rocketPoolCapacity: number = 20;
     /** 玩家血量 */
     private playerHealth: number = 100;
+    /**
+     * 组件加载时调用
+     * 初始化UI引用、绑定事件、加载游戏数据
+     * @description 游戏启动时的初始化方法，设置游戏状态和加载必要资源
+     */
     onLoad() {
+        // 绑定按钮事件 - 为4个道具按钮绑定点击事件
         for (let i = 1; i < 5; i++) {
             this[`onClick_addBtn${i}`] = this.onClickAddButton.bind(this);
             this[`onClick_toolBtn${i}`] = this.onClickToolButton.bind(this);
             this[`onClick_video${i}`] = this.onClickVideoButton.bind(this);
         }
+        // 调用父类的onLoad方法
         super.onLoad();
+        // 播放背景音乐
         AudioManager.getInstance().playMusic('background1', true);
 
+        // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
         this.gridMgr = this.viewList.get('center/gridManager').getComponent(gridManagerCmpt);
         this.DownGridMgr = this.viewList.get('center/DownGridManager').getComponent(DownGridManager);
         this.particleManager = this.viewList.get('center/ParticleManager').getComponent(ParticleManager);
@@ -154,35 +181,45 @@ export class Game extends BaseNodeCom {
         this.Alert = this.viewList.get('ui/Alert');
       
         this.spHealth = this.viewList.get('ui/spHealth');
+        
+        // 3秒后开始处理时间提示 - 玩家5秒不操作时显示提示
         this.scheduleOnce(() => {
             this.handleTimePro();
         }, 3);
+        
+        // 设置初始关卡并加载数据 - 从第一关开始
         LevelConfig.setCurLevel(1);
         this.loadExtraData(LevelConfig.getCurLevel());
+        // 添加事件监听器
         this.addEvents();
-
-        /////////////////////////////
     }
-    /** 开始下落 */
+    /**
+     * 开始下落水果方块
+     * 初始化DownGridManager并开始生成下落的水果方块
+     * @description 启动水果方块下落系统，创建并配置DownGridManager
+     * @returns {Promise<void>} 异步操作，完成后开始生成下落方块
+     */
     async startDownGrid() {
         // 初始化DownCubeManager
         try {
             // 先清理现有水果方块，避免等待预制体加载导致延迟
             this.DownGridMgr.clearAllGrids();
             
+            // 异步创建网格 - 加载必要的预制体和资源
             await this.DownGridMgr.createGrid();
+            // 检查预制体是否加载成功
             if (!this.DownGridMgr['gridDownPre']) {
                 return;
             }
 
-            // 配置参数
+            // 配置参数 - 设置生成数量和下落速度
             this.DownGridMgr.totalGridCount = 1000;
             this.DownGridMgr.fallSpeed = 20;
 
-            // 开始生成
+            // 开始生成 - 启动水果方块下落系统
             this.DownGridMgr.startGenerate();
               
-            // 动态调整参数
+            // 动态调整参数（注释掉的代码，可根据需要启用）
             //   setTimeout(() => {
             //       this.DownGridMgr.setFallSpeed(200); // 加快下落速度           
             //   }, 3000);  
@@ -203,12 +240,18 @@ export class Game extends BaseNodeCom {
         }
     }
 
+    /**
+     * 添加事件监听器
+     * 注册游戏中需要监听的各种事件
+     * @description 注册游戏事件监听器，包括触摸事件、游戏状态事件等
+     */
     addEvents() { 
+        // 触摸事件
         EventManager.on(EventName.Game.TouchStart, this.evtTouchStart, this);
         EventManager.on(EventName.Game.TouchMove, this.evtTouchMove, this);
         EventManager.on(EventName.Game.TouchEnd, this.evtTouchEnd, this);
+        // 游戏重启事件
         EventManager.on(EventName.Game.RestartGame, this.evtRestart, this);
-
 
         /** 接收奖励消息 */
         EventManager.on(EventName.Game.SendReward, this.handleRewardAnim, this);
@@ -220,7 +263,12 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.Damage, this.evtDamage, this);
     }
 
-    /** 初始化 */
+    /**
+     * 加载关卡额外数据
+     * 加载关卡配置数据并初始化游戏状态
+     * @param {number} lv - 关卡编号
+     * @returns {Promise<void>} 异步操作，完成后加载关卡数据
+     */
     async loadExtraData(lv: number) {
         // Advertise.showInterstitialAds();
         this.data = await LevelConfig.getLevelData(lv);
@@ -236,7 +284,7 @@ export class Game extends BaseNodeCom {
         else {
 
         }
-     
+
         // this.isWin = false;
         this.gameState = GameState.PLAYING;
     }
@@ -248,7 +296,12 @@ export class Game extends BaseNodeCom {
     private downTime: number = 1;
     /** 提示计时器索引：用于清除提示计时器 */
     private intervalTipsIndex: number = 0;
-    /** 玩家5秒不操作就给提示 */
+    
+    /**
+     * 处理时间提示
+     * 玩家5秒不操作就给提示
+     * @description 当玩家长时间不操作时，自动触发提示系统
+     */
     handleTimePro() {
         this.schedule(() => {
             this.downTime -= 0.1;
@@ -261,19 +314,36 @@ export class Game extends BaseNodeCom {
         }, 0.06);
     }
 
+    /**
+     * 重置时间间隔
+     * 重置提示计时器和倒计时
+     * @description 当玩家操作时，重置不操作提示的计时器
+     */
     resetTimeInterval() {
         clearInterval(this.intervalTipsIndex);
         this.downTime = 1;
     }
+    
+    /**
+     * 获取时间间隔
+     * 获取当前的倒计时时间
+     * @returns {number} 当前的倒计时时间
+     */
     getTimeInterval() {
         return this.downTime;
     }
 
-    /** 设置关卡信息 */
+    /**
+     * 设置关卡信息
+     * 初始化目标消除数量、道具信息和血量
+     * @description 根据关卡配置初始化游戏目标、道具数量和血量显示
+     */
     setLevelInfo() {
         let data = this.data;
         let idArr = data.mapData[0].m_id;
         this.AchievetheGoal = [];
+        
+        // 初始化目标消除数量
         for (let i = 0; i < idArr.length; i++) {
             let count = LevelConfig.getLevelTargetCount(data.mapData, i);
             let temp = [idArr[i], count];
@@ -281,22 +351,32 @@ export class Game extends BaseNodeCom {
         }
         console.log("this.AchievetheGoal",this.AchievetheGoal)
     
+        // 更新UI显示
         this.updateTargetCount();
         this.updateToolsInfo();
         // 初始化血量显示
         this.playerHealth = 100;
         this.updateHealthDisplay();
     }
-    /** 道具信息 */
+    /**
+     * 更新道具信息
+     * 显示各种道具的数量
+     * @description 从GameData加载道具数量并更新UI显示
+     */
     updateToolsInfo() {
+        // 加载道具数量
         let bombCount = GameData.loadData(GameData.BombBomb, 0);
         let verCount = GameData.loadData(GameData.BombVer, 0);
         let horCount = GameData.loadData(GameData.BombHor, 0);
         let allCount = GameData.loadData(GameData.BombAllSame, 0);
+        
+        // 更新UI显示
         CocosHelper.updateLabelText(this.lbTool1, bombCount);
         CocosHelper.updateLabelText(this.lbTool2, horCount);
         CocosHelper.updateLabelText(this.lbTool3, verCount);
         CocosHelper.updateLabelText(this.lbTool4, allCount);
+        
+        // 控制按钮显示状态
         this.addBtn1.active = bombCount <= 0;
         this.addBtn2.active = horCount <= 0;
         this.addBtn3.active = verCount <= 0;
@@ -307,12 +387,19 @@ export class Game extends BaseNodeCom {
         this.video4.active = false;// allCount <= 0;
     }
 
-    /** 更新消除目标数量 */
+    /**
+     * 更新消除目标数量
+     * 根据目标数量选择显示不同的目标面板
+     * @description 更新UI上的目标消除数量显示，并检查是否达成目标
+     */
     updateTargetCount() {
         let arr = this.AchievetheGoal;
+        // 根据目标数量选择显示不同的目标面板
         this.target1.active = arr.length <= 2;
         this.target2.active = arr.length > 2;
         let target = arr.length <= 2 ? this.target1 : this.target2;
+        
+        // 更新目标显示
         target.children.forEach((item, idx) => {
             item.active = idx < arr.length;
             if (idx < arr.length) {
@@ -320,11 +407,20 @@ export class Game extends BaseNodeCom {
                 item.getComponent(gridCmpt).setCount(arr[idx][1]);
             }
         });
+        
+        // 检查是否达成目标
         this.checkResult();
     }
 
+    /**
+     * 每帧更新
+     * 检查水果方块位置并显示警告
+     * @param {number} dt - 时间间隔
+     * @description 实时检查水果方块的位置，当方块过低时显示警告
+     */
     protected update(dt: number): void {
         if (isValid(this.DownGridMgr) && isValid(this.Alert)) {
+            // 检查最下方的水果方块是否低于阈值
             if (this.DownGridMgr.isLowestGridBelowThreshold()) {
                 if (!this.Alert.active) {
                     this.Alert.active = true;
@@ -338,22 +434,32 @@ export class Game extends BaseNodeCom {
         }
     }
 
-    /** 结束检测 */
+    /**
+     * 结束检测
+     * 检查是否达成所有消除目标
+     * @description 检查游戏是否达成胜利条件，当所有目标都完成时触发胜利
+     */
     checkResult() {
+        // 如果游戏已结束，直接返回
         if (this.gameState === GameState.WIN || this.gameState === GameState.GAME_OVER) return;
+        
         let count = 0;
+        // 统计已达成的目标数量
         for (let i = 0; i < this.AchievetheGoal.length; i++) {
             if (this.AchievetheGoal[i][1] == 0) {
                 count++;
             }
         }
-        //达成游戏目标，胜利
+        
+        // 达成所有游戏目标，胜利
         if (count == this.AchievetheGoal.length) {
-            // this.isWin = true;
             this.gameState = GameState.WIN;
-    
+            
+            // 暂停游戏
             EventManager.emit(EventName.Game.Pause);
+            // 获取奖励炸弹
             this.getRewardBombs();
+            // 显示胜利界面
             LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
                 let resultNode = instantiate(prefab);
                 ViewManager.show({
@@ -363,9 +469,13 @@ export class Game extends BaseNodeCom {
                 });
             });
         }
-
     }
 
+    /**
+     * 获取奖励炸弹
+     * 生成随机类型的奖励炸弹
+     * @description 根据关卡配置生成指定数量的随机奖励炸弹
+     */
     getRewardBombs() {
         // 清空之前的奖励炸弹数据
         this.rewardBombs = [];
@@ -382,10 +492,15 @@ export class Game extends BaseNodeCom {
         }
     }
 
-    /** 过关，处理奖励炸弹 */
+    /**
+     * 过关，处理奖励炸弹
+     * 进入下一关并发放奖励
+     * @returns {Promise<void>} 异步操作，完成后进入下一关
+     */
     async handleRewardAnim() {
- 
+        // 恢复游戏
         EventManager.emit(EventName.Game.Resume);
+        // 加载下一关
         this.loadExtraData(LevelConfig.nextLevel());
         
         // 将奖励道具存储到玩家道具库存中
@@ -397,6 +512,8 @@ export class Game extends BaseNodeCom {
         
         // 更新道具显示
         this.updateToolsInfo();
+        
+        // 以下代码可根据需要启用
         // for (let i = 0; i < this.rewardBombs.length; i++) {
         //     let bomb = this.rewardBombs[i];
         //     for (let j = 0; j < bomb.count; j++) {
@@ -407,10 +524,13 @@ export class Game extends BaseNodeCom {
 
         // await ToolsHelper.delayTime(1);
         // this.checkAllBomb();
-
     }
 
-    /** 检测网格中是否还有炸弹 */
+    /**
+     * 检测网格中是否还有炸弹
+     * 检查并处理所有剩余的炸弹
+     * @returns {Promise<void>} 异步操作，完成后检查是否还有炸弹
+     */
     async checkAllBomb() {
         if (!this.isValid) return;
         let isHaveBomb: boolean = false;
@@ -431,10 +551,17 @@ export class Game extends BaseNodeCom {
 
     }
 
+    /**
+     * 投放道具
+     * 从屏幕上方发射道具到随机方块
+     * @param {number} bombType - 炸弹类型，-1表示随机类型
+     * @param {Vec3} worldPosition - 发射位置
+     */
     throwTools(bombType: number = -1, worldPosition: Vec3 = null) {
         AudioManager.getInstance().playSound("prop_missle");
         let originPos = worldPosition || this.lbStep.worldPosition;
         
+        // 找到一个随机方块作为目标
         let item: gridCmpt = this.getRandomBlock();
         if (!item) {
             console.log("没有找到合适的方块");
@@ -443,23 +570,35 @@ export class Game extends BaseNodeCom {
         
         let gridnode: Node = item.node;
         
+        // 创建子弹特效
         const bulletParticle = this.particleManager.playParticle('bulletParticle', originPos);
         if (!bulletParticle) {
             console.log("创建子弹特效失败");
             return;
         }
         
+        // 重置时间间隔
         this.resetTimeInterval();
         
+        // 移动子弹到目标
         MoveManager.getInstance().moveToTargetWithBezier(bulletParticle, gridnode, 0.6, () => {
+            // 回收子弹特效
             if (bulletParticle && bulletParticle.parent) {
                 this.particleManager.releaseParticle('bulletParticle', bulletParticle);
             }
+            
+            // 设置方块类型为炸弹
             let rand = bombType == -1 ? Math.floor(Math.random() * 3) + 8 : bombType;
             item.setType(rand);
         });
     }
 
+    /**
+     * 获取随机方块
+     * 随机选择一个有效的方块作为目标
+     * @param {number} maxAttempts - 最大尝试次数，默认100
+     * @returns {gridCmpt} 随机选中的方块组件
+     */
     getRandomBlock(maxAttempts: number = 100) {
         // 随机尝试一定次数
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -469,7 +608,7 @@ export class Game extends BaseNodeCom {
                 return this.blockArr[h][v].getComponent(gridCmpt);
             }
         }
-        
+
         // 如果随机尝试失败，遍历整个网格寻找合适的方块
         for (let h = 0; h < this.H; h++) {
             for (let v = 0; v < this.V; v++) {
@@ -478,11 +617,16 @@ export class Game extends BaseNodeCom {
                 }
             }
         }
-        
+
         // 如果没有找到合适的方块，返回null
         return null;
     }
 
+    /**
+     * 继续游戏
+     * 恢复游戏状态并继续水果下落
+     * @description 当玩家观看视频后，恢复游戏状态并继续游戏
+     */
     evtContinueGame() {
         this.isStartChange = false;
         this.isStartTouch = false;
@@ -493,30 +637,37 @@ export class Game extends BaseNodeCom {
             EventManager.emit(EventName.Game.Resume);
         }
     }
-    
-    /** 处理扣血事件 */
+
+    /**
+     * 处理扣血事件
+     * 处理游戏扣血逻辑并检查游戏结束条件
+     * @param {number} damage - 扣除的血量
+     */
     evtDamage(damage: number) {
         if (this.gameState === GameState.WIN || this.gameState === GameState.GAME_OVER || !this.isValid) return;
-        
+
         // 扣除血量
         this.playerHealth -= damage;
         if (this.playerHealth < 0) {
             this.playerHealth = 0;
         }
-        
+
         // 更新血量显示
         this.updateHealthDisplay();
-        
+
         // 检查是否游戏结束
         if (this.playerHealth <= 0) {
             this.gameState = GameState.GAME_OVER;
             EventManager.emit(EventName.Game.GameOver);
         }
     }
-    
-    /** 更新血量显示 */
-    updateHealthDisplay() {
 
+    /**
+     * 更新血量显示
+     * 更新血量进度条
+     * @description 实时更新玩家血量的UI显示
+     */
+    updateHealthDisplay() {
         if (this.spHealth) {
             const healthProgress = this.spHealth.getComponent(ProgressBar);
             if (healthProgress) {
@@ -524,8 +675,12 @@ export class Game extends BaseNodeCom {
             }
         }
     }
-    
-    /** 处理游戏失败事件 */
+
+    /**
+     * 处理游戏失败事件
+     * 处理游戏结束逻辑并显示失败界面
+     * @description 当玩家血量为0时，触发游戏结束逻辑
+     */
     evtGameOver() {
         console.log("Game over: Handling game failure");
         // this.isWin = false;
@@ -538,7 +693,7 @@ export class Game extends BaseNodeCom {
             ViewManager.show({
                 node: resultNode,
                 name: "ResultView",
-                data: { level: LevelConfig.getCurLevel(), isWin: false ,rewardBombs:this.rewardBombs}
+                data: { level: LevelConfig.getCurLevel(), isWin: false, rewardBombs: this.rewardBombs }
             });
         });
     }
@@ -546,15 +701,20 @@ export class Game extends BaseNodeCom {
     /*********************************************  gameLogic *********************************************/
     /*********************************************  gameLogic *********************************************/
     /*********************************************  gameLogic *********************************************/
-    /** 触控事件（开始） */
+    /**
+     * 触控事件（开始）
+     * 处理玩家开始触摸的逻辑
+     * @param {Vec2} p - 触摸位置
+     * @returns {Promise<void>} 异步操作，处理触摸开始逻辑
+     */
     async evtTouchStart(p: Vec2) {
         console.log(this.isStartTouch, this.isStartChange)
-        if (this.getTimeInterval() > 0) 
+        if (this.getTimeInterval() > 0)
             return;
         this.handleProtected();
         if (this.isStartChange) return;
         if (this.isStartTouch) return;
- 
+
         let pos = this.gridNode.getComponent(UITransform).convertToNodeSpaceAR(new Vec3(p.x, p.y, 1));
         let bc = this.checkClickOnBlock(pos);
         this.curTwo = [];
@@ -566,7 +726,11 @@ export class Game extends BaseNodeCom {
         }
         // await this.checkMoveDown();
     }
-    /** 触控事件（滑动） */
+    /**
+     * 触控事件（滑动）
+     * 处理玩家滑动的逻辑
+     * @param {Vec2} p - 触摸位置
+     */
     evtTouchMove(p: Vec2) {
         if (this.isStartChange) return;
         if (!this.isStartTouch) return;
@@ -579,7 +743,12 @@ export class Game extends BaseNodeCom {
             this.startChangeCurTwoPos();
         }
     }
-    /** 触控事件（结束 ） */
+    /**
+     * 触控事件（结束）
+     * 处理玩家触摸结束的逻辑
+     * @param {Vec2} p - 触摸位置
+     * @returns {Promise<void>} 异步操作，处理触摸结束逻辑
+     */
     async evtTouchEnd(p: Vec2) {
         if (this.isStartChange) return;
         if (!this.isStartTouch) return;
@@ -596,7 +765,11 @@ export class Game extends BaseNodeCom {
 
     /** 保护状态：防止玩家快速操作的保护标记 */
     private isRecording: boolean = false;
-    /** 这里做一层保护措施，以防玩家预料之外的骚操作引起的游戏中断 */
+    /**
+     * 保护措施
+     * 防止玩家快速操作引起的游戏中断
+     * @description 当玩家进行快速操作时，设置保护机制以避免游戏状态混乱
+     */
     handleProtected() {
         if ((this.isStartChange || this.isStartTouch) && !this.isRecording) {
             this.isRecording = true;
@@ -609,29 +782,49 @@ export class Game extends BaseNodeCom {
             }, 5)
         }
     }
-    /** 是否是炸弹 */
+    /**
+     * 是否是炸弹
+     * 检查方块是否为炸弹类型
+     * @param {gridCmpt} bc - 方块组件
+     * @returns {boolean} 是否为炸弹
+     */
     isBomb(bc: gridCmpt) {
         return bc.type >= 8 && bc.type <= 11
     }
 
-    /** 是否是炸弹 */
+    /**
+     * 处理炸弹
+     * 处理炸弹的爆炸逻辑和特效
+     * @param {gridCmpt} bc - 炸弹方块组件
+     * @param {boolean} isResult - 是否为结果检查
+     * @returns {Promise<boolean>} 异步操作，是否成功处理炸弹
+     */
     async handleBomb(bc: gridCmpt, isResult: boolean = false) {
+        // 检查是否正在处理其他消除操作
         if (this.isChecking) {
             return false;
         }
-        
+
+        // 检查是否是炸弹类型
         if (this.isBomb(bc)) {
+            // 设置检查状态，避免重复处理
             this.isChecking = true;
+            // 存储炸弹影响的方块列表
             let bombList = [];
             let list2 = [];
+            // 获取当前炸弹影响的方块列表
             let list: gridCmpt[] = await this.getBombList(bc);
             bombList.push(list);
+            // 检查炸弹列表中的其他炸弹，递归处理
             for (let i = 0; i < list.length; i++) {
+                // 跳过当前炸弹本身
                 if (list[i].h == bc.h && list[i].v == bc.v) continue;
+                // 如果列表中包含其他炸弹，递归处理
                 if (this.isBomb(list[i])) {
                     bombList.push(await this.getBombList(list[i]));
                 }
             }
+            // 去重处理 - 避免重复消除同一个方块
             let func = (pc: gridCmpt) => {
                 for (let i = 0; i < list2.length; i++) {
                     if (list2[i].h == pc.h && list2[i].v == pc.v) {
@@ -640,6 +833,7 @@ export class Game extends BaseNodeCom {
                 }
                 return false;
             }
+            // 合并所有炸弹影响的方块列表
             for (let i = 0; i < bombList.length; i++) {
                 for (let j = 0; j < bombList[i].length; j++) {
                     let item = bombList[i][j];
@@ -649,14 +843,21 @@ export class Game extends BaseNodeCom {
                 }
             }
 
+            // 处理炸弹消除
             await this.handleSamelistBomb(list2);
+            // 检查是否还有其他可消除的方块
             await this.checkAgain(isResult);
             return true;
         }
         return false;
     }
 
-    /** 获取炸弹炸掉的糖果列表 */
+    /**
+     * 获取炸弹炸掉的糖果列表
+     * 根据炸弹类型获取需要消除的方块列表
+     * @param {gridCmpt} bc - 炸弹方块组件
+     * @returns {Promise<gridCmpt[]>} 异步操作，返回炸弹影响的方块列表
+     */
     async getBombList(bc: gridCmpt): Promise<gridCmpt[]> {
         let list: gridCmpt[] = [];
         // 保护：确保节点仍然存在
@@ -733,7 +934,7 @@ export class Game extends BaseNodeCom {
                         if (item && item.getComponent(gridCmpt).type == curType) {
                             list.push(item.getComponent(gridCmpt));
                             // let particle = instantiate(this.particlePre);
-                       let particle = this.particleManager.playParticle('particle', bc.node.position);
+                            let particle = this.particleManager.playParticle('particle', bc.node.position);
                             particle.children.forEach(item => {
                                 item.active = item.name == "move";
                                 item.getComponent(ParticleSystem2D).resetSystem();
@@ -756,7 +957,11 @@ export class Game extends BaseNodeCom {
         return list;
     }
 
-    /** 选中状态还原 */
+    /**
+     * 选中状态还原
+     * 重置所有选中方块的选中状态
+     * @description 将当前选中的方块重置为未选中状态
+     */
     resetSelected() {
         if (!this.isValid) {
             return;
@@ -768,7 +973,12 @@ export class Game extends BaseNodeCom {
         })
     }
 
-    /** 开始交换连个选中的方块 */
+    /**
+     * 开始交换两个选中的方块
+     * 处理方块交换的动画和逻辑
+     * @param {boolean} isBack - 是否是交换回原位
+     * @returns {Promise<void>} 异步操作，完成方块交换
+     */
     async startChangeCurTwoPos(isBack: boolean = false) {
         let time = Constant.changeTime;
         let one = this.curTwo[0], two = this.curTwo[1];
@@ -809,7 +1019,11 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 是否已经加入到列表中了
+     * 检查方块是否已经存在于列表中
+     * 避免重复处理同一个方块
+     * @param {gridCmpt} item - 要检查的方块组件
+     * @param {any[]} samelist - 已处理的方块列表
+     * @returns {boolean} 是否存在于列表中
      */
     private checkExist(item: gridCmpt, samelist: any[]) {
         for (let i = 0; i < samelist.length; i++) {
@@ -822,7 +1036,11 @@ export class Game extends BaseNodeCom {
         }
         return false;
     }
-    /** 反复检查 */
+    /**
+     * 反复检查
+     * 反复检查是否有可消除的方块
+     * @param {boolean} isResult - 是否为结果检查
+     */
     async checkAgain(isResult: boolean = false) {
         let bool = await this.startCheckThree();
         if (bool) {
@@ -841,7 +1059,9 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 开始检测是否有满足消除条件的存在
-     * @returns bool
+     * 检查网格中是否有可消除的方块组合
+     * @param {Function} cb - 回调函数
+     * @returns {Promise<boolean>} 异步操作，是否有可消除的方块
      */
     async startCheckThree(cb: Function = null): Promise<boolean> {
         return new Promise(async resolve => {
@@ -887,9 +1107,10 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 结果列表，进一步判断每一组元素是否合法
-     * @param samelist [Element[]]
-     * @returns 
+     * 处理消除列表
+     * 处理满足消除条件的方块列表
+     * @param {any[]} samelist - 可消除的方块列表
+     * @returns {Promise<void>} 异步操作，完成方块消除
      */
     private async handleSamelist(samelist: any[]) {
         return new Promise(async resolve => {
@@ -927,7 +1148,7 @@ export class Game extends BaseNodeCom {
                         }
                     }
                     this.destroyGridAndGetScore(ele);
-    
+
                 }
             }
             await ToolsHelper.delayTime(0.2);
@@ -936,9 +1157,13 @@ export class Game extends BaseNodeCom {
         });
     }
 
-    /** 消除并获得积分 */
+    /**
+     * 消除并获得积分
+     * 消除方块并处理特效和积分
+     * @param {gridCmpt} ele - 要消除的方块组件
+     */
     destroyGridAndGetScore(ele: gridCmpt) {
-   
+
         let particle = this.particleManager.playParticle('particle', this.blockPosArr[ele.h][ele.v]);
         particle.children.forEach(item => {
             item.active = +item.name == ele.type;
@@ -949,7 +1174,7 @@ export class Game extends BaseNodeCom {
 
         // 查找上面的水果方块能找到没有被锁定 同类型的水果方块
         let node2 = this.DownGridMgr.getFrontGridByType(ele.type);
-          //扣除虚拟血量
+        //扣除虚拟血量
         this.DownGridMgr.damageVirtualHealthByType(node2, ele.attack);
         if (node2) {
             //每消除一个grid都会向上面飞一个子弹 击中上面移动下来的gridDown
@@ -958,43 +1183,61 @@ export class Game extends BaseNodeCom {
             MoveManager.getInstance().moveToTargetWithBezier(bulletParticle, node2, 1, () => {
                 // 子弹击中目标，回收目标节点 // 检查目标节点是否还有父节点（确保它还存在）
                 if (node2 && node2.parent) {
+                    //子弹击中目标粒子
                     let Com = node2.getComponent(gridDownCmpt);
-                    //grid死亡
-                    if (Com.takeDamage(ele.attack)==false) {
-                        Com.showDamageAm();
-                    } else {
-                        //子弹击中目标粒子
-                        let particle = this.particleManager.playParticle('particle', node2.getPosition());
+                    let particle = this.particleManager.playParticle('particle', node2.getPosition());
 
-                        particle.children.forEach(item => {
-                            item.active = +item.name == Com.type;
-                            item.getComponent(ParticleSystem2D).resetSystem();
-                        })
-                        // 粒子特效播放完成后回收
-                        this.particleManager.ParticleWithTimer('particle', particle);
+                    particle.children.forEach(item => {
+                        item.active = +item.name == Com.type;
+                        item.getComponent(ParticleSystem2D).resetSystem();
+                    })
+                    // 粒子特效播放完成后回收
+                    this.particleManager.ParticleWithTimer('particle', particle);
 
-                        // 回收目标节点
-                        this.DownGridMgr.recycleGridByNode(node2);
-                    }
+                    // 回收目标节点
+                    this.DownGridMgr.recycleGridByNode(node2);
+                    // let Com = node2.getComponent(gridDownCmpt);
+                    // //grid死亡
+                    // if (Com.takeDamage(ele.attack)==false) {
+                    //     Com.showDamageAm();
+                    // } else {
+                    //     //子弹击中目标粒子
+                    //     let particle = this.particleManager.playParticle('particle', node2.getPosition());
+
+                    //     particle.children.forEach(item => {
+                    //         item.active = +item.name == Com.type;
+                    //         item.getComponent(ParticleSystem2D).resetSystem();
+                    //     })
+                    //     // 粒子特效播放完成后回收
+                    //     this.particleManager.ParticleWithTimer('particle', particle);
+
+                    //     // 回收目标节点
+                    //     this.DownGridMgr.recycleGridByNode(node2);
+                    // }
 
                 }
                 // 子弹粒子指定回收（用户要求的显式回收）
                 this.particleManager.releaseParticle('bulletParticle', bulletParticle);
             });
         }
-        
+
         //飞需要果子
         let tp = ele.type;
         let worldPosition = ele.node.worldPosition
         this.flyItem(tp, worldPosition);
-       // this.addScoreByType(tp);
-        
+        // this.addScoreByType(tp);
+
         this.blockArr[ele.h][ele.v] = null;
         ele.node.destroy();
-        
+
     }
 
-    /** 获取障碍物列表 */
+    /**
+     * 获取障碍物列表
+     * 从方块列表中筛选出障碍物类型的方块
+     * @param {Node[]} list - 方块节点列表
+     * @returns {Node[]} 障碍物节点列表
+     */
     getObstacleList(list: Node[]) {
         let obstacleList = [];
         for (let i = 0; i < list.length; i++) {
@@ -1006,7 +1249,12 @@ export class Game extends BaseNodeCom {
         return obstacleList;
     }
 
-    /** 获取一颗糖果四周的糖果 */
+    /**
+     * 获取一颗糖果四周的糖果
+     * 获取指定方块周围的相邻方块
+     * @param {gridCmpt} grid - 中心方块组件
+     * @returns {Node[]} 周围相邻的方块节点列表
+     */
     getAroundGrid(grid: gridCmpt) {
         if (grid.type > Constant.NormalType) return [];
         let h = grid.h;
@@ -1031,7 +1279,12 @@ export class Game extends BaseNodeCom {
         return list;
     }
 
-    /** 炸弹消除 */
+    /**
+     * 炸弹消除
+     * 处理炸弹爆炸后的消除逻辑
+     * @param {any[]} samelist - 炸弹影响的方块列表
+     * @returns {Promise<void>} 异步操作，完成炸弹消除
+     */
     private async handleSamelistBomb(samelist: any[]) {
         return new Promise(async resolve => {
             if (samelist.length < 1) {
@@ -1066,7 +1319,11 @@ export class Game extends BaseNodeCom {
             resolve("");
         });
     }
-    /** 合成炸弹 */
+    /**
+     * 合成炸弹
+     * 将多个方块合成为炸弹
+     * @param {gridCmpt[]} item - 要合成的方块列表
+     */
     synthesisBomb(item: gridCmpt[]) {
         /** 先找当前item中是否包含curTwo,包含就以curTwo为中心合成 */
         let center: gridCmpt = null;
@@ -1088,7 +1345,7 @@ export class Game extends BaseNodeCom {
             let tp = ele.type;
             let worldPosition = ele.node.worldPosition
             // this.flyItem(tp, worldPosition);
-           // this.addScoreByType(tp);
+            // this.addScoreByType(tp);
             tween(ele.node).to(0.1, { position: this.blockPosArr[center.h][center.v] }).call((target) => {
                 let gt = target.getComponent(gridCmpt);
                 console.log(gt.h, gt.v)
@@ -1105,7 +1362,9 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 去掉不合法的
-     * @param samelist  [Element[]]
+     * 筛选出合法的消除组合
+     * @param {any[]} samelist - 待检查的消除组合列表
+     * @returns {any[]} 合法的消除组合列表
      */
     private jugetLegitimate(samelist: any[]) {
         let arr: any[] = [];
@@ -1119,6 +1378,12 @@ export class Game extends BaseNodeCom {
         return arr;
     }
 
+    /**
+     * 判断消除组合是否合法
+     * 根据消除组合的长度判断是否合法
+     * @param {gridCmpt[]} list - 消除组合列表
+     * @returns {boolean} 是否合法
+     */
     private startJuge(list: gridCmpt[]): boolean {
         let bool = false;
         let len = list.length;
@@ -1156,8 +1421,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 至少有三个同行且三个同列
-     * @param list 
-     * @returns 
+     * 检查消除组合是否至少有三个同行和三个同列的方块
+     * @param {gridCmpt[]} list - 消除组合列表
+     * @returns {boolean} 是否满足条件
      */
     private _atLeastThreeSameHorAndVer(list: gridCmpt[]): boolean {
         let bool = false;
@@ -1192,8 +1458,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 处在同一行/或者同一列
-     * @param list 
-     * @returns 
+     * 检查消除组合是否在同一行或同一列
+     * @param {gridCmpt[]} list - 消除组合列表
+     * @returns {boolean} 是否在同一行或同一列
      */
     private _atTheSameHorOrVer(list: gridCmpt[]): boolean {
         let item = list[0];
@@ -1218,6 +1485,8 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 去重复
+     * 去除消除组合列表中的重复方块
+     * @param {any[]} samelist - 消除组合列表
      */
     private _deleteDuplicates(samelist: any[]) {
         for (let i = 0; i < samelist.length; i++) {
@@ -1241,7 +1510,9 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 以当前滑块为中心沿水平方向检查
-     * @param {gridCmpt} item 
+     * 检查水平方向上是否有可消除的方块组合
+     * @param {gridCmpt} item - 中心方块组件
+     * @returns {gridCmpt[]} 水平方向上的可消除方块列表
      */
     private _checkHorizontal(item: gridCmpt): gridCmpt[] {
         let arr: gridCmpt[] = [item];
@@ -1278,7 +1549,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 以当前滑块为中心沿竖直方向检查
-     * @param {gridCmpt} item 
+     * 检查竖直方向上是否有可消除的方块组合
+     * @param {gridCmpt} item - 中心方块组件
+     * @returns {gridCmpt[]} 竖直方向上的可消除方块列表
      */
     private _checkVertical(item: gridCmpt): gridCmpt[] {
         let arr: gridCmpt[] = [item];
@@ -1313,7 +1586,12 @@ export class Game extends BaseNodeCom {
         return arr;
     }
 
-    /** 数据交换，网格位置交换 */
+    /**
+     * 数据交换，网格位置交换
+     * 交换两个方块的数据和位置
+     * @param {gridCmpt} item1 - 第一个方块组件
+     * @param {gridCmpt} item2 - 第二个方块组件
+     */
     changeData(item1: gridCmpt, item2: gridCmpt) {
         /** 数据交换 */
         let temp = item1.data;
@@ -1332,7 +1610,12 @@ export class Game extends BaseNodeCom {
         this.blockArr[x2][y2].getComponent(gridCmpt).initData(this.blockArr[x2][y2].getComponent(gridCmpt).data.h, this.blockArr[x2][y2].getComponent(gridCmpt).data.v);
     }
 
-    /** 是否点击在方块上 */
+    /**
+     * 是否点击在方块上
+     * 检查点击位置是否在某个方块上
+     * @param {Vec3} pos - 点击位置
+     * @returns {gridCmpt} 点击的方块组件
+     */
     checkClickOnBlock(pos: Vec3): gridCmpt {
         if (!this.isValid) return;
         if (this.blockArr.length < 1) return;
@@ -1349,7 +1632,11 @@ export class Game extends BaseNodeCom {
         return null;
     }
 
-    /** 消除后向下滑动 */
+    /**
+     * 消除后向下滑动
+     * 处理消除方块后，上方方块向下移动填补空缺
+     * @returns {Promise<void>} 异步操作，完成方块下移
+     */
     async checkMoveDown() {
         return new Promise(async resolve => {
             for (let i = 0; i < this.H; i++) {
@@ -1385,7 +1672,14 @@ export class Game extends BaseNodeCom {
         });
     }
 
-    /** 获取最终下落的格子数 */
+    /**
+     * 获取最终下落的格子数
+     * 计算方块需要下落的最终格子数
+     * @param {number} i - 方块的行坐标
+     * @param {number} j - 方块的列坐标
+     * @param {number} count - 初始下落格子数
+     * @returns {Promise<number>} 异步操作，返回最终下落的格子数
+     */
     async getDownLastCount(i, j, count): Promise<number> {
         return new Promise(resolve => {
             let tempCount = 0;
@@ -1401,7 +1695,11 @@ export class Game extends BaseNodeCom {
         })
     }
 
-    /** 补充新方块填补空缺 */
+    /**
+     * 补充新方块填补空缺
+     * 在空缺位置补充新的方块
+     * @returns {Promise<void>} 异步操作，完成方块补充
+     */
     async checkReplenishBlock() {
         return new Promise(async resolve => {
             for (let i = 0; i < this.H; i++) {
@@ -1422,6 +1720,11 @@ export class Game extends BaseNodeCom {
         });
     }
 
+    /**
+     * 初始化布局
+     * 初始化游戏网格布局和方块
+     * @returns {Promise<void>} 异步操作，完成布局初始化
+     */
     async initLayout() {
         this.clearData();
         await this.gridMgr.initGrid();
@@ -1482,7 +1785,7 @@ export class Game extends BaseNodeCom {
                 }
                 count++;
                 let type = -1;
-                if (this.blockArr[i][j]) 
+                if (this.blockArr[i][j])
                     continue;
                 let block = this.addBlock(i, j, pos, type);
                 block.setScale(v3(0, 0, 0));
@@ -1500,6 +1803,15 @@ export class Game extends BaseNodeCom {
         // App.gameCtr.toolsArr = [];
     }
 
+    /**
+     * 添加方块
+     * 创建并添加新的方块到网格中
+     * @param {number} i - 方块的行坐标
+     * @param {number} j - 方块的列坐标
+     * @param {Vec3} pos - 方块的位置
+     * @param {number} type - 方块的类型，-1表示随机类型
+     * @returns {Node} 创建的方块节点
+     */
     addBlock(i: number, j: number, pos: Vec3 = null, type: number = -1) {
         let block = instantiate(this.gridPre);
         this.gridNode.addChild(block);
@@ -1510,6 +1822,11 @@ export class Game extends BaseNodeCom {
         return block;
     }
 
+    /**
+     * 清除数据
+     * 清除游戏数据和方块
+     * @description 重置游戏状态和数据，准备重新开始游戏
+     */
     clearData() {
         App.gameCtr.resetHdeList(LevelConfig.getCurLevel());
         if (this.blockArr.length < 1) return;
@@ -1527,7 +1844,7 @@ export class Game extends BaseNodeCom {
         this.isStartTouch = false;
         this.curScore = 0;
     }
-    
+
     // /** 加积分 */
     // addScoreByType(type: number) {
     //     if (type > this.data.blockRatio.length - 1) {
@@ -1537,7 +1854,13 @@ export class Game extends BaseNodeCom {
     //     this.curScore += score;
     //     this.updateScorePercent();
     // }
-    /** 飞舞动画 */
+    /**
+     * 飞舞动画
+     * 播放方块消除后的飞舞动画
+     * @param {number} type - 方块类型
+     * @param {Vec3} pos - 方块位置
+     * @returns {Promise<void>} 异步操作，完成飞舞动画
+     */
     async flyItem(type: number, pos: Vec3) {
         let idx = this.data.mapData[0].m_id.indexOf(type);
         if (idx < 0) return;
@@ -1583,14 +1906,14 @@ export class Game extends BaseNodeCom {
         // 测试暂停功能
         EventManager.emit(EventName.Game.Pause);
         console.log("发送暂停事件");
-        
+
         // 3秒后自动继续
         setTimeout(() => {
             EventManager.emit(EventName.Game.Resume);
             console.log("发送继续事件");
         }, 3000);
     }
-    
+
     /**
      *消除最前面3排水果方块
      */
@@ -1733,7 +2056,7 @@ export class Game extends BaseNodeCom {
                 type = Bomb.allSame;
                 break;
         }
-        
+
         // 调用渠道的视频广告方法
         if (CM.mainCH && CM.mainCH.showVideoAd) {
             CM.mainCH.showVideoAd((isSuccess: boolean) => {
@@ -1753,7 +2076,7 @@ export class Game extends BaseNodeCom {
             ViewManager.toast("操作太快")
             return;
         }
-        
+
         AudioManager.getInstance().playSound('button_click');
         if (this.isUsingBomb) return;
         this.isUsingBomb = true;
@@ -1782,7 +2105,7 @@ export class Game extends BaseNodeCom {
             ViewManager.toast("道具数量不足");
             return;
         }
-        GameData.setBomb(type, -1); 
+        GameData.setBomb(type, -1);
         let pos = this.gridMgr.node.getComponent(UITransform).convertToNodeSpaceAR(btnNode.worldPosition);
         this.throwTools(type, pos);
         this.updateToolsInfo();

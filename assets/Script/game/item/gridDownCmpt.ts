@@ -163,8 +163,11 @@ export class gridDownCmpt extends Component {
      * 更新血量显示
      */
     private updateHealthDisplay(): void {
-        if (this.healthBl) {
+        if (this.healthBl&&this.health>=2) {
             this.healthBl.string = this.health.toString();
+        }
+        else{
+            this.healthBl.string = '';
         }
     }
 
