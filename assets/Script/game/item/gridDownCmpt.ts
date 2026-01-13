@@ -36,15 +36,13 @@ export class gridDownCmpt extends Component {
      * @param damage 受到的伤害值
      * @returns 是否可以被回收（血量小于等于0）
      */
-    public takeDamage(damage: number): boolean {
+    public takeDamage(damage: number,callback:()=>void) {
         this.health -= damage;
         this.updateHealthDisplay();
         if (this.health <= 0) {
-            // 发送消息通知管理器该水果方块可以被回收
-            EventManager.emit(EventName.Game.GridCanBeRecycled, this.node);
-            return true;
+            callback();
         }
-        return false;
+   
     }
     
     /**
@@ -64,15 +62,17 @@ export class gridDownCmpt extends Component {
      * @returns 计算后的血量（整数）
      */
     public setHealthByLevel(level: number = LevelConfig.getCurLevel(), baseHealth: number = 1, levelCoefficient: number = 0.5): void {
-        // 计算血量：基础血量 + (等级-1) * 系数，结果取整
-        const calculatedHealth = Math.round(baseHealth + ((level-1) * levelCoefficient));
-        // 确保血量至少为基础血量
-        const maxHealth = Math.max(baseHealth, calculatedHealth);
-        // 在 baseHealth 和 maxHealth 之间取随机整数
-        const finalHealth = Math.floor(Math.random() * (maxHealth - baseHealth + 1)) + baseHealth;
+        // // 计算血量：基础血量 + (等级-1) * 系数，结果取整
+        // const calculatedHealth = Math.round(baseHealth + ((level-1) * levelCoefficient));
+        // // 确保血量至少为基础血量
+        // const maxHealth = Math.max(baseHealth, calculatedHealth);
+        // // 在 baseHealth 和 maxHealth 之间取随机整数
+        // const finalHealth = Math.floor(Math.random() * (maxHealth - baseHealth + 1)) + baseHealth;
         
-        this.setHealth(finalHealth);
-        this.virtualHealth = finalHealth;
+        // this.setHealth(finalHealth);
+        // this.virtualHealth = finalHealth;
+
+          this.setHealth(1);
     }
 
     /**

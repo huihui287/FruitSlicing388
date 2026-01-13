@@ -2,7 +2,6 @@
 import { _decorator, Component, Node, Button, EditBox, Label, isValid } from 'cc';
 import { App } from '../Controller/app';
 const { ccclass, property } = _decorator;
-
 /** 点击按钮等待时间 */
 const CLICK_WAIT_TIME = 0;
 /**

@@ -22,6 +22,7 @@ import { ParticleManager } from './Manager/ParticleManager';
 import { MoveManager } from './Manager/MoveManager';
 import { gridDownCmpt } from './item/gridDownCmpt';
 import CM from '../channel/CM';
+import { Turret } from './Manager/Turret';
 
 const { ccclass, property } = _decorator;
 
@@ -42,7 +43,8 @@ export class Game extends BaseNodeCom {
     private DownGridMgr: DownGridManager = null;
     /** UI引用：特效管理器 */
     private particleManager: ParticleManager = null;
-    
+        /** UI引用：炮台管理器 */
+    private turret: Turret = null;
     /*********************************************  UI引用  *********************************************/
     /*********************************************  UI引用  *********************************************/
     /*********************************************  UI引用  *********************************************/
@@ -157,7 +159,8 @@ export class Game extends BaseNodeCom {
         this.gridMgr = this.viewList.get('center/gridManager').getComponent(gridManagerCmpt);
         this.DownGridMgr = this.viewList.get('center/DownGridManager').getComponent(DownGridManager);
         this.particleManager = this.viewList.get('center/ParticleManager').getComponent(ParticleManager);
-        
+        this.turret = this.viewList.get('center/Turret').getComponent(Turret);
+
         this.gridNode = this.viewList.get('center/gridNode');
         this.effNode = this.viewList.get('center/ParticleManager');
         this.targetBg = this.viewList.get('top/content/targetBg');
@@ -419,6 +422,11 @@ export class Game extends BaseNodeCom {
      * @description 实时检查水果方块的位置，当方块过低时显示警告
      */
     protected update(dt: number): void {
+        this.UPAlert();
+    }
+
+    //检查最下方的水果方块是否低于阈值
+    UPAlert() {
         if (isValid(this.DownGridMgr) && isValid(this.Alert)) {
             // 检查最下方的水果方块是否低于阈值
             if (this.DownGridMgr.isLowestGridBelowThreshold()) {
@@ -433,7 +441,6 @@ export class Game extends BaseNodeCom {
             }
         }
     }
-
     /**
      * 结束检测
      * 检查是否达成所有消除目标
@@ -632,6 +639,9 @@ export class Game extends BaseNodeCom {
         this.isStartTouch = false;
         this.updateToolsInfo();
         this.eliminateFrontNRows();
+        // 恢复玩家血量 - 观看视频后恢复部分血量
+        this.playerHealth = 100; // 
+        this.updateHealthDisplay(); // 更新血量显示
         // 恢复水果下落
         if (this.DownGridMgr) {
             EventManager.emit(EventName.Game.Resume);
@@ -1163,73 +1173,113 @@ export class Game extends BaseNodeCom {
      * @param {gridCmpt} ele - 要消除的方块组件
      */
     destroyGridAndGetScore(ele: gridCmpt) {
+        if (!ele) return;
 
+        // 1. 播放消除粒子特效
+        this.playDestroyParticle(ele);
+
+        // 2. 攻击上方同类型下落方块
+        this.attackTopDownGrid(ele);
+
+        // 3. 处理物品飞行效果
+        this.handleItemFly(ele);
+
+        // 4. 销毁方块
+        this.destroyGridNode(ele);
+    }
+
+    /**
+     * 播放消除粒子特效
+     * @param {gridCmpt} ele - 要消除的方块组件
+     */
+    private playDestroyParticle(ele: gridCmpt) {
         let particle = this.particleManager.playParticle('particle', this.blockPosArr[ele.h][ele.v]);
         particle.children.forEach(item => {
             item.active = +item.name == ele.type;
             item.getComponent(ParticleSystem2D).resetSystem();
-        })
+        });
         // 粒子特效播放完成后回收
         this.particleManager.ParticleWithTimer('particle', particle);
+    }
 
+    /**
+     * 攻击上方同类型下落方块
+     * @param {gridCmpt} ele - 要消除的方块组件
+     */
+    private attackTopDownGrid(ele: gridCmpt) {
         // 查找上面的水果方块能找到没有被锁定 同类型的水果方块
-        let node2 = this.DownGridMgr.getFrontGridByType(ele.type);
-        //扣除虚拟血量
-        this.DownGridMgr.damageVirtualHealthByType(node2, ele.attack);
-        if (node2) {
-            //每消除一个grid都会向上面飞一个子弹 击中上面移动下来的gridDown
-            let bulletParticle = this.particleManager.playParticle('bulletParticle', this.blockPosArr[ele.h][ele.v]);
+        let targetNode = this.DownGridMgr.getFrontGridByType(ele.type);
+        if (!targetNode) return;
 
-            MoveManager.getInstance().moveToTargetWithBezier(bulletParticle, node2, 1, () => {
-                // 子弹击中目标，回收目标节点 // 检查目标节点是否还有父节点（确保它还存在）
-                if (node2 && node2.parent) {
-                    //子弹击中目标粒子
-                    let Com = node2.getComponent(gridDownCmpt);
-                    let particle = this.particleManager.playParticle('particle', node2.getPosition());
+        // 扣除虚拟血量
+        this.DownGridMgr.damageVirtualHealthByType(targetNode, ele.attack);
 
-                    particle.children.forEach(item => {
-                        item.active = +item.name == Com.type;
-                        item.getComponent(ParticleSystem2D).resetSystem();
-                    })
-                    // 粒子特效播放完成后回收
-                    this.particleManager.ParticleWithTimer('particle', particle);
+        // 发射子弹粒子
+        this.fireBulletToTarget(ele, targetNode);
+    }
 
-                    // 回收目标节点
-                    this.DownGridMgr.recycleGridByNode(node2);
-                    // let Com = node2.getComponent(gridDownCmpt);
-                    // //grid死亡
-                    // if (Com.takeDamage(ele.attack)==false) {
-                    //     Com.showDamageAm();
-                    // } else {
-                    //     //子弹击中目标粒子
-                    //     let particle = this.particleManager.playParticle('particle', node2.getPosition());
+    /**
+     * 发射子弹粒子到目标
+     * @param {gridCmpt} source - 源方块组件
+     * @param {Node} target - 目标下落方块节点
+     */
+    private fireBulletToTarget(source: gridCmpt, target: Node) {
+        let bulletParticle = this.particleManager.playParticle('bulletParticle', this.blockPosArr[source.h][source.v]);
 
-                    //     particle.children.forEach(item => {
-                    //         item.active = +item.name == Com.type;
-                    //         item.getComponent(ParticleSystem2D).resetSystem();
-                    //     })
-                    //     // 粒子特效播放完成后回收
-                    //     this.particleManager.ParticleWithTimer('particle', particle);
+        MoveManager.getInstance().moveToTargetWithBezier(bulletParticle, target, 1, () => {
+            // 子弹击中目标，回收目标节点
+            this.handleBulletHit(target, source.attack);
+            
+            // 子弹粒子指定回收（用户要求的显式回收）
+            this.particleManager.releaseParticle('bulletParticle', bulletParticle);
+        });
+    }
 
-                    //     // 回收目标节点
-                    //     this.DownGridMgr.recycleGridByNode(node2);
-                    // }
+    /**
+     * 处理子弹击中效果
+     * @param {Node} target - 目标下落方块节点
+     * @param {number} damage - 伤害值
+     */
+    private handleBulletHit(target: Node, damage: number) {
+        // 检查目标节点是否还有父节点（确保它还存在）
+        if (!target || !target.parent) return;
 
-                }
-                // 子弹粒子指定回收（用户要求的显式回收）
-                this.particleManager.releaseParticle('bulletParticle', bulletParticle);
-            });
-        }
+        let targetComp = target.getComponent(gridDownCmpt);
+        if (!targetComp) return;
 
-        //飞需要果子
+        // 子弹击中目标粒子
+        let hitParticle = this.particleManager.playParticle('particle', target.getPosition());
+        hitParticle.children.forEach(item => {
+            item.active = +item.name == targetComp.type;
+            item.getComponent(ParticleSystem2D).resetSystem();
+        });
+        // 粒子特效播放完成后回收
+        this.particleManager.ParticleWithTimer('particle', hitParticle);
+
+        // 扣除真实血量并处理销毁
+        targetComp.takeDamage(damage, () => {
+            // grid死亡，回收目标节点
+            this.DownGridMgr.recycleGridByNode(target);
+        });
+    }
+
+    /**
+     * 处理物品飞行效果
+     * @param {gridCmpt} ele - 要消除的方块组件
+     */
+    private handleItemFly(ele: gridCmpt) {
         let tp = ele.type;
-        let worldPosition = ele.node.worldPosition
+        let worldPosition = ele.node.worldPosition;
         this.flyItem(tp, worldPosition);
-        // this.addScoreByType(tp);
+    }
 
+    /**
+     * 销毁方块节点
+     * @param {gridCmpt} ele - 要消除的方块组件
+     */
+    private destroyGridNode(ele: gridCmpt) {
         this.blockArr[ele.h][ele.v] = null;
         ele.node.destroy();
-
     }
 
     /**

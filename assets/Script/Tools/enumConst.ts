@@ -45,6 +45,7 @@ export let Constant = {
     NormalType: 12,
 }
 
+
 /**
  *  关卡配置
  */
@@ -77,7 +78,13 @@ export enum GridType {
     // /** 葡萄 */
     // GRAPE = 5,
 }
-
+/** Grid的数据 */
+export interface GridData {
+    /**  水果的类型 */
+    type: GridType; // 使用枚举“GridType”作为类型声明
+    // 攻击
+    attack: number;
+}
 export interface mapData {
     m_id: number[],
     m_ct: number[],

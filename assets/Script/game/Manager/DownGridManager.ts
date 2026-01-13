@@ -99,7 +99,6 @@ export class DownGridManager extends Component {
         // 移除事件监听
         EventManager.off(EventName.Game.Pause, this.pauseFall, this);
         EventManager.off(EventName.Game.Resume, this.resumeFall, this);
-        EventManager.off(EventName.Game.GridCanBeRecycled, this.onGridCanBeRecycled, this);
         this.clearAllGrids();
     }
 
@@ -108,8 +107,7 @@ export class DownGridManager extends Component {
         EventManager.on(EventName.Game.Pause, this.pauseFall, this);
         // 监听继续事件
         EventManager.on(EventName.Game.Resume, this.resumeFall, this);
-        // 监听水果方块可以被回收事件
-        EventManager.on(EventName.Game.GridCanBeRecycled, this.onGridCanBeRecycled, this);
+   
     }
     /**
      * 加载水果方块预制体
@@ -399,19 +397,6 @@ export class DownGridManager extends Component {
      */
     public getActiveGridCount(): number {
         return this.activeGrids.length;
-    }
-
-    /**
-     * 处理水果方块可以被回收的事件
-     * @param gridNode 可以被回收的水果方块节点
-     */
-    private onGridCanBeRecycled(gridNode: Node): void {
-        // 检查该节点是否在活跃列表中
-        const index = this.activeGrids.indexOf(gridNode);
-        if (index > -1) {
-            // 使用指定的回收接口回收水果方块
-            this.recycleGrid(gridNode);
-        }
     }
 
     /**

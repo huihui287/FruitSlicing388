@@ -9,7 +9,7 @@ export class gridCmpt extends Component {
     /** 横纵轴编号 */
     public h: number = 0;
     public v: number = 0;
-    public type: number = -1;
+    public type: number = -1;//水果类型
     public obstacleValue: number = 0;
     public attack: number = 1; // 攻击
     public data: { h: number, v: number }
