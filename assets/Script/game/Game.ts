@@ -1209,13 +1209,23 @@ export class Game extends BaseNodeCom {
     private attackTopDownGrid(ele: gridCmpt) {
         // 查找上面的水果方块能找到没有被锁定 同类型的水果方块
         let targetNode = this.DownGridMgr.getFrontGridByType(ele.type);
-        if (!targetNode) return;
+        
+        if (targetNode) {
+            // 扣除虚拟血量
+            this.DownGridMgr.damageVirtualHealthByType(targetNode, ele.attack);
 
-        // 扣除虚拟血量
-        this.DownGridMgr.damageVirtualHealthByType(targetNode, ele.attack);
-
-        // 发射子弹粒子
-        this.fireBulletToTarget(ele, targetNode);
+            // 发射子弹粒子
+            this.fireBulletToTarget(ele, targetNode);
+        } else {
+            // 如果没有找到目标下落方块，将方块的类型和攻击值添加到炮塔的gridDataList中
+            if (this.turret) {
+                const gridData = {
+                    type: ele.type,
+                    attack: ele.attack
+                };
+                this.turret.addGridData(gridData);
+            }
+        }
     }
 
     /**

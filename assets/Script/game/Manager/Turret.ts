@@ -3,7 +3,9 @@ import { BaseNodeCom } from '../BaseNode';
 import { DownGridManager } from './DownGridManager';
 import { gridDownCmpt } from '../item/gridDownCmpt';
 import StateMachine, { IState } from '../../Common/StateMachine';
-import { GridData } from '../../Tools/enumConst';
+import { GridData, GridType } from '../../Tools/enumConst';
+import LoaderManeger from '../../sysloader/LoaderManeger';
+import { gridCmpt } from '../item/gridCmpt';
 const { ccclass, property } = _decorator;
 
 /**
@@ -31,6 +33,7 @@ interface TurretData {
     isAttacking: boolean;
     reloadTime: number;
     upgradeTime: number;
+    attackCooldown: number; // 攻击冷却时间
 }
 
 /**
@@ -88,12 +91,20 @@ class ActiveState implements IState {
     
     onEnter(fromState: IState | null, params?: any) {
         this._data.isAttacking = true;
+        this._data.attackCooldown = 0; // 重置攻击冷却时间
         this._data.turret.startAttack();
         console.log('Turret is now active and attacking');
     }
     
     onUpdate(dt: number) {
         // 活跃状态下的更新逻辑
+        this._data.attackCooldown -= dt;
+        if (this._data.attackCooldown <= 0) {
+            // 执行攻击
+            this._data.turret.fireAttack();
+            // 重置攻击冷却时间
+            this._data.attackCooldown = this._data.turret.attackInterval;
+        }
     }
     
     onExit(toState: IState | null) {
@@ -121,99 +132,6 @@ class ActiveState implements IState {
     }
 }
 
-/**
- * 重新装填状态
- */
-class ReloadingState implements IState {
-    readonly name: string = TurretState.RELOADING;
-    private _data: TurretData;
-    
-    constructor(data: TurretData) {
-        this._data = data;
-    }
-    
-    onEnter(fromState: IState | null, params?: any) {
-        this._data.isAttacking = false;
-        this._data.turret.unscheduleAllCallbacks();
-        this._data.reloadTime = 2; // 2秒重新装填时间
-        
-        // 开始重新装填倒计时
-        this._data.turret.scheduleOnce(() => {
-            this._data.turret.activate();
-        }, this._data.reloadTime);
-        
-        console.log('Turret is now reloading');
-    }
-    
-    onUpdate(dt: number) {
-        // 重新装填状态下的更新逻辑
-        this._data.reloadTime -= dt;
-    }
-    
-    onExit(toState: IState | null) {
-        console.log('Turret is leaving reloading state');
-    }
-    
-    onEvent(eventName: string, data?: any): boolean {
-        switch (eventName) {
-            case 'cancel_reload':
-                // 取消重新装填
-                return true;
-            case 'disable':
-                // 禁用炮塔
-                return true;
-            default:
-                return false;
-        }
-    }
-}
-
-/**
- * 升级状态
- */
-class UpgradingState implements IState {
-    readonly name: string = TurretState.UPGRADING;
-    private _data: TurretData;
-    
-    constructor(data: TurretData) {
-        this._data = data;
-    }
-    
-    onEnter(fromState: IState | null, params?: any) {
-        this._data.isAttacking = false;
-        this._data.turret.unscheduleAllCallbacks();
-        this._data.upgradeTime = 3; // 3秒升级时间
-        
-        // 开始升级倒计时
-        this._data.turret.scheduleOnce(() => {
-            this._data.turret.activate();
-        }, this._data.upgradeTime);
-        
-        console.log('Turret is now upgrading');
-    }
-    
-    onUpdate(dt: number) {
-        // 升级状态下的更新逻辑
-        this._data.upgradeTime -= dt;
-    }
-    
-    onExit(toState: IState | null) {
-        console.log('Turret is leaving upgrading state');
-    }
-    
-    onEvent(eventName: string, data?: any): boolean {
-        switch (eventName) {
-            case 'cancel_upgrade':
-                // 取消升级
-                return true;
-            case 'disable':
-                // 禁用炮塔
-                return true;
-            default:
-                return false;
-        }
-    }
-}
 
 /**
  * 禁用状态
@@ -289,30 +207,39 @@ export class Turret extends BaseNodeCom {
     /** 炮塔数据 */
     private _turretData: TurretData;
     
+    /** 子弹对象池：存储可复用的子弹节点 */
+    private bulletPool: Node[] = [];
+    /** 最大子弹池大小：控制对象池的最大容量 */
+    private maxBulletPoolSize: number = 20;
+    
     /**
      * 组件加载时调用
      * 初始化DownGridManager引用
      * @description 炮塔初始化时获取必要的组件引用
      */
-    protected onLoad(): void {
+    protected async onLoad(): Promise<void> {
         // 调用父类的onLoad方法
         super.onLoad();
-        
+
         // 初始化炮塔数据
         this._turretData = {
             turret: this,
             isAttacking: false,
             reloadTime: 0,
-            upgradeTime: 0
+            upgradeTime: 0,
+            attackCooldown: this.attackInterval // 初始化攻击冷却时间
         };
-        
+
         // 初始化状态机
         this.initStateMachine();
-        
+
         // 检查DownGridManager是否获取成功
         if (!this.DownGridMgr) {
             console.error('Turret: 无法获取DownGridManager组件');
             this.disable();
+        }
+        if (!this.bulletPrefab) {
+            this.bulletPrefab = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
         }
     }
     
@@ -336,6 +263,7 @@ export class Turret extends BaseNodeCom {
     public onDestroy(): void {
         super.onDestroy();
         this.deactivate();
+        this.clearBulletPool();
     }
     
     /**
@@ -345,6 +273,18 @@ export class Turret extends BaseNodeCom {
      */
     protected onDisable(): void {
         this.deactivate();
+    }
+    
+    /**
+     * 清理子弹对象池
+     */
+    private clearBulletPool(): void {
+        for (const bullet of this.bulletPool) {
+            if (bullet && bullet.isValid) {
+                bullet.destroy();
+            }
+        }
+        this.bulletPool = [];
     }
     
     /**
@@ -360,12 +300,10 @@ export class Turret extends BaseNodeCom {
         // 创建状态实例
         const idleState = new IdleState(this._turretData);
         const activeState = new ActiveState(this._turretData);
-        const reloadingState = new ReloadingState(this._turretData);
-        const upgradingState = new UpgradingState(this._turretData);
         const disabledState = new DisabledState(this._turretData);
         
         // 添加所有状态
-        this._stateMachine.addStates([idleState, activeState, reloadingState, upgradingState, disabledState]);
+        this._stateMachine.addStates([idleState, activeState, disabledState]);
         
         // 初始状态设为空闲
         this._stateMachine.changeState(TurretState.IDLE);
@@ -417,81 +355,125 @@ export class Turret extends BaseNodeCom {
     
     /**
      * 开始攻击循环
-     * 启动攻击计时器，定期执行攻击
+     * 开始攻击
      * @description 开始炮塔的自动攻击行为
      */
     public startAttack(): void {
         if (this._stateMachine.currentStateName !== TurretState.ACTIVE) return;
         
-        // 清除所有计时器
-        this.unscheduleAllCallbacks();
-        
-        // 开始攻击
-        this.attack();
+        // 攻击逻辑在ActiveState的onUpdate方法中处理
     }
     
     /**
      * 停止攻击循环
-     * 清除所有计时器，停止攻击行为
+     * 停止攻击行为
      * @description 停止炮塔的自动攻击行为
      */
     public stopAttack(): void {
-        this.unscheduleAllCallbacks();
+        // 不需要做什么，因为攻击逻辑在update方法中，会根据状态自动停止
     }
     
-    /**
-     * 攻击方法
-     * 寻找目标并发射攻击
-     * @description 炮塔的核心攻击逻辑，定期执行
-     */
-    private attack(): void {
-        // 检查状态
-        if (this._stateMachine.currentStateName !== TurretState.ACTIVE) return;
-        
-        // 延迟执行下一次攻击
-        this.scheduleOnce(() => {
-            // 再次检查状态
-            if (this._stateMachine.currentStateName !== TurretState.ACTIVE) return;
-            
-            // 执行攻击
-            this.fireAttack();
-            
-            // 递归调用，继续攻击循环
-            this.attack();
-        }, this.attackInterval);
-    }
+
     
     /**
      * 执行攻击
-     * 遍历所有存储的grid数据，为每个数据寻找目标并发射攻击
-     * @description 执行实际的攻击操作，从每个grid数据发射攻击
+     * 使用gridDataList中最前面的一项数据进行攻击，攻击后释放该数据
+     * 如果找不到同类型目标，则将数据放到列表最后，继续寻找下一个
+     * @description 执行实际的攻击操作，从gridDataList中取出数据发射攻击
      */
-    private fireAttack(): void {
-        // 遍历所有存储的grid数据
-        for (const gridData of this.gridDataList) {
-            // 寻找攻击目标
-            const target = this.findTarget();
+    public fireAttack(): void {
+        // 检查gridDataList是否有数据
+        if (this.gridDataList.length > 0) {
+            // 遍历所有数据，寻找可攻击的目标
+            let foundTarget = false;
+            let processedCount = 0;
             
-            // 如果找到目标，则发射攻击
-            if (target) {
-                this.fire(target, gridData);
+            while (!foundTarget && processedCount < this.gridDataList.length) {
+                // 取出最前面的一项数据
+                const gridData = this.gridDataList[0];
+                
+                // 寻找同类型的攻击目标
+                const target = this.findTargetByType(gridData.type);
+                
+                // 如果找到目标，则发射攻击
+                if (target) {
+                    // 扣除虚拟血量
+                    this.DownGridMgr.damageVirtualHealthByType(target, gridData.attack);
+                    
+                    // 发射子弹
+                    this.fire(target, gridData);
+                    
+                    // 攻击后释放这一条数据
+                    this.removeGridData(gridData);
+                    
+                    foundTarget = true;
+                } else {
+                    // 如果找不到目标，将数据放到列表最后
+                    this.gridDataList.push(this.gridDataList.shift()!);
+                }
+                
+                processedCount++;
             }
         }
     }
-    
-    /**
-     * 寻找攻击目标
-     * 在攻击范围内寻找最近的活跃gridDown
-     * @returns 找到的目标节点，如果没有找到则返回null
-     * @description 在DownGridManager中寻找可攻击的目标
-     */
-    private findTarget(): Node | null {
 
-        
-        // 返回找到的最近目标
+    /**
+     * 按类型寻找攻击目标
+     * 寻找同类型最下面的活跃gridDown
+     * @param type 目标类型
+     * @returns 找到的目标节点，如果没有找到则返回null
+     * @description 在DownGridManager中寻找指定类型的目标
+     */
+    private findTargetByType(type: number): Node | null {
+        // 使用DownGridManager的方法寻找同类型最下面的gridDown
+        if (this.DownGridMgr) {
+            return this.DownGridMgr.getFrontGridByType(type);
+        }
         return null;
     }
-    
+
+    /**
+     * 从对象池获取子弹
+     * @returns 子弹节点
+     */
+    private getBulletFromPool(): Node | null {
+        if (this.bulletPool.length > 0) {
+            return this.bulletPool.pop();
+        }
+        
+        if (!this.bulletPrefab) return null;
+        
+        // 如果对象池为空且未达到最大容量，创建新子弹
+        if (this.bulletPool.length < this.maxBulletPoolSize) {
+            return instantiate(this.bulletPrefab);
+        }
+        
+        return null;
+    }
+
+    /**
+     * 回收子弹到对象池
+     * @param bullet 要回收的子弹节点
+     */
+    private recycleBulletToPool(bullet: Node): void {
+        if (!bullet) return;
+        
+        // 确保子弹未被销毁
+        if (!bullet.isValid) return;
+        
+        // 重置子弹状态
+        bullet.setParent(null);
+        bullet.active = true;
+        
+        // 如果对象池未达到最大容量，回收子弹
+        if (this.bulletPool.length < this.maxBulletPoolSize) {
+            this.bulletPool.push(bullet);
+        } else {
+            // 否则销毁子弹
+            bullet.destroy();
+        }
+    }
+
     /**
      * 发射攻击
      * 从指定的grid数据发射子弹到目标
@@ -500,14 +482,16 @@ export class Turret extends BaseNodeCom {
      * @description 从源grid数据向目标发射子弹
      */
     private fire(target: Node, gridData: GridData): void {
-        // 检查子弹预制体是否存在
-        if (!this.bulletPrefab) return;
-        
-        // 创建子弹实例
-        const bullet = instantiate(this.bulletPrefab);
-        
+        // 从对象池获取子弹
+        const bullet = this.getBulletFromPool();
+        if (!bullet) return;
+
         // 设置子弹的父节点
-        bullet.setParent(this.node.parent);
+        bullet.setParent(this.node);
+        let bulletcom = bullet.getComponent(gridCmpt);
+        if (!bulletcom) return;
+        // 设置子弹的类型为gridData的类型
+        bulletcom.setType(gridData.type);
         
         // 设置子弹的初始位置为炮塔的位置
         bullet.setWorldPosition(this.node.worldPosition);
@@ -520,23 +504,24 @@ export class Turret extends BaseNodeCom {
             .to(0.5, { worldPosition: targetPos }) // 子弹飞行时间为0.5秒
             .call(() => {
                 // 子弹到达目标后，击中目标
-                this.hitTarget(target);
+                this.hitTarget(target, gridData.attack);
                 
-                // 销毁子弹
-                bullet.destroy();
+                // 回收子弹到对象池
+                this.recycleBulletToPool(bullet);
             })
             .start();
 
-            console.log('Fire bullet to target:', target);
+        console.log('Fire bullet to target:', target);
     }
-    
+
     /**
      * 击中目标
      * 对目标造成伤害
      * @param target 被击中的目标节点
+     * @param damage 伤害值
      * @description 处理子弹击中目标的逻辑，造成伤害
      */
-    private hitTarget(target: Node): void {
+    private hitTarget(target: Node, damage: number): void {
         // 检查目标节点是否有效
         if (!target || !target.isValid) return;
         
@@ -545,7 +530,10 @@ export class Turret extends BaseNodeCom {
         
         // 如果目标有gridDownCmpt组件，则造成伤害
         if (gridDownCmptcom) {
-            gridDownCmptcom.takeDamage(this.attackDamage);
+            gridDownCmptcom.takeDamage(damage,()=>{
+                // 目标被消灭后，从DownGridManager中移除
+                this.DownGridMgr.recycleGridByNode(target);
+            });
         }
     }
     
@@ -553,26 +541,29 @@ export class Turret extends BaseNodeCom {
      * 添加grid数据
      * 向存储的grid数据数组中添加新的grid数据
      * @param gridData 新的grid数据
-     * @description 动态添加发射点到炮塔
+     * @description 动态添加发射点到炮塔，只添加GridType中包含的类型
      */
     public addGridData(gridData: GridData): void {
-        // 检查grid数据是否有效且不在数组中
+        // 检查grid数据是否有效
         if (gridData) {
-            // 添加数据到数组
-            this.gridDataList.push(gridData);
+            // 检查类型是否在GridType中
+            const isValidType = (Object as any).values(GridType).includes(gridData.type);
+            if (isValidType) {
+                // 添加数据到数组
+                this.gridDataList.push(gridData);
+            }
         }
     }
     
     /**
      * 移除grid数据
-     * 从存储的grid数据数组中移除指定的grid数据
-     * @param gridData 要移除的grid数据
-     * @description 动态移除炮塔的发射点
+     * 从存储的grid数据数组中移除最前面的一项数据
+     * @param gridData 要移除的grid数据（此参数在当前实现中未使用，保留仅为了接口兼容性）
+     * @description 移除并释放炮塔的第一个发射点数据
      */
     public removeGridData(gridData: GridData): void {
-
-        // 如果数据在数组中，则移除
-        if (this.gridDataList.length >= 0) {
+        // 如果数据数组不为空，则移除最前面的一项数据
+        if (this.gridDataList.length > 0) {
             this.gridDataList.splice(0, 1);
         }
     }
