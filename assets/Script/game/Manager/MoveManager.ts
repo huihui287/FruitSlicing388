@@ -168,5 +168,48 @@ export class MoveManager {
         return [control1, control2];
     }
 
-    
+    /**
+     * 执行物品飞舞动画
+     * 使节点从起始位置飞舞到目标位置
+     * @param item 要飞舞的节点
+     * @param startPos 起始位置（世界坐标）
+     * @param targetPos 目标位置（世界坐标）
+     * @param duration 可选，动画持续时间，默认0.5-1.5秒随机
+     * @param onComplete 可选，动画完成后的回调函数
+     */
+    public flyItem(item: Node, startPos: Vec3, targetPos: Vec3, duration?: number, onComplete?: () => void): void {
+        // 设置起始位置和初始缩放
+        item.setPosition(startPos);
+        item.setScale(0.5, 0.5, 0.5);
+        
+        // 计算动画持续时间
+        const animationTime = duration || (0.5 + Math.random() * 1);
+        
+        // 执行飞舞动画
+        tween(item)
+            .to(animationTime, { position: targetPos }, { easing: 'backIn' })
+            .call(() => {
+                // 触发回调
+                if (onComplete) {
+                    onComplete();
+                }
+            })
+            .start();
+    }
+
+    /**
+     * 执行物品飞舞动画（基于节点）
+     * 使节点从起始节点位置飞舞到目标节点位置
+     * @param item 要飞舞的节点
+     * @param startNode 起始节点
+     * @param targetNode 目标节点
+     * @param duration 可选，动画持续时间，默认0.5-1.5秒随机
+     * @param onComplete 可选，动画完成后的回调函数
+     */
+    public flyItemToNode(item: Node, startNode: Node, targetNode: Node, duration?: number, onComplete?: () => void): void {
+        const startPos = startNode.worldPosition;
+        const targetPos = targetNode.worldPosition;
+        this.flyItem(item, startPos, targetPos, duration, onComplete);
+    }
+
 }

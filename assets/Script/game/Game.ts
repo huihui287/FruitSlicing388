@@ -124,8 +124,6 @@ export class Game extends BaseNodeCom {
     private data: LevelData = null;
     /** 游戏数据：目标消除数量数组 */
     private AchievetheGoal: any[] = [];
-    /** 游戏数据：当前得分 */
-    private curScore: number = 0; 
     /** 游戏状态：是否胜利 */
     // private isWin: boolean = false;
     /** 游戏状态：使用枚举替代 */
@@ -138,6 +136,67 @@ export class Game extends BaseNodeCom {
     private rocketPoolCapacity: number = 20;
     /** 玩家血量 */
     private playerHealth: number = 100;
+    /** 飞grid的对象池 */
+    private flyItemPool: Node[] = [];
+    /** 飞grid对象池最大容量 */
+    private maxFlyItemPoolSize: number = 20;
+
+    /**
+     * 从对象池获取飞grid节点
+     * @returns Node 飞grid节点或 null（如果对象池为空且达到最大容量）
+     */
+    private getFlyItemFromPool(): Node | null {
+        let item: Node = null;
+        if (this.flyItemPool.length > 0) {
+            item= this.flyItemPool.pop();
+        }
+        if (this.flyItemPool.length < this.maxFlyItemPoolSize) {
+            item= instantiate(this.gridPre);
+        }
+        item.active = true;
+        return item;
+    }
+
+    /**
+     * 将飞grid节点回收至对象池
+     * @param item 飞grid节点
+     */
+    private recycleFlyItemToPool(item: Node): void {
+        // 安全检查
+        if (!item) {
+            console.warn("recycleFlyItemToPool: item is null or undefined");
+            return;
+        }
+        
+        // 检查对象池是否已满
+        if (this.flyItemPool.length >= this.maxFlyItemPoolSize) {
+            // 如果对象池已满，销毁节点
+            console.warn("recycleFlyItemToPool: flyItemPool is full, destroying item");
+            item.destroy();
+            return;
+        }
+        
+        try {
+            // 停止所有动画
+           // tween().stopAllByTarget(item);
+            
+            // 重置节点属性
+            item.active = false;
+            item.setScale(1, 1, 1);
+            item.setPosition(Vec3.ZERO);
+            item.setRotation(Quat.IDENTITY);
+            
+            // 从父节点移除
+            item.removeFromParent();
+            
+            // 添加到对象池
+            this.flyItemPool.push(item);
+        } catch (error) {
+            console.error("recycleFlyItemToPool: error recycling item:", error);
+            // 发生错误时销毁节点
+            item.destroy();
+        }
+    }
     /**
      * 组件加载时调用
      * 初始化UI引用、绑定事件、加载游戏数据
@@ -1224,6 +1283,7 @@ export class Game extends BaseNodeCom {
                     attack: ele.attack
                 };
                 this.turret.addGridData(gridData);
+                 this.flyItemToTurret(ele.type, ele.node.worldPosition,this.turret.node);
             }
         }
     }
@@ -1280,7 +1340,7 @@ export class Game extends BaseNodeCom {
     private handleItemFly(ele: gridCmpt) {
         let tp = ele.type;
         let worldPosition = ele.node.worldPosition;
-        this.flyItem(tp, worldPosition);
+        this.flyItem(tp, worldPosition,this.targetBg);
     }
 
     /**
@@ -1902,7 +1962,6 @@ export class Game extends BaseNodeCom {
         this.blockPosArr = [];
         this.isStartChange = false;
         this.isStartTouch = false;
-        this.curScore = 0;
     }
 
     // /** 加积分 */
@@ -1914,33 +1973,79 @@ export class Game extends BaseNodeCom {
     //     this.curScore += score;
     //     this.updateScorePercent();
     // }
+
+    // 计算位置
+    tempstartPos = new Vec3();
+    tempendPos = new Vec3();
     /**
      * 飞舞动画
      * 播放方块消除后的飞舞动画
      * @param {number} type - 方块类型
      * @param {Vec3} pos - 方块位置
+     * @param {Node} target - 目标节点
      * @returns {Promise<void>} 异步操作，完成飞舞动画
      */
-    async flyItem(type: number, pos: Vec3) {
-        let idx = this.data.mapData[0].m_id.indexOf(type);
-        if (idx < 0) return;
-        let item = instantiate(this.gridPre);
-        let tempPos = new Vec3();
-        let targetPos = new Vec3();
-        /** 空间坐标转节点坐标 */
-        this.node.getComponent(UITransform).convertToNodeSpaceAR(pos, tempPos)
-        this.node.getComponent(UITransform).convertToNodeSpaceAR(this.targetBg.worldPosition, targetPos)
-        item.setPosition(tempPos);
+    async flyItem(type: number, pos: Vec3, target: Node) {
+        // 检查类型是否在映射数据中
+        const typeIndex = this.data.mapData[0].m_id.indexOf(type);
+        if (typeIndex < 0) return;
+
+        // 从对象池获取方块实例
+        const item = this.getFlyItemFromPool();
+        if (!item) return;
+        
+        // 计算位置
+        this.node.getComponent(UITransform).convertToNodeSpaceAR(pos, this.tempstartPos);
+        this.node.getComponent(UITransform).convertToNodeSpaceAR(target.worldPosition, this.tempendPos);
+        
+        // 设置方块属性
+        item.setPosition(this.tempstartPos);
         this.node.addChild(item);
         item.getComponent(gridCmpt).setType(type);
-
-        let time = 0.5 + Math.random() * 1;
-        item.setScale(0.5, 0.5, 0.5);
-        tween(item).to(time, { position: targetPos }, { easing: 'backIn' }).call(() => {
+        
+        // 使用 MoveManager 执行飞舞动画
+        MoveManager.getInstance().flyItem(item, this.tempstartPos, this.tempendPos, undefined, () => {
+            // 处理关卡目标
             this.handleLevelTarget(type);
-            item.destroy();
+            // 回收方块到对象池
+            this.recycleFlyItemToPool(item);
+            // 播放音效
             // AudioManager.getInstance().playSound('Full');
-        }).start();
+        });
+    }
+
+        /**
+     * 飞舞动画到炮塔
+     * 播放方块消除后的飞舞动画
+     * @param {number} type - 方块类型
+     * @param {Vec3} pos - 方块位置
+     * @param {Node} target - 目标节点
+     * @returns {Promise<void>} 异步操作，完成飞舞动画
+     */
+    async flyItemToTurret(type: number, pos: Vec3, target: Node) {
+
+        // 从对象池获取方块实例
+        const item = this.getFlyItemFromPool();
+        if (!item) return;
+        
+        // 计算位置
+        this.node.getComponent(UITransform).convertToNodeSpaceAR(pos, this.tempstartPos);
+        this.node.getComponent(UITransform).convertToNodeSpaceAR(target.worldPosition, this.tempendPos);
+        
+        // 设置方块属性
+        item.setPosition(this.tempstartPos);
+        this.node.addChild(item);
+        item.getComponent(gridCmpt).setType(type);
+        
+        // 使用 MoveManager 执行飞舞动画
+        MoveManager.getInstance().flyItem(item, this.tempstartPos, this.tempendPos, 0.5, () => {
+            // 处理关卡目标
+            this.handleLevelTarget(type);
+            // 回收方块到对象池
+            this.recycleFlyItemToPool(item);
+            // 播放音效
+            // AudioManager.getInstance().playSound('Full');
+        });
     }
 
     handleLevelTarget(type: number) {

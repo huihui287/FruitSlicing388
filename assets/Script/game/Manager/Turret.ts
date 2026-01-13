@@ -495,13 +495,18 @@ export class Turret extends BaseNodeCom {
         
         // 设置子弹的初始位置为炮塔的位置
         bullet.setWorldPosition(this.node.worldPosition);
+        // 设置子弹的初始缩放
+        bullet.setScale(1, 1, 1);
         
         // 获取目标的位置
         const targetPos = target.worldPosition;
         
         // 创建子弹飞行的动画
         tween(bullet)
-            .to(0.5, { worldPosition: targetPos }) // 子弹飞行时间为0.5秒
+            .to(0.5, { 
+                worldPosition: targetPos,
+                scale: new Vec3(0.3, 0.3, 0.3) // 飞行过程中缩小到0.1倍
+            }) // 子弹飞行时间为0.5秒
             .call(() => {
                 // 子弹到达目标后，击中目标
                 this.hitTarget(target, gridData.attack);
