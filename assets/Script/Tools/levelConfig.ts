@@ -42,7 +42,7 @@ class config {
   //"201": 201,//3,
     handleIdArr(id: number) {
         let numObj = {
-            "201": 201,//3,
+            "201": 3,
             "410": 4,
             "50": 0,
             "51": 1,

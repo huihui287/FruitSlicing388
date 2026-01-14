@@ -139,7 +139,7 @@ export class Game extends BaseNodeCom {
     /** 飞grid的对象池 */
     private flyItemPool: Node[] = [];
     /** 飞grid对象池最大容量 */
-    private maxFlyItemPoolSize: number = 20;
+    private maxFlyItemPoolSize: number = 30;
 
     /**
      * 从对象池获取飞grid节点
@@ -147,13 +147,23 @@ export class Game extends BaseNodeCom {
      */
     private getFlyItemFromPool(): Node | null {
         let item: Node = null;
+        
+        // 优先从对象池获取
         if (this.flyItemPool.length > 0) {
-            item= this.flyItemPool.pop();
+            item = this.flyItemPool.pop();
+        } 
+        // 如果对象池为空且未达到最大容量，创建新节点
+        else if (this.flyItemPool.length < this.maxFlyItemPoolSize) {
+            item = instantiate(this.gridPre);
         }
-        if (this.flyItemPool.length < this.maxFlyItemPoolSize) {
-            item= instantiate(this.gridPre);
+        
+        // 如果获取到节点，重置状态
+        if (item) {
+            item.active = true;
+            item.setScale(1, 1, 1);
+            item.setPosition(Vec3.ZERO);
         }
-        item.active = true;
+        
         return item;
     }
 
@@ -178,7 +188,7 @@ export class Game extends BaseNodeCom {
         
         try {
             // 停止所有动画
-           // tween().stopAllByTarget(item);
+            // tween.stopAllByTarget(item);
             
             // 重置节点属性
             item.active = false;
@@ -1058,33 +1068,62 @@ export class Game extends BaseNodeCom {
             AudioManager.getInstance().playSound("ui_banner_up_hide")
         }
         if (!one || !two) return;
-        tween(one.node).to(time, { position: this.blockPosArr[two.h][two.v] }).start();
-        tween(two.node).to(time, { position: this.blockPosArr[one.h][one.v] }).call(async () => {
-            if (!isBack) {
-                this.changeData(one, two);
-                let isbomb1 = await this.handleBomb(one);
-                let isbomb2 = await this.handleBomb(two);
-                let bool = await this.startCheckThree((bl) => {
-                    // if (bl) {
-                    //     this.stepCount--;
-                    //     this.updateStep();
-                    // }
-                });
-                if (bool || (isbomb1 || isbomb2)) {
-                    this.checkAgain()
-                }
-                else {
-                    console.log(this.curTwo);
-                    this.startChangeCurTwoPos(true);
-                }
+        
+        // 保存原始位置，避免数据交换后位置计算错误
+        const onePos = this.blockPosArr[one.h][one.v].clone();
+        const twoPos = this.blockPosArr[two.h][two.v].clone();
+        
+        // 执行交换动画
+        const oneTween = tween(one.node).to(time, { position: twoPos });
+        const twoTween = tween(two.node).to(time, { position: onePos });
+        
+        // 同时启动两个动画
+        oneTween.start();
+        twoTween.start();
+        
+        // 使用Promise等待两个动画完成
+        await new Promise<void>((resolve) => {
+            // 监听第二个动画完成
+            setTimeout(resolve, time * 1000);
+        });
+        
+        // 动画完成后处理逻辑
+        if (!isBack) {
+            // 交换数据
+            this.changeData(one, two);
+            
+            // 检查是否形成消除
+            let isbomb1 = await this.handleBomb(one);
+            let isbomb2 = await this.handleBomb(two);
+            let bool = await this.startCheckThree((bl) => {
+                // if (bl) {
+                //     this.stepCount--;
+                //     this.updateStep();
+                // }
+            });
+            
+            if (bool || (isbomb1 || isbomb2)) {
+                // 有消除，继续检查
+                this.checkAgain();
             }
             else {
-                this.changeData(one, two);
-                this.isStartChange = false;
-                this.isStartTouch = false;
-                this.resetSelected();
+                // 无消除，交换回原位
+                console.log("No match found, swapping back");
+                // 保存当前的方块引用，避免数据交换后引用错误
+                const currentOne = this.curTwo[0];
+                const currentTwo = this.curTwo[1];
+                await this.startChangeCurTwoPos(true);
             }
-        }).start();
+        }
+        else {
+            // 交换回原位，恢复数据
+            this.changeData(one, two);
+            
+            // 重置状态
+            this.isStartChange = false;
+            this.isStartTouch = false;
+            this.resetSelected();
+        }
     }
 
     /**

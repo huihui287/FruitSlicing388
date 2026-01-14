@@ -101,7 +101,7 @@ class ActiveState implements IState {
         this._data.attackCooldown -= dt;
         if (this._data.attackCooldown <= 0) {
             // 执行攻击
-            this._data.turret.fireAttack();
+          //  this._data.turret.fireAttack();
             // 重置攻击冷却时间
             this._data.attackCooldown = this._data.turret.attackInterval;
         }
@@ -501,20 +501,20 @@ export class Turret extends BaseNodeCom {
         // 获取目标的位置
         const targetPos = target.worldPosition;
         
-        // 创建子弹飞行的动画
-        tween(bullet)
-            .to(0.5, { 
-                worldPosition: targetPos,
-                scale: new Vec3(0.3, 0.3, 0.3) // 飞行过程中缩小到0.1倍
-            }) // 子弹飞行时间为0.5秒
-            .call(() => {
-                // 子弹到达目标后，击中目标
-                this.hitTarget(target, gridData.attack);
+        // // 创建子弹飞行的动画
+        // tween(bullet)
+        //     .to(0.5, { 
+        //         worldPosition: targetPos,
+        //         scale: new Vec3(0.3, 0.3, 0.3) // 飞行过程中缩小到0.1倍
+        //     }) // 子弹飞行时间为0.5秒
+        //     .call(() => {
+        //         // 子弹到达目标后，击中目标
+        //         this.hitTarget(target, gridData.attack);
                 
-                // 回收子弹到对象池
-                this.recycleBulletToPool(bullet);
-            })
-            .start();
+        //         // 回收子弹到对象池
+        //         this.recycleBulletToPool(bullet);
+        //     })
+        //     .start();
 
         console.log('Fire bullet to target:', target);
     }
