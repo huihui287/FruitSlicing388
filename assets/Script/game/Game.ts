@@ -23,6 +23,7 @@ import { MoveManager } from './Manager/MoveManager';
 import { gridDownCmpt } from './item/gridDownCmpt';
 import CM from '../channel/CM';
 import { Turret } from './Manager/Turret';
+import { BulletParticle } from './item/bulletParticle';
 
 const { ccclass, property } = _decorator;
 
@@ -266,6 +267,7 @@ export class Game extends BaseNodeCom {
         this.loadExtraData(LevelConfig.getCurLevel());
         // 添加事件监听器
         this.addEvents();
+        GameData.setGold(300);
     }
     /**
      * 开始下落水果方块
@@ -1307,7 +1309,7 @@ export class Game extends BaseNodeCom {
         
         if (targetNode) {
             // 扣除虚拟血量
-            this.DownGridMgr.damageVirtualHealthByType(targetNode, ele.attack);
+            this.DownGridMgr.damageVirtualHealthByType(targetNode, ele.getAttack());
 
             // 发射子弹粒子
             this.fireBulletToTarget(ele, targetNode);
@@ -1316,7 +1318,7 @@ export class Game extends BaseNodeCom {
             if (this.turret) {
                 const gridData = {
                     type: ele.type,
-                    attack: ele.attack
+                    attack: ele.getAttack()
                 };
                 this.turret.addGridData(gridData);
                  this.flyItemToTurret(ele.type, ele.node.worldPosition,this.turret.node);
@@ -1330,14 +1332,15 @@ export class Game extends BaseNodeCom {
      * @param {Node} target - 目标下落方块节点
      */
     private fireBulletToTarget(source: gridCmpt, target: Node) {
-        let bulletParticle = this.particleManager.playParticle('bulletParticle', this.blockPosArr[source.h][source.v]);
-
-        MoveManager.getInstance().moveToTargetWithBezier(bulletParticle, target, 1, () => {
+        let pbullet = this.particleManager.playParticle('bulletParticle', this.blockPosArr[source.h][source.v]);
+        pbullet.getComponent(BulletParticle).setAttack(source.getAttack());
+        
+        MoveManager.getInstance().moveToTargetWithBezier(pbullet, target, 1, () => {
             // 子弹击中目标，回收目标节点
-            this.handleBulletHit(target, source.attack);
+            this.handleBulletHit(target, pbullet.getComponent(BulletParticle).getAttack());   
             
             // 子弹粒子指定回收（用户要求的显式回收）
-            this.particleManager.releaseParticle('bulletParticle', bulletParticle);
+            this.particleManager.releaseParticle('bulletParticle', pbullet);
         });
     }
 
@@ -2312,6 +2315,17 @@ export class Game extends BaseNodeCom {
         this.updateToolsInfo();
     }
 
+    /** 升级道具 */
+    onClick_upgradeFruitBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        LoaderManeger.instance.loadPrefab('prefab/ui/upgradeFruit').then((prefab) => {
+            let upgradeFruitNode = instantiate(prefab);
+            ViewManager.show({
+                node: upgradeFruitNode,
+                name: "UpgradeFruit"
+            });
+        });
+    }
     /** 提示道具 */
     onClick_tipsBtn() {
         let list = [];

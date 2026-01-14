@@ -1,14 +1,15 @@
 import { _decorator, Node, tween, v3 } from 'cc';
-import BaseDialog from './view/BaseDialog';
+        
 import { App } from '../Controller/app';
 import { LevelConfig } from '../Tools/levelConfig';
 import { gridCmpt } from '../game/item/gridCmpt';
-import EventManager from './view/EventManager';
-import GameData from './GameData';
-import AudioManager from './AudioManager';
+
 import { EventName } from '../Tools/eventName';
 import CM from '../channel/CM';
 import ChannelDB from '../channel/ChannelDB';
+import BaseDialog from '../Common/view/BaseDialog';
+import AudioManager from '../Common/AudioManager';
+import EventManager from '../Common/view/EventManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('resultViewCmpt')

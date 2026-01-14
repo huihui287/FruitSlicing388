@@ -1,6 +1,8 @@
 import { _decorator, Component, Node, Vec3, UITransform, Label } from 'cc';
 import { App } from '../../Controller/app';
 import { ToolsHelper } from '../../Tools/toolsHelper';
+import GameData from '../../Common/GameData';
+import { GridType } from '../../Tools/enumConst';
 
 const { ccclass, property } = _decorator;
 
@@ -35,6 +37,18 @@ export class gridCmpt extends Component {
             }
         });
         this.showPos(h, v);
+    }   
+
+
+    setAttack(attack: number) {
+        this.attack = attack;
+        GameData.saveData('LVAttack' + this.type, attack);
+
+    }
+
+    getAttack() {
+        this.attack = GameData.loadData('LVAttack' + this.type, 1);
+        return this.attack;
     }
     
     onDisable() {
@@ -89,10 +103,26 @@ export class gridCmpt extends Component {
         });
     }
 
-    setCount(count: number) {
+    setCount(count: number | string | number[]) {
+        let displayCount: string = "";
+        
+        // 处理不同类型的参数
+        if (typeof count === 'number') {
+            // 直接使用数字参数
+            displayCount = count.toString();
+        } else if (typeof count === 'string') {
+            // 尝试将字符串转换为数字
+            displayCount = count;
+        } else if (Array.isArray(count)) {
+            // 处理数组参数，这里假设使用数组的长度作为计数
+            // 你可以根据实际需求修改数组处理逻辑
+            
+        }
+        
         let lb = this.node.getChildByName('lb');
-        lb.getComponent(Label).string = `${count}`;
-        if (count == 0) {
+        lb.getComponent(Label).string = displayCount;
+
+        if (parseInt(displayCount) == 0) {
             this.node.getChildByName('ok').active = true;
         }
         else {
@@ -120,7 +150,6 @@ export class gridCmpt extends Component {
         this.h = 0;
         this.v = 0;
         this.obstacleValue = 0;
-             this.attack = 1; // 重置攻击等级   
 
         // 隐藏所有图标
         this.node.getChildByName('icon').children.forEach(item => {

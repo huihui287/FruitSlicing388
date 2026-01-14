@@ -66,8 +66,6 @@ export default class BaseDialog extends Component {
         }
         this.addEvent();
 
-        this.initData();
-
         this.pos = ViewManager.findChildByName(BaseDialog.ButtonTag.POS, this.node);
         this.showBanner();
 
@@ -116,10 +114,6 @@ export default class BaseDialog extends Component {
         //         video.active = true;
         //     }
         // }
-    }
-
-    protected initData() {
-
     }
 
     // 修改后的setData方法 - 添加了类型注释

@@ -14941,7 +14941,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Button",
+    "_name": "upgradeFruitBtn",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -15199,7 +15199,7 @@
     "__prefab": null,
     "clickEvents": [],
     "_interactable": true,
-    "_transition": 2,
+    "_transition": 3,
     "_normalColor": {
       "__type__": "cc.Color",
       "r": 214,

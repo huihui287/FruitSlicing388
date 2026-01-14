@@ -95,6 +95,45 @@ static loadData(key: string, defaultValue: any): any {
         }
     }
     
+    /**
+     * 添加金币
+     * @param amount 要添加的金币数量
+     * @returns 更新后的金币数量
+     */
+    static addGold(amount: number): number {
+        const currentGold = this.loadData('gold', 0);
+        const newGold = currentGold + amount;
+        this.saveData('gold', newGold);
+        return newGold;
+    }
+    
+    /**
+     * 花费金币
+     * @param amount 要花费的金币数量
+     * @returns 是否花费成功（金币是否足够）
+     */
+    static spendGold(amount: number): boolean {
+        const currentGold = this.loadData('gold', 0);
+        if (currentGold >= amount) {
+            const newGold = currentGold - amount;
+            this.saveData('gold', newGold);
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * 获取当前金币数量
+     * @returns 当前金币数量
+     */
+    static getGold(): number {
+        return this.loadData('gold', 0);
+    }
+    
+    static setGold(gold: number) {
+        this.saveData('gold', gold);
+    }
+    
 }
 // // 保存单个值
 // GameData.saveData('Level', 10);
