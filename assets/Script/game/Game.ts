@@ -37,21 +37,21 @@ export class Game extends BaseNodeCom {
     /*********************************************  游戏核心组件  *********************************************/
     /*********************************************  游戏核心组件  *********************************************/
 
-    /** UI引用：网格管理器组件 */
+    /** 网格管理器组件 */
     private gridMgr: gridManagerCmpt = null;
-    /** UI引用：下落方块管理器组件 */
+    /**下落方块管理器组件 */
     private DownGridMgr: DownGridManager = null;
-    /** UI引用：特效管理器 */
+    /** 特效管理器 */
     private particleManager: ParticleManager = null;
-        /** UI引用：炮台管理器 */
+        /** 炮台管理器 */
     private turret: Turret = null;
     /*********************************************  UI引用  *********************************************/
     /*********************************************  UI引用  *********************************************/
     /*********************************************  UI引用  *********************************************/
 
-    /** UI引用：网格容器节点 */
+    /** 网格容器节点 */
     private gridNode: Node = null;
-    /** UI引用：特效容器节点 */
+    /** 特效容器节点 */
     private effNode: Node = null;
     /** UI引用：目标显示节点1（适用于2个及以下目标） */
     private target1: Node = null;
@@ -89,6 +89,8 @@ export class Game extends BaseNodeCom {
     private video3: Node = null;
     /** UI引用：道具4视频按钮 */
     private video4: Node = null;
+    /** UI引用：升级水果攻击值 */
+    private upgradeFruitAttack: Node = null;
     /** 警告图片 */
     private Alert: Node = null;
     /** UI引用：血量进度条节点 */
@@ -1096,10 +1098,7 @@ export class Game extends BaseNodeCom {
             let isbomb1 = await this.handleBomb(one);
             let isbomb2 = await this.handleBomb(two);
             let bool = await this.startCheckThree((bl) => {
-                // if (bl) {
-                //     this.stepCount--;
-                //     this.updateStep();
-                // }
+     
             });
             
             if (bool || (isbomb1 || isbomb2)) {
@@ -1109,9 +1108,7 @@ export class Game extends BaseNodeCom {
             else {
                 // 无消除，交换回原位
                 console.log("No match found, swapping back");
-                // 保存当前的方块引用，避免数据交换后引用错误
-                const currentOne = this.curTwo[0];
-                const currentTwo = this.curTwo[1];
+
                 await this.startChangeCurTwoPos(true);
             }
         }

@@ -5,5 +5,11 @@
   /* Add your custom configuration here. */
   "compilerOptions": {
     "strict": false
-  }
+ 
+  },
+    "exclude": [
+    "node_modules",
+    "library"
+  ]
+
 }

@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, instantiate, Prefab, Vec3, tween, v3, director } from 'cc';
+import { _decorator, Component, Node, instantiate, Prefab, Vec3, tween, v3, director, Quat,Tween } from 'cc';
 import { BaseNodeCom } from '../BaseNode';
 import { DownGridManager } from './DownGridManager';
 import { gridDownCmpt } from '../item/gridDownCmpt';
@@ -6,6 +6,7 @@ import StateMachine, { IState } from '../../Common/StateMachine';
 import { GridData, GridType } from '../../Tools/enumConst';
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { gridCmpt } from '../item/gridCmpt';
+import { DEV } from 'cc/env';
 const { ccclass, property } = _decorator;
 
 /**
@@ -101,7 +102,7 @@ class ActiveState implements IState {
         this._data.attackCooldown -= dt;
         if (this._data.attackCooldown <= 0) {
             // 执行攻击
-          //  this._data.turret.fireAttack();
+            this._data.turret.fireAttack();
             // 重置攻击冷却时间
             this._data.attackCooldown = this._data.turret.attackInterval;
         }
@@ -383,12 +384,13 @@ export class Turret extends BaseNodeCom {
      */
     public fireAttack(): void {
         // 检查gridDataList是否有数据
-        if (this.gridDataList.length > 0) {
+        if (this.gridDataList.length > 0 && this.DownGridMgr) {
             // 遍历所有数据，寻找可攻击的目标
             let foundTarget = false;
+            let originalLength = this.gridDataList.length;
             let processedCount = 0;
             
-            while (!foundTarget && processedCount < this.gridDataList.length) {
+            while (!foundTarget && this.gridDataList.length > 0 && processedCount < originalLength) {
                 // 取出最前面的一项数据
                 const gridData = this.gridDataList[0];
                 
@@ -396,17 +398,23 @@ export class Turret extends BaseNodeCom {
                 const target = this.findTargetByType(gridData.type);
                 
                 // 如果找到目标，则发射攻击
-                if (target) {
-                    // 扣除虚拟血量
-                    this.DownGridMgr.damageVirtualHealthByType(target, gridData.attack);
-                    
-                    // 发射子弹
-                    this.fire(target, gridData);
-                    
-                    // 攻击后释放这一条数据
-                    this.removeGridData(gridData);
-                    
-                    foundTarget = true;
+                if (target && target.isValid) {
+                    try {
+                        // 扣除虚拟血量
+                        this.DownGridMgr.damageVirtualHealthByType(target, gridData.attack);
+                        
+                        // 发射子弹
+                        this.fire(target, gridData);
+                        
+                        // 攻击后释放这一条数据
+                        this.gridDataList.shift(); // 直接移除第一个元素
+                        
+                        foundTarget = true;
+                    } catch (error) {
+                        console.error('Fire attack error:', error);
+                        // 出错时也移除数据，避免卡住
+                        this.gridDataList.shift();
+                    }
                 } else {
                     // 如果找不到目标，将数据放到列表最后
                     this.gridDataList.push(this.gridDataList.shift()!);
@@ -443,7 +451,7 @@ export class Turret extends BaseNodeCom {
         
         if (!this.bulletPrefab) return null;
         
-        // 如果对象池为空且未达到最大容量，创建新子弹
+        // 如果对象池未达到最大容量，创建新子弹
         if (this.bulletPool.length < this.maxBulletPoolSize) {
             return instantiate(this.bulletPrefab);
         }
@@ -461,9 +469,15 @@ export class Turret extends BaseNodeCom {
         // 确保子弹未被销毁
         if (!bullet.isValid) return;
         
+        // 停止子弹上的所有动画
+     //   tween.stopAllByTarget(bullet);
+    
         // 重置子弹状态
         bullet.setParent(null);
         bullet.active = true;
+        bullet.setPosition(Vec3.ZERO);
+        bullet.setScale(1, 1, 1);
+        bullet.setRotation(Quat.IDENTITY);
         
         // 如果对象池未达到最大容量，回收子弹
         if (this.bulletPool.length < this.maxBulletPoolSize) {
@@ -482,41 +496,63 @@ export class Turret extends BaseNodeCom {
      * @description 从源grid数据向目标发射子弹
      */
     private fire(target: Node, gridData: GridData): void {
-        // 从对象池获取子弹
-        const bullet = this.getBulletFromPool();
-        if (!bullet) return;
+        // 检查目标和炮塔节点是否有效
+        if (!target || !target.isValid || !this.node || !this.node.isValid) return;
+        
+        try {
+            // 从对象池获取子弹
+            const bullet = this.getBulletFromPool();
+            if (!bullet) return;
 
-        // 设置子弹的父节点
-        bullet.setParent(this.node);
-        let bulletcom = bullet.getComponent(gridCmpt);
-        if (!bulletcom) return;
-        // 设置子弹的类型为gridData的类型
-        bulletcom.setType(gridData.type);
-        
-        // 设置子弹的初始位置为炮塔的位置
-        bullet.setWorldPosition(this.node.worldPosition);
-        // 设置子弹的初始缩放
-        bullet.setScale(1, 1, 1);
-        
-        // 获取目标的位置
-        const targetPos = target.worldPosition;
-        
-        // // 创建子弹飞行的动画
-        // tween(bullet)
-        //     .to(0.5, { 
-        //         worldPosition: targetPos,
-        //         scale: new Vec3(0.3, 0.3, 0.3) // 飞行过程中缩小到0.1倍
-        //     }) // 子弹飞行时间为0.5秒
-        //     .call(() => {
-        //         // 子弹到达目标后，击中目标
-        //         this.hitTarget(target, gridData.attack);
-                
-        //         // 回收子弹到对象池
-        //         this.recycleBulletToPool(bullet);
-        //     })
-        //     .start();
+            // 设置子弹的父节点为场景根节点，避免继承炮塔的变换
+            bullet.setParent(this.node.parent);
+            let bulletcom = bullet.getComponent(gridCmpt);
+            if (!bulletcom) {
+                this.recycleBulletToPool(bullet);
+                return;
+            }
+            // 设置子弹的类型为gridData的类型
+            bulletcom.setType(gridData.type);
+            
+            // 设置子弹的初始位置为炮塔的位置
+            bullet.setWorldPosition(this.node.worldPosition);
+            // 设置子弹的初始缩放
+            bullet.setScale(1, 1, 1);
+            
+            // 获取目标的位置
+            const targetPos = target.worldPosition;
+            
+            // 计算距离，动态调整飞行时间
+            const distance = Vec3.distance(this.node.worldPosition, targetPos);
+            const flightTime = Math.max(0.3, Math.min(1.0, distance / 500)); // 飞行时间在0.3-1.0秒之间
+            
+            // 创建子弹飞行的动画
+            tween(bullet)
+                .to(flightTime, { 
+                    worldPosition: targetPos,
+                    scale: new Vec3(0.3, 0.3, 0.3) // 飞行过程中缩小
+                }, {
+                    easing: 'linear' // 线性运动，使速度更均匀
+                })
+                .call(() => {
+                    // 检查目标是否仍然有效
+                    if (target && target.isValid) {
+                        // 子弹到达目标后，击中目标
+                        this.hitTarget(target, gridData.attack);
+                    }
+                    
+                    // 回收子弹到对象池
+                    this.recycleBulletToPool(bullet);
+                })
+                .start();
 
-        console.log('Fire bullet to target:', target);
+            // 仅在开发模式下输出日志
+            if (DEV) {
+                console.log('Fire bullet to target:', target, 'Flight time:', flightTime);
+            }
+        } catch (error) {
+            console.error('Fire error:', error);
+        }
     }
 
     /**
@@ -557,19 +593,6 @@ export class Turret extends BaseNodeCom {
                 // 添加数据到数组
                 this.gridDataList.push(gridData);
             }
-        }
-    }
-    
-    /**
-     * 移除grid数据
-     * 从存储的grid数据数组中移除最前面的一项数据
-     * @param gridData 要移除的grid数据（此参数在当前实现中未使用，保留仅为了接口兼容性）
-     * @description 移除并释放炮塔的第一个发射点数据
-     */
-    public removeGridData(gridData: GridData): void {
-        // 如果数据数组不为空，则移除最前面的一项数据
-        if (this.gridDataList.length > 0) {
-            this.gridDataList.splice(0, 1);
         }
     }
     
