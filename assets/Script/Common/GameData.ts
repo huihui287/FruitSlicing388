@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, sys } from 'cc';
 import { DEV } from 'cc/env';
-import { Bomb } from '../Tools/enumConst';
+import { Bomb, GridType } from '../Tools/enumConst';
 const { ccclass, property } = _decorator;
 
 @ccclass
@@ -132,6 +132,38 @@ static loadData(key: string, defaultValue: any): any {
     
     static setGold(gold: number) {
         this.saveData('gold', gold);
+    }
+    
+    /**
+     * 重置所有游戏数据为默认值
+     */
+    static resetAllData(): void {
+        try {
+            // 重置金币
+            this.saveData('gold', 0);
+            
+            // 重置炸弹数量
+            this.saveData(GameData.BombHor, 0);
+            this.saveData(GameData.BombVer, 0);
+            this.saveData(GameData.BombBomb, 0);
+            this.saveData(GameData.BombAllSame, 0);
+            
+            // 重置等级
+            this.saveData(GameData.Level, 1);
+            
+            // 重置所有攻击等级
+            const gridTypes = Object.values(GridType).filter(value => typeof value === 'number') as number[];
+            gridTypes.forEach(type => {
+                this.saveData('LVAttack' + type, 1);
+            });
+            
+            // 重置其他可能的游戏数据
+            // 这里可以根据实际游戏中添加的其他数据键名进行扩展
+            
+            console.log('所有游戏数据已重置为默认值');
+        } catch (error) {
+            DEV && console.error('重置数据失败:', error);
+        }
     }
     
 }

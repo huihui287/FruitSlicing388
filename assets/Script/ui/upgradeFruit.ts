@@ -17,10 +17,7 @@ const { ccclass, property } = _decorator;
 @ccclass('upgradeFruit')
 export class upgradeFruit extends BaseDialog {
 
-    @property(Node)
     gridNodeS: Node = null;
-
-    @property(Node)
     btns: Node = null;
 
     onLoad() {
@@ -138,8 +135,6 @@ export class upgradeFruit extends BaseDialog {
 
     onClick_SendReward_End() {
         AudioManager.getInstance().playSound('button_click');
-        // 发送事件
-        EventManager.emit(EventName.Game.SendReward);
         this.dismiss();
     }
 
