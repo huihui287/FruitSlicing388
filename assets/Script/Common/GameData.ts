@@ -7,7 +7,11 @@ const { ccclass, property } = _decorator;
 export default class GameData {
 
     public static _TiLi = 2;
+   
 
+
+
+    
     /** 炸弹 */
     public static BombHor = "BombHor";
     public static BombVer = "BomVerr";
