@@ -3,6 +3,7 @@ import CM from '../channel/CM';
 import LoaderManeger from '../sysloader/LoaderManeger';
 import { App } from '../Controller/app';
 import { LevelConfig } from '../Tools/levelConfig';
+import GameData from '../Common/GameData';
 const { ccclass, property } = _decorator;
 
 @ccclass('Start')
@@ -16,6 +17,10 @@ export class Start extends Component {
         new LoaderManeger();
         LevelConfig.setCurLevel(1);
         App.gameCtr.curLevel = LevelConfig.getCurLevel();
+
+        GameData.resetAllData();
+        GameData.setGold(600);
+
         // 初始化时加载分包
         this.loadSubPackages();
     }

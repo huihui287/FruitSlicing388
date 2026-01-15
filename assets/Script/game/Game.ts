@@ -24,6 +24,7 @@ import { gridDownCmpt } from './item/gridDownCmpt';
 import CM from '../channel/CM';
 import { Turret } from './Manager/Turret';
 import { BulletParticle } from './item/bulletParticle';
+import { DEV } from 'cc/env';
 
 const { ccclass, property } = _decorator;
 
@@ -256,19 +257,49 @@ export class Game extends BaseNodeCom {
         this.Alert = this.viewList.get('ui/Alert');
       
         this.spHealth = this.viewList.get('ui/spHealth');
-        
-        // 3秒后开始处理时间提示 - 玩家5秒不操作时显示提示
-        this.scheduleOnce(() => {
-            this.handleTimePro();
-        }, 3);
-        
+
         // 设置初始关卡并加载数据 - 从第一关开始
-        LevelConfig.setCurLevel(1);
+        if (DEV) {
+            LevelConfig.setCurLevel(1);
+           
+        }
+         LevelConfig.setCurLevel(1);
         this.loadExtraData(LevelConfig.getCurLevel());
         // 添加事件监听器
         this.addEvents();
-        GameData.setGold(300);
+
+        ///新手引导
+        this.Guide();
     }
+    
+    /**
+     * 新手引导入口
+     * 用于在进入关卡后决定是否开启教学流程或展示操作提示
+     * 说明：
+     * - 新玩家：进入教学流程（后续可在此处调用具体教学步骤）
+     * - 非新玩家：延时展示“操作提示”逻辑（handleTimePro）
+     */
+    Guide() {
+        let isnew = GameData.isNewPlayer();
+        // if (isnew) {
+        //     // TODO: 在此处触发教学流程（仅入口，不做具体实现）
+        //     // 例如：显示箭头/遮罩/步骤说明等
+        //     this.scheduleOnce(() => {
+        //         this.onClick_tipsBtn(true);
+        //     }, 0.5);
+        // }
+        // else {
+        //     // 3秒后开始处理时间提示 - 玩家5秒不操作时显示提示
+        //     this.scheduleOnce(() => {
+        //         this.handleTimePro();
+        //     }, 3);
+        // }
+
+                 this.scheduleOnce(() => {
+                this.handleTimePro();
+            }, 3);
+    }
+
     /**
      * 开始下落水果方块
      * 初始化DownGridManager并开始生成下落的水果方块
@@ -326,17 +357,15 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.TouchStart, this.evtTouchStart, this);
         EventManager.on(EventName.Game.TouchMove, this.evtTouchMove, this);
         EventManager.on(EventName.Game.TouchEnd, this.evtTouchEnd, this);
-        // 游戏重启事件
-        EventManager.on(EventName.Game.RestartGame, this.evtRestart, this);
 
         /** 接收奖励消息 */
         EventManager.on(EventName.Game.SendReward, this.handleRewardAnim, this);
-        /** 接收游戏失败消息 */
-        EventManager.on(EventName.Game.GameOver, this.evtGameOver, this);
         /** 看完视频接收继续游戏消息 */
         EventManager.on(EventName.Game.ContinueGame, this.evtContinueGame, this);
         /** 接收扣血消息 */
         EventManager.on(EventName.Game.Damage, this.evtDamage, this);
+        // 游戏重启事件
+        EventManager.on(EventName.Game.RestartGame, this.evtRestart, this);
     }
 
     /**
@@ -740,8 +769,7 @@ export class Game extends BaseNodeCom {
 
         // 检查是否游戏结束
         if (this.playerHealth <= 0) {
-            this.gameState = GameState.GAME_OVER;
-            EventManager.emit(EventName.Game.GameOver);
+            this.GameOver();
         }
     }
 
@@ -764,7 +792,7 @@ export class Game extends BaseNodeCom {
      * 处理游戏结束逻辑并显示失败界面
      * @description 当玩家血量为0时，触发游戏结束逻辑
      */
-    evtGameOver() {
+    GameOver() {
         console.log("Game over: Handling game failure");
         // this.isWin = false;
         this.gameState = GameState.GAME_OVER;
@@ -2106,18 +2134,6 @@ export class Game extends BaseNodeCom {
     evtRestart() {
         this.loadExtraData(1);
     }
-    onClick_testBtn() {
-        // 测试暂停功能
-        EventManager.emit(EventName.Game.Pause);
-        console.log("发送暂停事件");
-
-        // 3秒后自动继续
-        setTimeout(() => {
-            EventManager.emit(EventName.Game.Resume);
-            console.log("发送继续事件");
-        }, 3000);
-    }
-
     /**
      *消除最前面3排水果方块
      */
@@ -2326,8 +2342,9 @@ export class Game extends BaseNodeCom {
             });
         });
     }
-    /** 提示道具 */
-    onClick_tipsBtn() {
+    
+    /** 提示可以交换的水果 */
+    onClick_tipsBtn(isGuide: boolean=false) {
         let list = [];
         for (let i = 0; i < this.H; i++) {
             for (let j = 0; j < this.V; j++) {
@@ -2352,7 +2369,11 @@ export class Game extends BaseNodeCom {
             let rand = Math.floor(Math.random() * list.length);
             let tipsList = list[rand];
             tipsList.forEach(item => {
-                item.getComponent(gridCmpt).showTips();
+                if (isGuide) {
+                    item.getComponent(gridCmpt).showTipsGuide(true);
+                } else {
+                    item.getComponent(gridCmpt).showTips();
+                }
             })
         }
         else {

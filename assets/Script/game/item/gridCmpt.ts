@@ -144,6 +144,11 @@ export class gridCmpt extends Component {
         }
     }
 
+    /** 显示提示教学 */
+    async showTipsGuide(isshow: boolean) {
+        this.node.getChildByName("selected").active = isshow;
+    }
+    
     /** 重置grid状态 */
     public reset() {
         this.type = -1;

@@ -8,10 +8,6 @@ export default class GameData {
 
     public static _TiLi = 2;
    
-
-
-
-    
     /** 炸弹 */
     public static BombHor = "BombHor";
     public static BombVer = "BomVerr";
@@ -96,6 +92,23 @@ static loadData(key: string, defaultValue: any): any {
             case Bomb.allSame:
                 GameData.saveData(GameData.BombAllSame, ct + "");
                 break;
+        }
+    }
+    
+    public static NewPlayerKey = 'newPlayer';
+    static isNewPlayer(): boolean {
+        const val = this.loadData(this.NewPlayerKey, null);
+        if (val === null || typeof val === 'undefined') 
+            return true;
+        return !!val;
+    }
+    static setNewPlayer(flag: boolean): void {
+        this.saveData(this.NewPlayerKey, flag);
+    }
+    static ensureNewPlayerFlag(): void {
+        const val = this.loadData(this.NewPlayerKey, null);
+        if (val === null || typeof val === 'undefined') {
+            this.saveData(this.NewPlayerKey, false);
         }
     }
     

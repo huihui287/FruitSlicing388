@@ -126,9 +126,9 @@ export enum GameState {
     /** 游戏进行中 */
     PLAYING = 0,
     /** 游戏胜利 */
-    WIN,
+    WIN = 1,
     /** 游戏失败 */
-    GAME_OVER,
+    GAME_OVER = 2,
     /** 游戏暂停 */
-    PAUSED,
+    PAUSED = 3,
 }
