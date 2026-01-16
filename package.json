@@ -5,5 +5,15 @@
     "version": "3.8.8"
   },
   "_sourceId": "d5d276b9-ed8c-4ddb-969b-bdc8eb2dbcee",
-  "_storeId": "6815fd7b548f0a279d7046efc14c0e4a"
+  "_storeId": "6815fd7b548f0a279d7046efc14c0e4a",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.53.0",
+    "@typescript-eslint/parser": "^8.53.0",
+    "eslint": "^9.39.2",
+    "typescript": "^5.9.3"
+  },
+    "scripts": {
+    "lint": "eslint assets/Script --ext .ts",
+    "test": "npm run lint"
+  }
 }

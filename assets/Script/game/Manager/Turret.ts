@@ -242,6 +242,7 @@ export class Turret extends BaseNodeCom {
         if (!this.bulletPrefab) {
             this.bulletPrefab = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
         }
+        
     }
     
     /**

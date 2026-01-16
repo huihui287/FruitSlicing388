@@ -1,4 +1,4 @@
-import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid, ProgressBar } from 'cc';
+import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid, ProgressBar } from 'cc';
 // 如果 enumConst.ts 已改名或迁移，请根据实际路径调整
 // 例如：'../../const/EnumConst' 或 '../../const/Enum'
 //import { Advertise } from '../../wx/advertise';//广告
@@ -11,7 +11,7 @@ import { App } from '../Controller/app';
 import { CocosHelper } from '../Tools/cocosHelper';
 import { LevelConfig } from '../Tools/levelConfig';
 import { EventName } from '../Tools/eventName';
-import { Bomb, Constant, LevelData, PageIndex, GameState } from '../Tools/enumConst';
+import { Bomb, Constant, LevelData, PageIndex, GameState, Direction } from '../Tools/enumConst';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
@@ -91,6 +91,8 @@ export class Game extends BaseNodeCom {
     private video3: Node = null;
     /** UI引用：道具4视频按钮 */
     private video4: Node = null;
+    /** UI引用：教学手图片 */
+    private hand: Node = null;
     /** UI引用：升级水果攻击值 */
     private upgradeFruitAttack: Node = null;
     /** 警告图片 */
@@ -144,6 +146,7 @@ export class Game extends BaseNodeCom {
     private flyItemPool: Node[] = [];
     /** 飞grid对象池最大容量 */
     private maxFlyItemPoolSize: number = 30;
+    private lastTipsCenter: gridCmpt | null = null;
 
     /**
      * 从对象池获取飞grid节点
@@ -257,47 +260,42 @@ export class Game extends BaseNodeCom {
         this.Alert = this.viewList.get('ui/Alert');
       
         this.spHealth = this.viewList.get('ui/spHealth');
-
+        this.hand = this.viewList.get('ui/hand');
+        this.hand.active = false;
+        
         // 设置初始关卡并加载数据 - 从第一关开始
         if (DEV) {
             LevelConfig.setCurLevel(1);
-           
         }
          LevelConfig.setCurLevel(1);
         this.loadExtraData(LevelConfig.getCurLevel());
         // 添加事件监听器
         this.addEvents();
-
-        ///新手引导
-        this.Guide();
     }
     
     /**
      * 新手引导入口
      * 用于在进入关卡后决定是否开启教学流程或展示操作提示
      * 说明：
-     * - 新玩家：进入教学流程（后续可在此处调用具体教学步骤）
+     * - 新玩家：立即给出一次提示，引导玩家如何操作
      * - 非新玩家：延时展示“操作提示”逻辑（handleTimePro）
      */
     Guide() {
         let isnew = GameData.isNewPlayer();
-        // if (isnew) {
-        //     // TODO: 在此处触发教学流程（仅入口，不做具体实现）
-        //     // 例如：显示箭头/遮罩/步骤说明等
-        //     this.scheduleOnce(() => {
-        //         this.onClick_tipsBtn(true);
-        //     }, 0.5);
-        // }
-        // else {
-        //     // 3秒后开始处理时间提示 - 玩家5秒不操作时显示提示
-        //     this.scheduleOnce(() => {
-        //         this.handleTimePro();
-        //     }, 3);
-        // }
+        if (isnew) {
+            // 新玩家：直接触发一次提示和手势教学，引导基础操作
 
-                 this.scheduleOnce(() => {
-                this.handleTimePro();
-            }, 3);
+            let tips = this.onClick_tipsBtn(true);
+            console.log('tips', tips);
+            let info = this.getTipsMoveInfo(tips);
+            console.log('info', info);
+            if (info) {
+                this.playHandGuide(info.grid, info.dir);
+            }
+
+        } else {
+            // 老玩家：保持原逻辑，3 秒后开始“不操作提示”计时
+        }
     }
 
     /**
@@ -380,16 +378,15 @@ export class Game extends BaseNodeCom {
         App.gameCtr.blockCount = this.data.blockCount;
         this.setLevelInfo();
         if (lv == 1) {
-
             this.gridPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
             this.rocketPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/rocket');
             await this.initLayout();
             this.startDownGrid();
+            
+        } else {
+            // 非第一关暂不执行新手引导
         }
-        else {
-
-        }
-
+        this.Guide();
         // this.isWin = false;
         this.gameState = GameState.PLAYING;
     }
@@ -401,23 +398,6 @@ export class Game extends BaseNodeCom {
     private downTime: number = 1;
     /** 提示计时器索引：用于清除提示计时器 */
     private intervalTipsIndex: number = 0;
-    
-    /**
-     * 处理时间提示
-     * 玩家5秒不操作就给提示
-     * @description 当玩家长时间不操作时，自动触发提示系统
-     */
-    handleTimePro() {
-        this.schedule(() => {
-            this.downTime -= 0.1;
-            if (this.downTime > -0.01 && this.downTime < 0.01) {
-                this.intervalTipsIndex = setInterval(() => {
-                    if (!this.isValid) return;
-                    this.onClick_tipsBtn();
-                }, 5000);
-            }
-        }, 0.06);
-    }
 
     /**
      * 重置时间间隔
@@ -427,6 +407,7 @@ export class Game extends BaseNodeCom {
     resetTimeInterval() {
         clearInterval(this.intervalTipsIndex);
         this.downTime = 1;
+        this.hand.active = false;
     }
     
     /**
@@ -525,6 +506,110 @@ export class Game extends BaseNodeCom {
      */
     protected update(dt: number): void {
         this.UPAlert();
+        this.UPdownTime(dt);
+    }
+
+    /**
+     * 播放教学手势移动动画
+     * 根据提示返回的格子和方向，控制 hand 从当前格子位置移动到目标格子位置
+     * 逻辑：
+     * 1. 计算中心格子和目标格子的世界坐标
+     * 2. 将 hand 节点移动到起点位置并激活
+     * 3. 使用 tween 往返移动，模拟玩家滑动操作
+     * @param grid 需要移动的中心格子组件
+     * @param dir 移动方向（左/右/上/下）
+     */
+    playHandGuide(grid: gridCmpt, dir: Direction) {
+        if (!this.hand || !grid || !grid.node) return;
+        
+        // 计算中心格子的世界坐标
+        // 注意：这里需要确保使用正确的节点层级来获取坐标
+        let centerWorld = grid.node.worldPosition.clone();
+
+        // 目标格子的世界坐标
+        // 根据方向计算目标格子的位置
+        let offset = v3(0, 0, 0);
+        let w = Constant.Width; // 假设这是格子的宽度
+        
+        // 根据移动方向调整偏移量
+        // 注意：Cocos Creator的坐标系，Y轴向上为正
+        switch (dir) {
+            case Direction.left:
+                offset.x = -w;
+                break;
+            case Direction.right:
+                offset.x = w;
+                break;
+            case Direction.up:
+                offset.y = w;
+                break;
+            case Direction.down:
+                offset.y = -w;
+                break;
+        }
+
+        let targetWorld = centerWorld.clone().add(offset);
+
+        // 将世界坐标转换为hand父节点的局部坐标
+        // 这样可以确保hand在正确的位置显示
+        let parent = this.hand.parent;
+        if (!parent) return;
+        
+        let uiTransform = parent.getComponent(UITransform);
+        if (!uiTransform) return;
+
+        let startLocal = uiTransform.convertToNodeSpaceAR(centerWorld);
+        let endLocal = uiTransform.convertToNodeSpaceAR(targetWorld);
+
+        if (DEV) {
+            console.log(`HandGuide: Start(${startLocal.x}, ${startLocal.y}) -> End(${endLocal.x}, ${endLocal.y}), Dir: ${dir}`);
+        }
+
+        this.hand.active = true;
+        this.hand.setPosition(startLocal);
+
+        // 停止之前的动画，开始新的往返动画
+        Tween.stopAllByTarget(this.hand);
+        
+        // 创建往返动画：移动到目标 -> 停顿 -> 回到起点 -> 停顿
+        tween(this.hand)
+            .to(0.8, { position: endLocal }, { easing: 'sineInOut' }) // 移动过去
+            .delay(0.2) // 稍微停顿
+            .to(0.2, { position: startLocal }, { easing: 'sineInOut' }) // 快速回到起点（模拟提起手）
+            .delay(0.2)
+            .union() // 合并成一个动作
+            .repeatForever() // 循环播放
+            .start();
+    }
+
+       /**
+     * 处理时间提示
+     * 玩家5秒不操作就给提示
+     * @description 当玩家长时间不操作时，自动触发提示系统
+     */
+    UPdownTime(dt: number) {
+        // 倒计时已经结束并且定时器已创建时，直接返回，避免重复创建
+        if (this.downTime <= 0 ) {
+            return;
+        }
+
+        // 按帧减少倒计时
+        if (this.downTime > 0) {
+            this.downTime -= dt;
+        }
+
+        // 首次降到阈值以下时创建定时器
+        if (this.downTime <= 0 ) {
+            if (GameData.isNewPlayer()) {
+                return;
+            }
+            // 老玩家：进入 5 秒一次的提示循环
+            this.intervalTipsIndex = setInterval(() => {
+                if (!this.isValid) return;
+                this.onClick_tipsBtn();
+            }, 5000);
+
+        }
     }
 
     //检查最下方的水果方块是否低于阈值
@@ -819,7 +904,9 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<void>} 异步操作，处理触摸开始逻辑
      */
     async evtTouchStart(p: Vec2) {
-        console.log(this.isStartTouch, this.isStartChange)
+        console.log(this.isStartTouch, this.isStartChange);
+        if (this.hand)
+            this.hand.active = false;
         if (this.getTimeInterval() > 0)
             return;
         this.handleProtected();
@@ -1311,6 +1398,11 @@ export class Game extends BaseNodeCom {
 
         // 4. 销毁方块
         this.destroyGridNode(ele);
+
+        // 5. 检查是否为新玩家，若为新玩家则设置为非新玩家
+        if (GameData.isNewPlayer()) {
+            GameData.setNewPlayer(false);
+        }
     }
 
     /**
@@ -2343,44 +2435,229 @@ export class Game extends BaseNodeCom {
         });
     }
     
-    /** 提示可以交换的水果 */
-    onClick_tipsBtn(isGuide: boolean=false) {
-        let list = [];
+    /**
+     * 提示可以交换的水果
+     * 从棋盘中找到第一组通过一次交换即可形成三消的组合
+     * 逻辑：
+     * 1. 遍历 blockArr 中每个格子，调用 GameCtr.checkTipsGroup 检测该格子为中心时是否存在可消除组合
+     * 2. 过滤掉包含特殊类型水果（type > NormalType）的组合
+     * 3. 一旦找到第一组合法组合，立即在界面上显示提示并返回该组合
+     * @param isGuide 是否为引导模式（true 时调用 showTipsGuide，false 调用 showTips）
+     * @returns 第一组可用提示组合（group 列表）；找不到则返回 null
+     */
+    onClick_tipsBtn(isGuide: boolean=false): Node[] | null {
+        this.lastTipsCenter = null;
+        if (!this.blockArr || this.blockArr.length === 0) {
+            return null;
+        }
         for (let i = 0; i < this.H; i++) {
             for (let j = 0; j < this.V; j++) {
-                let item = this.blockArr[i][j];
-                if (item) {
-                    let arr = App.gameCtr.checkTipsGroup(item.getComponent(gridCmpt), this.blockArr);
-                    if (arr.length > 0) {
-                        let count = 0;
-                        for (let m = 0; m < arr.length; m++) {
-                            if (arr[m].getComponent(gridCmpt).type > Constant.NormalType) {
-                                count++;
+                if (!this.blockArr[i]) continue;
+                let node = this.blockArr[i][j];
+                if (!node) continue;
+                let ele = node.getComponent(gridCmpt);
+                if (!ele) continue;
+                let arr = App.gameCtr.checkTipsGroup(ele, this.blockArr);
+                if (arr.length > 0) {
+                    let count = 0;
+                    for (let m = 0; m < arr.length; m++) {
+                        if (arr[m].getComponent(gridCmpt).type > Constant.NormalType) {
+                            count++;
+                        }
+                    }
+                    if (count == 0) {
+                        this.lastTipsCenter = ele;
+                        arr.forEach(item => {
+                            if (isGuide) {
+                                item.getComponent(gridCmpt).showTipsGuide(true);
+                            } else {
+                                item.getComponent(gridCmpt).showTips();
                             }
-                        }
-                        if (count == 0) {
-                            list.push(arr);
-                        }
+                        })
+                        return arr;
                     }
                 }
             }
         }
-        if (list.length > 0) {
-            let rand = Math.floor(Math.random() * list.length);
-            let tipsList = list[rand];
-            tipsList.forEach(item => {
-                if (isGuide) {
-                    item.getComponent(gridCmpt).showTipsGuide(true);
-                } else {
-                    item.getComponent(gridCmpt).showTips();
-                }
-            })
-        }
-        else {
-            ViewManager.toast("没有可以交换的糖果了");
-        }
+
+        ViewManager.toast("没有可以交换的糖果了");
+        return null;
     }
 
+    /**
+     * 获取提示组合中需要移动的格子以及移动方向
+     * 使用 onClick_tipsBtn 返回的 group 结果，避免重复遍历棋盘
+     * 逻辑：
+     * 1. 在 group 中找出“异类格子”（与另外两个格子既不同行也不同列）
+     * 2. 另外两个格子必然在同一行或同一列，代表“三消所在的直线”
+     * 3. 由“异类格子”的行/列与这条直线求交点，得到它需要移动到的目标格子坐标
+     * 4. 根据当前坐标与目标坐标的差值，计算移动方向（left/right/up/down）
+     * 5. 如果未能严格找到这三点关系，则退化为：在 group 内任意找到一对相邻格子，取其中一个作为移动格子
+     * @param group onClick_tipsBtn 返回的组合结果（提示用到的格子列表）
+     * @returns { grid, dir } grid 为需要移动的格子，dir 为移动方向；若没有则返回 null
+     */
+    getTipsMoveInfo(group: Node[] | null): { grid: gridCmpt, dir: Direction } | null {
+        if (!group || group.length === 0) {
+            return null;
+        }
+        if (group.length < 2) {
+            return null;
+        }
+
+        let center = this.lastTipsCenter;
+        if (!center) {
+            return null;
+        }
+
+        let comps: gridCmpt[] = [];
+        for (let i = 0; i < group.length; i++) {
+            if (!group[i]) continue;
+            let c = group[i].getComponent(gridCmpt);
+            if (!c) continue;
+            comps.push(c);
+        }
+        if (comps.length === 0) return null;
+
+        let candidates: gridCmpt[] = [];
+        for (let i = 0; i < comps.length; i++) {
+            let g = comps[i];
+            let dh = g.data.h - center.data.h;
+            let dv = g.data.v - center.data.v;
+            if (Math.abs(dh) + Math.abs(dv) === 1) {
+                candidates.push(g);
+            }
+        }
+
+        for (let i = 0; i < candidates.length; i++) {
+            let target = candidates[i];
+            if (this.canSwapFormMatch(center, target)) {
+                let dh = center.data.h - target.data.h;
+                let dv = center.data.v - target.data.v;
+                let dir: Direction | null = null;
+                if (dh === -1 && dv === 0) dir = Direction.left;
+                else if (dh === 1 && dv === 0) dir = Direction.right;
+                else if (dh === 0 && dv === 1) dir = Direction.up;
+                else if (dh === 0 && dv === -1) dir = Direction.down;
+                if (dir !== null) {
+                    if (DEV) {
+                        console.log(
+                            "提示移动：",
+                            target.data.h + "," + target.data.v,
+                            "->",
+                            center.data.h + "," + center.data.v,
+                            "方向：",
+                            dir
+                        );
+                    }
+                    return { grid: target, dir };
+                }
+            }
+        }
+
+        for (let i = 0; i < comps.length; i++) {
+            for (let j = 0; j < comps.length; j++) {
+                if (i === j) continue;
+                let a = comps[i];
+                let b = comps[j];
+                let dh = b.data.h - a.data.h;
+                let dv = b.data.v - a.data.v;
+                if (Math.abs(dh) + Math.abs(dv) === 1) {
+                    let dir: Direction | null = null;
+                    if (dh === -1 && dv === 0) dir = Direction.left;
+                    else if (dh === 1 && dv === 0) dir = Direction.right;
+                    else if (dh === 0 && dv === 1) dir = Direction.up;
+                    else if (dh === 0 && dv === -1) dir = Direction.down;
+                    if (dir !== null) {
+                        if (DEV) {
+                            console.log(
+                                "提示移动兜底：",
+                                a.data.h + "," + a.data.v,
+                                "->",
+                                b.data.h + "," + b.data.v,
+                                "方向：",
+                                dir
+                            );
+                        }
+                        return { grid: a, dir };
+                    }
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    private canSwapFormMatch(a: gridCmpt, b: gridCmpt): boolean {
+        if (!this.blockArr || this.blockArr.length === 0) {
+            return false;
+        }
+
+        let ax = a.data.h;
+        let ay = a.data.v;
+        let bx = b.data.h;
+        let by = b.data.v;
+        let typeA = a.type;
+        let typeB = b.type;
+
+        let getTypeAt = (x: number, y: number): number => {
+            if (x === ax && y === ay) {
+                return typeB;
+            }
+            if (x === bx && y === by) {
+                return typeA;
+            }
+            if (x < 0 || x >= this.H || y < 0 || y >= this.V) {
+                return -1;
+            }
+            let node = this.blockArr[x][y];
+            if (!node) return -1;
+            let c = node.getComponent(gridCmpt);
+            if (!c) return -1;
+            return c.type;
+        };
+
+        let checkPos = (x: number, y: number, type: number): boolean => {
+            if (type >= Constant.NormalType) return false;
+            let lenH = 1;
+            let i = x - 1;
+            while (i >= 0) {
+                let t = getTypeAt(i, y);
+                if (t !== type || t >= Constant.NormalType) break;
+                lenH++;
+                i--;
+            }
+            i = x + 1;
+            while (i < this.H) {
+                let t = getTypeAt(i, y);
+                if (t !== type || t >= Constant.NormalType) break;
+                lenH++;
+                i++;
+            }
+
+            let lenV = 1;
+            let j = y - 1;
+            while (j >= 0) {
+                let t = getTypeAt(x, j);
+                if (t !== type || t >= Constant.NormalType) break;
+                lenV++;
+                j--;
+            }
+            j = y + 1;
+            while (j < this.V) {
+                let t = getTypeAt(x, j);
+                if (t !== type || t >= Constant.NormalType) break;
+                lenV++;
+                j++;
+            }
+
+            return lenH >= 3 || lenV >= 3;
+        };
+
+        if (checkPos(ax, ay, typeB)) return true;
+        if (checkPos(bx, by, typeA)) return true;
+        return false;
+    }
     /**
      * 从对象池获取火箭效果
      */

@@ -96,19 +96,32 @@ static loadData(key: string, defaultValue: any): any {
     }
     
     public static NewPlayerKey = 'newPlayer';
+    private static _isNewPlayerCache: boolean | null = null;
     static isNewPlayer(): boolean {
+        if (this._isNewPlayerCache !== null) {
+            return this._isNewPlayerCache;
+        }
         const val = this.loadData(this.NewPlayerKey, null);
-        if (val === null || typeof val === 'undefined') 
-            return true;
-        return !!val;
+        let res: boolean;
+        if (val === null || typeof val === 'undefined') {
+            res = true;
+        } else {
+            res = !!val;
+        }
+        this._isNewPlayerCache = res;
+        return res;
     }
     static setNewPlayer(flag: boolean): void {
+        this._isNewPlayerCache = flag;
         this.saveData(this.NewPlayerKey, flag);
     }
     static ensureNewPlayerFlag(): void {
         const val = this.loadData(this.NewPlayerKey, null);
         if (val === null || typeof val === 'undefined') {
             this.saveData(this.NewPlayerKey, false);
+            this._isNewPlayerCache = false;
+        } else {
+            this._isNewPlayerCache = !!val;
         }
     }
     
