@@ -1005,6 +1005,10 @@ export class Game extends BaseNodeCom {
 
         // 检查是否是炸弹类型
         if (this.isBomb(bc)) {
+            // 只有炸弹 触发短震动反馈
+            if (bc.type === Bomb.bomb) {
+                CM.mainCH.vibrateShort();
+            }
             // 设置检查状态，避免重复处理
             this.isChecking = true;
             // 存储炸弹影响的方块列表
@@ -1435,13 +1439,8 @@ export class Game extends BaseNodeCom {
             this.fireBulletToTarget(ele, targetNode);
         } else {
             // 如果没有找到目标下落方块，将方块的类型和攻击值添加到炮塔的gridDataList中
-            if (this.turret) {
-                const gridData = {
-                    type: ele.type,
-                    attack: ele.getAttack()
-                };
-                this.turret.addGridData(gridData);
-                 this.flyItemToTurret(ele.type, ele.node.worldPosition,this.turret.node);
+            if (this.turret) {          
+                 this.flyItemToTurret(ele, ele.node.worldPosition,this.turret.node);
             }
         }
     }
@@ -2176,30 +2175,36 @@ export class Game extends BaseNodeCom {
         /**
      * 飞舞动画到炮塔
      * 播放方块消除后的飞舞动画
-     * @param {number} type - 方块类型
+     * @param {gridCmpt} ele - 方块组件
      * @param {Vec3} pos - 方块位置
      * @param {Node} target - 目标节点
      * @returns {Promise<void>} 异步操作，完成飞舞动画
      */
-    async flyItemToTurret(type: number, pos: Vec3, target: Node) {
+    async flyItemToTurret(ele: gridCmpt, pos: Vec3, target: Node) {
 
         // 从对象池获取方块实例
         const item = this.getFlyItemFromPool();
         if (!item) return;
-        
+
         // 计算位置
         this.node.getComponent(UITransform).convertToNodeSpaceAR(pos, this.tempstartPos);
         this.node.getComponent(UITransform).convertToNodeSpaceAR(target.worldPosition, this.tempendPos);
-        
+
         // 设置方块属性
         item.setPosition(this.tempstartPos);
         this.node.addChild(item);
-        item.getComponent(gridCmpt).setType(type);
-        
+        item.getComponent(gridCmpt).setType(ele.type);
+        const gridData = {
+            type: ele.type,
+            attack: ele.getAttack()
+        };
         // 使用 MoveManager 执行飞舞动画
         MoveManager.getInstance().flyItem(item, this.tempstartPos, this.tempendPos, 0.5, () => {
+            //更新的炮塔的已经有的数量
+            this.turret.addGridData(gridData);
+            this.turret.getComponent(Turret).updateGridDataCountLb();
             // 处理关卡目标
-            this.handleLevelTarget(type);
+            this.handleLevelTarget(gridData.type);
             // 回收方块到对象池
             this.recycleFlyItemToPool(item);
             // 播放音效
@@ -2304,37 +2309,6 @@ export class Game extends BaseNodeCom {
                 break;
         }
 
-        // 检查渠道管理器是否初始化
-        if (!CM.mainCH) {
-            console.error("渠道管理器未初始化");
-            return;
-        }
-
-        // 显示选择弹窗：看视频或分享
-        CM.mainCH.showModal('获取道具', '请选择获取道具的方式', true, (isConfirm: boolean) => {
-            if (isConfirm) {
-                // 确定：看视频
-                if (CM.mainCH.showVideoAd) {
-                    // 确保视频广告已创建
-                    if (!CM.mainCH.videoAd) {
-                        CM.mainCH.createVideoAd();
-                    }
-                    // 显示视频广告
-                    CM.mainCH.showVideoAd((isSuccess: boolean) => {
-                        if (isSuccess) {
-                            GameData.setBomb(type, 1);
-                            this.updateToolsInfo();
-                        }
-                    });
-                } else {
-                    // 视频广告不可用，使用分享
-                    this.shareToGetProp(type);
-                }
-            } else {
-                // 取消：分享
-                this.shareToGetProp(type);
-            }
-        });
     }
 
     /** 通过分享获取道具 */

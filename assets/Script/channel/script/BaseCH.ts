@@ -213,24 +213,24 @@ export default class BaseCH implements BaseINT {
 
     /**手机振动 15ms*/
     vibrateShort() {
-        // if (this.ch && Global.shake_switch) {
-        //     this.ch.vibrateShort({
-        //         success() { },
-        //         fail() { },
-        //         complete() { }
-        //     });
-        // }
+        if (this.ch && this.ch.vibrateShort) {
+            this.ch.vibrateShort({
+                success() { },
+                fail() { },
+                complete() { }
+            });
+        }
     }
 
     /**手机振动 400ms*/
     vibrateLong() {
-        // if (this.ch && Global.shake_switch) {
-        //     this.ch.vibrateLong({
-        //         success() { },
-        //         fail() { },
-        //         complete() { }
-        //     });
-        // }
+        if (this.ch && this.ch.vibrateLong) {
+            this.ch.vibrateLong({
+                success() { },
+                fail() { },
+                complete() { }
+            });
+        }
     }
 
 }

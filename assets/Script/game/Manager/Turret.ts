@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, instantiate, Prefab, Vec3, tween, v3, director, Quat,Tween } from 'cc';
+import { _decorator, Component, Node, instantiate, Prefab, Vec3, tween, v3, director, Quat,Tween, Label } from 'cc';
 import { BaseNodeCom } from '../BaseNode';
 import { DownGridManager } from './DownGridManager';
 import { gridDownCmpt } from '../item/gridDownCmpt';
@@ -212,7 +212,9 @@ export class Turret extends BaseNodeCom {
     private bulletPool: Node[] = [];
     /** 最大子弹池大小：控制对象池的最大容量 */
     private maxBulletPoolSize: number = 20;
-    
+   
+    /** 存储的grid数据还剩多少个 */
+    public gridDataCountLb: Label = null;
     /**
      * 组件加载时调用
      * 初始化DownGridManager引用
@@ -242,7 +244,7 @@ export class Turret extends BaseNodeCom {
         if (!this.bulletPrefab) {
             this.bulletPrefab = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
         }
-        
+        this.gridDataCountLb = this.viewList.get('Label').getComponent(Label);
     }
     
     /**
@@ -424,6 +426,7 @@ export class Turret extends BaseNodeCom {
                 processedCount++;
             }
         }
+        this.updateGridDataCountLb();
     }
 
     /**
@@ -585,6 +588,14 @@ export class Turret extends BaseNodeCom {
      * @param gridData 新的grid数据
      * @description 动态添加发射点到炮塔，只添加GridType中包含的类型
      */
+    public updateGridDataCountLb(count?: number): void {
+        if (!this.gridDataCountLb || !this.gridDataCountLb.isValid) {
+            return;
+        }
+        const value = typeof count === 'number' ? count : this.gridDataList.length;
+        this.gridDataCountLb.string = value.toString();
+    }
+
     public addGridData(gridData: GridData): void {
         // 检查grid数据是否有效
         if (gridData) {
@@ -593,6 +604,7 @@ export class Turret extends BaseNodeCom {
             if (isValidType) {
                 // 添加数据到数组
                 this.gridDataList.push(gridData);
+                this.updateGridDataCountLb();
             }
         }
     }
