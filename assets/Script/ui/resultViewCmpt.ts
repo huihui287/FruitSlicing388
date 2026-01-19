@@ -17,6 +17,7 @@ const { ccclass, property } = _decorator;
 export class ResultViewCmpt extends BaseDialog  {
     private isWin: boolean = false;
     private level: number = 0;
+    private goldnum: number = 0;
     private rewardBombs: {type: number, count: number}[] = [];
 
     goldnumlb: Node = null;
@@ -64,8 +65,8 @@ export class ResultViewCmpt extends BaseDialog  {
     }
     
     showgoldnum() {
-        let goldnum = 100 * GameData.loadData(GameData.Level, 1);
-        this.goldnumlb.getComponent(Label).string = goldnum.toString();
+        this.goldnum = 100 * GameData.loadData(GameData.Level, 1);
+        this.goldnumlb.getComponent(Label).string = this.goldnum.toString();
     }
 
     handleLose() {
@@ -104,43 +105,13 @@ export class ResultViewCmpt extends BaseDialog  {
         EventManager.emit(EventName.Game.Share, this.level);
     }
 
-    /** 看视频继续游戏 */
-    onClick_continueVideoBtn() {
-        AudioManager.getInstance().playSound('button_click');
-        
-        // 检查渠道广告是否可用
-        if (CM.mainCH && CM.mainCH.createVideoAd && CM.mainCH.showVideoAd) {
-            // 创建视频广告实例
-            if (!CM.mainCH.videoAd) {
-                CM.mainCH.createVideoAd();
-            }
-            
-            // 显示视频广告
-            CM.mainCH.showVideoAd((isSuccess: boolean) => {
-                if (isSuccess) {
-                    // 视频观看成功，继续游戏
-                    EventManager.emit(EventName.Game.ContinueGame);
-                    this.dismiss();
-                } else {
-                    // 视频观看失败或中途退出
-                    console.log('视频观看失败');
-                }
-            });
-        } else {
-            // 渠道广告不可用，直接继续游戏（作为兼容方案）
-            console.log('广告不可用，直接继续游戏');
-            EventManager.emit(EventName.Game.ContinueGame);
-            this.dismiss();
-        }
-    }
-
     onClick_guanbiBtn() {
         if (this.isWin) {
             if (this.level == LevelConfig.getCurLevel()) {
                 LevelConfig.nextLevel();
             }
         }
-        // App.backHome(true);
+        GameData.addGold(this.goldnum);
         this.dismiss();
     }
     onClick_RestartGameBtn() {
@@ -149,4 +120,9 @@ export class ResultViewCmpt extends BaseDialog  {
         this.dismiss();
     }
     
+    onClick_backStartbtn() {
+        AudioManager.getInstance().playSound('button_click');
+        App.backStart(true);
+        this.dismiss();
+    }
 }

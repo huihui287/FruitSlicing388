@@ -1373,9 +1373,6 @@ export class Game extends BaseNodeCom {
     private async handleSamelist(samelist: any[]) {
         //  触发短震动反馈
 
-        if (CM.mainCH && CM.mainCH.vibrateShort) {
-            CM.mainCH.vibrateShort();
-        }
         return new Promise(async resolve => {
             if (samelist.length < 1) {
                 resolve("");
@@ -1413,7 +1410,11 @@ export class Game extends BaseNodeCom {
                     this.destroyGridAndGetScore(ele);
 
                 }
+                
             }
+            if (CM.mainCH && CM.mainCH.vibrateShort) {
+                CM.mainCH.vibrateShort();
+        }
             await ToolsHelper.delayTime(0.2);
             await this.checkMoveDown();
             resolve("");

@@ -28,20 +28,40 @@ export class settingGameView extends BaseDialog {
         this.btnMusicON = this.viewList.get('animNode/content/btnMusic/on');
         this.btnMusicOFF = this.viewList.get('animNode/content/btnMusic/off');
         // 初始化音效和音乐状态
-        this.setSoundStatus(GameData.loadData(GameData.SoundOn, true));
-        this.setMusicStatus(GameData.loadData(GameData.MusicOn, true));
+        const soundOn = GameData.loadData(GameData.SoundOn, true);
+        const musicOn = GameData.loadData(GameData.MusicOn, true);
+        
+        this.setSoundStatus(soundOn);
+        this.setMusicStatus(musicOn);
+
+        // 同步AudioManager的状态
+        AudioManager.getInstance().soundOn = soundOn;
+        AudioManager.getInstance().musicOn = musicOn;
     }
 
+    /**
+     * 点击音效按钮
+     * 切换音效开启/关闭状态
+     */
     onClick_btnSound() {
         AudioManager.getInstance().playSound('button_click');
         const isOn = !GameData.loadData(GameData.SoundOn, true);
         GameData.saveData(GameData.SoundOn, isOn);
+        // 更新AudioManager中的音效状态
+        AudioManager.getInstance().soundOn = isOn;
         this.setSoundStatus(isOn);
     }
+
+    /**
+     * 点击音乐按钮
+     * 切换背景音乐开启/关闭状态
+     */
     onClick_btnMusic() {
         AudioManager.getInstance().playSound('button_click');
         const isOn = !GameData.loadData(GameData.MusicOn, true);
         GameData.saveData(GameData.MusicOn, isOn);
+        // 更新AudioManager中的音乐状态
+        AudioManager.getInstance().musicOn = isOn;
         this.setMusicStatus(isOn);
     }
 
