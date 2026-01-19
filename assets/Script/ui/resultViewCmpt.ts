@@ -1,4 +1,4 @@
-import { _decorator, Node, tween, v3 } from 'cc';
+import { _decorator, Label, Node, tween, v3 } from 'cc';
         
 import { App } from '../Controller/app';
 import { LevelConfig } from '../Tools/levelConfig';
@@ -10,6 +10,7 @@ import ChannelDB from '../channel/ChannelDB';
 import BaseDialog from '../Common/view/BaseDialog';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
+import GameData from '../Common/GameData';
 const { ccclass, property } = _decorator;
 
 @ccclass('resultViewCmpt')
@@ -18,13 +19,14 @@ export class ResultViewCmpt extends BaseDialog  {
     private level: number = 0;
     private rewardBombs: {type: number, count: number}[] = [];
 
+    goldnumlb: Node = null;
     onLoad() {
         super.onLoad();
-      
         // 处理数据
         if (this._data) {
             this.handleData();
         }
+
     }
 
     setData(data: any) {
@@ -52,7 +54,7 @@ export class ResultViewCmpt extends BaseDialog  {
         
         this.viewList.get('animNode/win').active = isWin;
         this.viewList.get('animNode/lose').active = !isWin;
-        
+        this.goldnumlb = this.viewList.get('animNode/win/coin8/goldnumlb');
         if (isWin) {
             // LevelConfig.setLevelStar(lv, starCount);
             this.handleWin(this.rewardBombs);
@@ -61,6 +63,11 @@ export class ResultViewCmpt extends BaseDialog  {
         }
     }
     
+    showgoldnum() {
+        let goldnum = 100 * GameData.loadData(GameData.Level, 1);
+        this.goldnumlb.getComponent(Label).string = goldnum.toString();
+    }
+
     handleLose() {
         // 失败处理逻辑
     }
@@ -79,15 +86,16 @@ export class ResultViewCmpt extends BaseDialog  {
 
     handleWin(rewardBombs: {type: number, count: number}[]) {
         let target = this.viewList.get('animNode/win/target');
-        target.children.forEach((item, idx) => {
-            if (!rewardBombs) return;
-            item.active = idx < rewardBombs.length;
-            if (idx < rewardBombs.length) {
-                item.getComponent(gridCmpt).setType(rewardBombs[idx].type);
-                item.getComponent(gridCmpt).setCount(rewardBombs[idx].count);
-            }
-        });
-
+        target.active=false;
+        // target.children.forEach((item, idx) => {
+        //     if (!rewardBombs) return;
+        //     item.active = idx < rewardBombs.length;
+        //     if (idx < rewardBombs.length) {
+        //         item.getComponent(gridCmpt).setType(rewardBombs[idx].type);
+        //         item.getComponent(gridCmpt).setCount(rewardBombs[idx].count);
+        //     }
+        // });
+        this.showgoldnum();
     }
 
     /** 分享 */

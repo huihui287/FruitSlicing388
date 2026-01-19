@@ -1,104 +1,74 @@
-import { _decorator, Component, Node, ProgressBar } from 'cc';
+import { _decorator, BaseNode, Component, instantiate, Node, ProgressBar } from 'cc';
 import CM from '../channel/CM';
 import LoaderManeger from '../sysloader/LoaderManeger';
 import { App } from '../Controller/app';
 import { LevelConfig } from '../Tools/levelConfig';
 import GameData from '../Common/GameData';
+import { BaseNodeCom } from './BaseNode';
+import AudioManager from '../Common/AudioManager';
+import ViewManager from '../Common/view/ViewManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('Start')
-export class Start extends Component {
-    
-    @property(ProgressBar)
-    progressBar: ProgressBar = null;
-    
+export class Start extends BaseNodeCom {
+
     start() {
-        new CM(CM.CH_ZJ);
-        new LoaderManeger();
-        LevelConfig.setCurLevel(1);
+
+    }
+
+    protected onLoad(): void {
+        super.onLoad();
+    }
+
+    onClick_startBtn() {
         App.gameCtr.curLevel = LevelConfig.getCurLevel();
-
-        // GameData.resetAllData();
-        // GameData.setGold(600);
-        GameData.GetDataOne();
-        // 初始化时加载分包
-        this.loadSubPackages();
-    }
-
-    /**
-     * 加载分包
-     * 从渠道角度考虑，使用CM的loadSubPackages方法
-     */
-    loadSubPackages() {
-        // 分包名称列表，根据实际项目需求修改
-        const subPackages = ['resources'];
-        
-        // 依次加载分包
-        let loadedCount = 0;
-        const totalCount = subPackages.length;
-        
-        const loadNext = () => {
-            if (loadedCount >= totalCount) {
-                // 所有分包加载完成
-                console.log('All subPackages loaded successfully');
-                this.onSubPackagesLoaded();
-                return;
-            }
-            
-            const currentPackage = subPackages[loadedCount];
-            console.log(`Loading subPackage: ${currentPackage}`);
-            
-            CM.loadSubPackages(currentPackage, 
-                (success, error) => {
-                    if (success) {
-                        console.log(`SubPackage ${currentPackage} loaded successfully`);
-                        loadedCount++;
-                        // 更新进度
-                        this.updateProgress(loadedCount / totalCount);
-                        // 加载下一个分包
-                        loadNext();
-                    } else {
-                        console.error(`Failed to load subPackage ${currentPackage}:`, error);
-                        // 即使失败也继续加载下一个分包
-                        loadedCount++;
-                        this.updateProgress(loadedCount / totalCount);
-                        loadNext();
-                    }
-                },
-                (progress, totalBytesWritten, totalBytesExpectedToWrite) => {
-                    // 单个分包的加载进度
-                    const currentProgress = (loadedCount + progress) / totalCount;
-                    this.updateProgress(currentProgress);
-                }
-            );
-        };
-        
-        // 开始加载第一个分包
-        loadNext();
-    }
-
-    /**
-     * 更新加载进度
-     * @param progress 进度值 (0-1)
-     */
-    updateProgress(progress: number) {
-        if (this.progressBar) {
-            this.progressBar.progress = progress;
-        }
-        console.log(`Loading progress: ${Math.round(progress * 100)}%`);
-    }
-
-    /**
-     * 分包加载完成后的回调
-     */
-    onSubPackagesLoaded() {
-        console.log('SubPackages loaded, starting game...');
-        // 使用App结构跳转到游戏场景
         App.GoGame();
     }
+    onClick_shopBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        // App.view.openView(ViewName.Single.eBuyView);
+        LoaderManeger.instance.loadPrefab('prefab/ui/getGold').then((prefab) => {
+            let getGold = instantiate(prefab);
+            ViewManager.show({
+                node: getGold,
+                name: "GetGold"
+            });
+        });
+    }
 
-    update(deltaTime: number) {
+    onClick_settingBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        // App.view.openView(ViewName.Single.eSettingView);
+        LoaderManeger.instance.loadPrefab('prefab/ui/settingGameView').then((prefab) => {
+            let setting = instantiate(prefab);
+            ViewManager.show({
+                node: setting,
+                name: "SettingGameView"
+            });
+        });
+    }
+    onClick_uppaotaBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        // App.view.openView(ViewName.Single.eSettingView);
+        LoaderManeger.instance.loadPrefab('prefab/ui/UpTurret').then((prefab) => {
+            let uppaota = instantiate(prefab);
+            ViewManager.show({
+                node: uppaota,
+                name: "UpTurret"
+            });
+        });
+    }
 
+    onClick_upgradeFruitBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        // App.view.openView(ViewName.Single.eSettingView);
+        LoaderManeger.instance.loadPrefab('prefab/ui/upgradeFruit').then((prefab) => {
+            let upgradeFruit = instantiate(prefab);
+            ViewManager.show({
+                node: upgradeFruit,
+                name: "UpgradeFruit"
+            });
+        });
     }
 }
 

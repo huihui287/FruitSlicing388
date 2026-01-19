@@ -1,5 +1,7 @@
 // import { NetManager } from "../network/netManager";
+import CM from "../channel/CM";
 import ViewManager from "../Common/view/ViewManager";
+import LoaderManeger from "../sysloader/LoaderManeger";
 import { LevelConfig } from "../Tools/levelConfig";
 import { GameCtr } from "./GameCtr";
 import { SingletonClass } from "./singletonClass";
@@ -11,20 +13,10 @@ import { director } from "cc";
 class GameApp extends SingletonClass<GameApp> {
     event: any;
 
-    get gameCtr() { return GameCtr.getInstance<GameCtr>(GameCtr); }
-
+    get gameCtr() {
+        return GameCtr.getInstance<GameCtr>(GameCtr);
+    }
     protected async onInit(canvas: Node) {
-        // this.net.init();
-        // this.i18n.init();
-        // this.subGame.init();
-        // this.platform.init();
-        // App.user.init();
-        // this.audio.init(canvas);
-        // this.view.init(canvas);
-        LevelConfig.setCurLevel(1);
-        App.gameCtr.curLevel = LevelConfig.getCurLevel();
-        this.gameCtr.init();
-        //StorageHelper.initData();
     }
 
     addEvent() {

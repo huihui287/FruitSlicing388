@@ -65,7 +65,7 @@ export class getGold extends BaseDialog {
             CM.mainCH.showVideoAd((isSuccess: boolean) => {
                 if (isSuccess) {
                     // 视频观看成功，给予金币奖励
-                    const goldReward = 200; // 可以根据实际需求调整奖励数量
+                    const goldReward = 500; // 可以根据实际需求调整奖励数量
                     GameData.addGold(goldReward);
                     console.log(`视频观看成功，获得 ${goldReward} 金币`);
                     // 可以在这里添加获得金币的动画或提示
@@ -78,7 +78,7 @@ export class getGold extends BaseDialog {
         } else {
             // 渠道广告不可用，直接给予金币（作为兼容方案）
             console.log('广告不可用，直接获得金币');
-            const goldReward = 100;
+            const goldReward = 500;
             const currentGold = GameData.loadData('gold', 0);
             GameData.saveData('gold', currentGold + goldReward);
             this.dismiss();

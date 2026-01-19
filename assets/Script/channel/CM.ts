@@ -37,11 +37,11 @@ export default class CM {
 
     constructor(platform) {
         console.log("platform:", platform)
-        CM.platform = platform;
-        this.initPlatform();
-        // CM.mainCH.getSystem();
-        // CM.mainCH.getLaunchOptions();
-        // CM.mainCH.onShowAlways();
+         CM.platform = platform;
+         this.initPlatform();
+         CM.mainCH.getSystem();
+         CM.mainCH.getLaunchOptions();
+         CM.mainCH.onShowAlways();
         // CM.mainCH.createBannerAd();
         // CM.mainCH.createVideoAd();
         // CM.mainCH.createInterstitialAd();//wx qq oppo vivo

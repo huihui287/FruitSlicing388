@@ -142,6 +142,9 @@ export default class TTCH extends BaseCH implements BaseINT {
                 this.videoAd.load();
                 // if (callback) callback(false);
             });
+        }else{
+            this.showToast("暂无视频，请稍后再试");
+             if (callback) callback(false);
         }
     }
 

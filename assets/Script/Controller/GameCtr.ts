@@ -15,8 +15,14 @@ export class GameCtr extends SingletonClass<GameCtr> {
     public hideList = [];
     /** 挨着旁边的障碍物列表，这里做个类型记录 */
     public sideObstacleList: number[] = [3]
+    /** 是否暂停 */
+    public isPause: boolean = false;
 
     protected async onInit(...args: any[]) {
+    }
+       
+    setPause(pause: boolean) {
+        this.isPause = pause;
     }
 
     checkInHideList(i: number, j: number) {

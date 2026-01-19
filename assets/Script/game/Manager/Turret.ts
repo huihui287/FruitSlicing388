@@ -7,6 +7,8 @@ import { GridData, GridType } from '../../Tools/enumConst';
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { gridCmpt } from '../item/gridCmpt';
 import { DEV } from 'cc/env';
+import { App } from '../../Controller/app';
+import GameData from '../../Common/GameData';
 const { ccclass, property } = _decorator;
 
 /**
@@ -212,6 +214,17 @@ export class Turret extends BaseNodeCom {
     private bulletPool: Node[] = [];
     /** 最大子弹池大小：控制对象池的最大容量 */
     private maxBulletPoolSize: number = 20;
+
+    /** 基础容量：初始值为50 */
+    private _baseCapacity: number = 50;
+
+    /**
+     * 获取最大容量
+     * 容量 = 基础容量 * 炮塔等级
+     */
+    public get maxCapacity(): number {
+        return this._baseCapacity * GameData.loadData(GameData.TurretLevel, 1);
+    }
    
     /** 存储的grid数据还剩多少个 */
     public gridDataCountLb: Label = null;
@@ -257,6 +270,9 @@ export class Turret extends BaseNodeCom {
         this.activate();
     }
     update(dt: number) {
+        if (App.gameCtr.isPause) {
+            return;
+        }
         this.updateStateMachine(dt);
     }
     /**
@@ -593,10 +609,17 @@ export class Turret extends BaseNodeCom {
             return;
         }
         const value = typeof count === 'number' ? count : this.gridDataList.length;
-        this.gridDataCountLb.string = value.toString();
+        // 显示当前数量 / 最大容量
+        this.gridDataCountLb.string = `${value}/${this.maxCapacity}`;
     }
 
     public addGridData(gridData: GridData): void {
+        // 检查是否达到最大容量
+        if (this.gridDataList.length >= this.maxCapacity) {
+            // console.warn('Turret: 已达到最大容量，无法添加新的grid数据');
+            return;
+        }
+
         // 检查grid数据是否有效
         if (gridData) {
             // 检查类型是否在GridType中

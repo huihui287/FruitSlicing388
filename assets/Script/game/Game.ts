@@ -214,6 +214,21 @@ export class Game extends BaseNodeCom {
             item.destroy();
         }
     }
+    onDestroy(): void {
+        App.gameCtr.setPause(false);
+        // 清除所有定时器
+        clearInterval(this.intervalTipsIndex);
+        // 清除所有事件监听
+        EventManager.off(EventName.Game.TouchStart, this.evtTouchStart, this);
+        EventManager.off(EventName.Game.TouchMove, this.evtTouchMove, this);
+        EventManager.off(EventName.Game.TouchEnd, this.evtTouchEnd, this);
+        EventManager.off(EventName.Game.SendReward, this.handleRewardAnim, this);
+        EventManager.off(EventName.Game.ContinueGame, this.evtContinueGame, this);
+        EventManager.off(EventName.Game.Damage, this.evtDamage, this);
+        EventManager.off(EventName.Game.RestartGame, this.evtRestart, this);
+        EventManager.off(EventName.Game.Pause, this.evtPause, this);
+        EventManager.off(EventName.Game.Resume, this.evtResume, this);
+    }
     /**
      * 组件加载时调用
      * 初始化UI引用、绑定事件、加载游戏数据
@@ -364,8 +379,22 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.Damage, this.evtDamage, this);
         // 游戏重启事件
         EventManager.on(EventName.Game.RestartGame, this.evtRestart, this);
+        /** 暂停游戏 */
+        EventManager.on(EventName.Game.Pause, this.evtPause, this);
+        /** 恢复游戏 */
+        EventManager.on(EventName.Game.Resume, this.evtResume, this);
     }
-
+    evtPause() {
+    
+        App.gameCtr.setPause(true);
+        // throw new Error('Method not implemented.');
+    }
+    evtResume() {
+   
+        App.gameCtr.setPause(false);
+        // throw new Error('Method not implemented.');
+    }
+    
     /**
      * 加载关卡额外数据
      * 加载关卡配置数据并初始化游戏状态
@@ -389,6 +418,7 @@ export class Game extends BaseNodeCom {
         this.Guide();
         // this.isWin = false;
         this.gameState = GameState.PLAYING;
+        App.gameCtr.setPause(false);
     }
     /*********************************************  UI information *********************************************/
     /*********************************************  UI information *********************************************/
@@ -505,6 +535,7 @@ export class Game extends BaseNodeCom {
      * @description 实时检查水果方块的位置，当方块过低时显示警告
      */
     protected update(dt: number): void {
+        if (App.gameCtr.isPause) return;
         this.UPAlert();
         this.UPdownTime(dt);
     }
@@ -881,7 +912,9 @@ export class Game extends BaseNodeCom {
         console.log("Game over: Handling game failure");
         // this.isWin = false;
         this.gameState = GameState.GAME_OVER;
-        this.DownGridMgr.pauseFall();
+
+        App.gameCtr.setPause(true);
+  
         this.getRewardBombs();
         // 加载并显示结果界面
         LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
@@ -904,6 +937,7 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<void>} 异步操作，处理触摸开始逻辑
      */
     async evtTouchStart(p: Vec2) {
+        if (App.gameCtr.isPause) return;
         console.log(this.isStartTouch, this.isStartChange);
         if (this.hand)
             this.hand.active = false;
@@ -930,6 +964,7 @@ export class Game extends BaseNodeCom {
      * @param {Vec2} p - 触摸位置
      */
     evtTouchMove(p: Vec2) {
+        if (App.gameCtr.isPause) return;
         if (this.isStartChange) return;
         if (!this.isStartTouch) return;
         let pos = this.gridNode.getComponent(UITransform).convertToNodeSpaceAR(new Vec3(p.x, p.y, 1));
@@ -948,6 +983,7 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<void>} 异步操作，处理触摸结束逻辑
      */
     async evtTouchEnd(p: Vec2) {
+        if (App.gameCtr.isPause) return;
         if (this.isStartChange) return;
         if (!this.isStartTouch) return;
         let pos = this.gridNode.getComponent(UITransform).convertToNodeSpaceAR(new Vec3(p.x, p.y, 1));
@@ -1005,12 +1041,6 @@ export class Game extends BaseNodeCom {
 
         // 检查是否是炸弹类型
         if (this.isBomb(bc)) {
-            // 只有炸弹 触发短震动反馈
-            if (bc.type === Bomb.bomb) {
-                if (CM.mainCH && CM.mainCH.vibrateShort) {
-                    CM.mainCH.vibrateShort();
-                }
-            }
             // 设置检查状态，避免重复处理
             this.isChecking = true;
             // 存储炸弹影响的方块列表
@@ -1341,6 +1371,11 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<void>} 异步操作，完成方块消除
      */
     private async handleSamelist(samelist: any[]) {
+        //  触发短震动反馈
+
+        if (CM.mainCH && CM.mainCH.vibrateShort) {
+            CM.mainCH.vibrateShort();
+        }
         return new Promise(async resolve => {
             if (samelist.length < 1) {
                 resolve("");
@@ -2256,7 +2291,7 @@ export class Game extends BaseNodeCom {
 
     /** 设置 */
     onClick_setBtn() {
-        // App.view.openView(ViewName.Single.esettingGameView);
+        App.gameCtr.setPause(true);
         LoaderManeger.instance.loadPrefab('prefab/ui/settingGameView').then((prefab) => {
             let settingNode = instantiate(prefab);
             ViewManager.show({
@@ -2416,18 +2451,6 @@ export class Game extends BaseNodeCom {
         let pos = this.gridMgr.node.getComponent(UITransform).convertToNodeSpaceAR(btnNode.worldPosition);
         this.throwTools(type, pos);
         this.updateToolsInfo();
-    }
-
-    /** 升级道具 */
-    onClick_upgradeFruitBtn() {
-        AudioManager.getInstance().playSound('button_click');
-        LoaderManeger.instance.loadPrefab('prefab/ui/upgradeFruit').then((prefab) => {
-            let upgradeFruitNode = instantiate(prefab);
-            ViewManager.show({
-                node: upgradeFruitNode,
-                name: "UpgradeFruit"
-            });
-        });
     }
     
     /**

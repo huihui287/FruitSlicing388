@@ -5,6 +5,7 @@ import LoaderManeger from '../../sysloader/LoaderManeger';
 import { gridDownCmpt } from '../item/gridDownCmpt';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
+import { App } from '../../Controller/app';
     /**
      * 表示被回收方块的信息接口
      */
@@ -67,11 +68,7 @@ export class DownGridManager extends Component {
     private lockedGrids: Set<Node> = new Set();
     /** 生成状态标志：控制水果方块是否正在生成 */
     private isGenerating: boolean = false;
-    
-    // 暂停功能相关变量
-    /** 暂停状态标志：控制水果方块的下落是否暂停 结束和暂停都是它 */
-    private isPaused: boolean = false;
-    
+
     /** 路径可用性检查定时器ID */
     private pathCheckIntervalId: any = null;
     
@@ -96,18 +93,10 @@ export class DownGridManager extends Component {
      * 生命周期方法：组件销毁时调用
      */
     onDestroy() {
-        // 移除事件监听
-        EventManager.off(EventName.Game.Pause, this.pauseFall, this);
-        EventManager.off(EventName.Game.Resume, this.resumeFall, this);
-        this.clearAllGrids();
+       // this.clearAllGrids();
     }
 
     protected onLoad(): void {
-        // 监听暂停事件
-        EventManager.on(EventName.Game.Pause, this.pauseFall, this);
-        // 监听继续事件
-        EventManager.on(EventName.Game.Resume, this.resumeFall, this);
-   
     }
     /**
      * 加载水果方块预制体
@@ -322,7 +311,8 @@ export class DownGridManager extends Component {
      */
     update(deltaTime: number) {
         // 检查是否暂停
-        if (this.isPaused) return;
+        // if (this.isPaused) return;
+        if (App.gameCtr.isPause) return;
         
         // 检查是否有水果到达底部
         let hasReachedBottom = false;
@@ -350,24 +340,6 @@ export class DownGridManager extends Component {
             this.eliminateFrontRows(1);
             EventManager.emit(EventName.Game.Damage, this.damagePerFruit);
         }
-    }
-
-    /**
-     * 暂停所有水果方块的下落
-     */
-    public pauseFall() {
-        if (this.isPaused) return;
-        
-        this.isPaused = true;
-    }
-
-    /**
-     * 继续所有水果方块的下落
-     */
-    public resumeFall() {
-        if (!this.isPaused) return;
-        
-        this.isPaused = false;
     }
 
     /**
@@ -488,9 +460,6 @@ export class DownGridManager extends Component {
         
         // 重置计数
         this.generatedCount = 0;
-        
-        // 重置暂停状态
-        this.isPaused = false;
         
     }
 

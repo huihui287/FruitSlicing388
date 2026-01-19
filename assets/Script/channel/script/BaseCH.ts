@@ -241,7 +241,7 @@ export default class BaseCH implements BaseINT {
         "score": 100,
         "progress": 10
     }
-    setUserCloudStorage(kvData?: { key: string; value: any }) {
+    setUserCloudStorage(kvData?: { }) {
         if (!this.ch || !this.ch.setUserCloudStorage) {
             return;
         }
@@ -276,13 +276,15 @@ export default class BaseCH implements BaseINT {
         "progress": 10
     }
 
-    getUserCloudStorage( callback?: (data: {}) => void) {
+    getUserCloudStorage( callback?: (data:string) => void) {
         if (!this.ch || !this.ch.getUserCloudStorage ) {
             if (callback) {
                 callback(null);
+                console.log(" callback(null)");
             }
             return;
         }
+         console.log(" callback(null)22222");
         this.ch.getUserCloudStorage({
            keyList: ["ONE"],
             success: (res) => {
