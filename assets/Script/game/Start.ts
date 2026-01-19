@@ -18,9 +18,9 @@ export class Start extends Component {
         LevelConfig.setCurLevel(1);
         App.gameCtr.curLevel = LevelConfig.getCurLevel();
 
-        GameData.resetAllData();
-        GameData.setGold(600);
-
+        // GameData.resetAllData();
+        // GameData.setGold(600);
+        GameData.GetDataOne();
         // 初始化时加载分包
         this.loadSubPackages();
     }

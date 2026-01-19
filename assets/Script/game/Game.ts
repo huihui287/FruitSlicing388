@@ -431,7 +431,7 @@ export class Game extends BaseNodeCom {
         
         // 初始化目标消除数量
         for (let i = 0; i < idArr.length; i++) {
-            let count = LevelConfig.getLevelTargetCount(data.mapData, i);
+            let count = LevelConfig.getLevelTargetCount();
             let temp = [idArr[i], count];
             this.AchievetheGoal.push(temp);
         }
@@ -1007,7 +1007,9 @@ export class Game extends BaseNodeCom {
         if (this.isBomb(bc)) {
             // 只有炸弹 触发短震动反馈
             if (bc.type === Bomb.bomb) {
-                CM.mainCH.vibrateShort();
+                if (CM.mainCH && CM.mainCH.vibrateShort) {
+                    CM.mainCH.vibrateShort();
+                }
             }
             // 设置检查状态，避免重复处理
             this.isChecking = true;
@@ -2268,13 +2270,13 @@ export class Game extends BaseNodeCom {
     onClick_buyBtn() {
         AudioManager.getInstance().playSound('button_click');
         // App.view.openView(ViewName.Single.eBuyView);
-        LoaderManeger.instance.loadPrefab('prefab/ui/buyView').then((prefab) => {
-            let buyNode = instantiate(prefab);
-            ViewManager.show({
-                node: buyNode,
-                name: "BuyView"
+           LoaderManeger.instance.loadPrefab('prefab/ui/getGold').then((prefab) => {
+                let getGold = instantiate(prefab);
+                ViewManager.show({
+                    node: getGold,
+                    name: "GetGold"
+                });
             });
-        });
     }
 
     /** 暂停 */
@@ -2309,6 +2311,25 @@ export class Game extends BaseNodeCom {
                 break;
         }
 
+        if (type === -1) {
+            return;
+        }
+
+        const cost = 100;
+        const success = GameData.spendGold(cost);
+
+        if (success) {
+            GameData.setBomb(type, 1);
+            this.updateToolsInfo();
+        } else {
+            LoaderManeger.instance.loadPrefab('prefab/ui/getGold').then((prefab) => {
+                let getGold = instantiate(prefab);
+                ViewManager.show({
+                    node: getGold,
+                    name: "GetGold"
+                });
+            });
+        }
     }
 
     /** 通过分享获取道具 */

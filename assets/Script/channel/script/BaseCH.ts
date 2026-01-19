@@ -233,5 +233,76 @@ export default class BaseCH implements BaseINT {
         }
     }
 
+    /**
+     * 写入用户云存储数据
+     * @param kvData 要写入的键值对对象，value 可以是字符串或可序列化对象
+     */
+        kvData: {
+        "score": 100,
+        "progress": 10
+    }
+    setUserCloudStorage(kvData?: { key: string; value: any }) {
+        if (!this.ch || !this.ch.setUserCloudStorage) {
+            return;
+        }
+
+        this.ch.setUserCloudStorage({
+            KVDataList: [
+                {
+                    key: "ONE",
+                    value: JSON.stringify(kvData),
+                },
+            ],
+            success: (res) => {
+                console.log("setUserCloudStorage success", res);
+            },
+            fail: (res) => {
+                console.log("setUserCloudStorage fail", res);
+            },
+            complete: (res) => {
+                console.log("setUserCloudStorage complete", res);
+            },
+        });
+    }
+
+    /**
+     * 读取用户云存储数据
+     * @param keyList 需要读取的 key 列表
+     * @param callback 读取完成回调，参数为平台返回的 KVDataList 或 null
+     */
+
+    KVDataList: {
+        "score": 100,
+        "progress": 10
+    }
+
+    getUserCloudStorage( callback?: (data: {}) => void) {
+        if (!this.ch || !this.ch.getUserCloudStorage ) {
+            if (callback) {
+                callback(null);
+            }
+            return;
+        }
+        this.ch.getUserCloudStorage({
+           keyList: ["ONE"],
+            success: (res) => {
+                console.log("getUserCloudStorage success", res);
+                if (callback) {
+                    callback(res.KVDataList || null);
+                }
+            },
+            fail: (res) => {
+                console.log("getUserCloudStorage fail", res);
+                if (callback) {
+                    callback(null);
+                }
+            },
+            complete: (res) => {
+                console.log("getUserCloudStorage complete", res);
+            },
+        });
+    }
+
+
 }
 
