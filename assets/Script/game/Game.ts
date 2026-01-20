@@ -972,6 +972,13 @@ export class Game extends BaseNodeCom {
         if (App.gameCtr.isPause) return;
         // 2024-01-20: 游戏结束等待期间禁止操作
         if (this.isGameOverWaiting) return;
+        
+        // 核心修复：正在处理消除或爆炸时，禁止产生新的触摸
+        if (this.isChecking) {
+            console.log("evtTouchStart: board is checking, touch ignored.");
+            return;
+        }
+
         console.log(this.isStartTouch, this.isStartChange);
         if (this.hand)
             this.hand.active = false;
@@ -1001,6 +1008,12 @@ export class Game extends BaseNodeCom {
         if (App.gameCtr.isPause) return;
         if (this.isStartChange) return;
         if (!this.isStartTouch) return;
+
+        // 核心修复：正在处理消除或爆炸时，禁止触发滑动交换
+        if (this.isChecking) {
+            return;
+        }
+
         let pos = this.gridNode.getComponent(UITransform).convertToNodeSpaceAR(new Vec3(p.x, p.y, 1));
         let bc = this.checkClickOnBlock(pos);
         if (bc && App.gameCtr.isNeighbor(bc, this.curTwo[0])) {
@@ -1278,6 +1291,16 @@ export class Game extends BaseNodeCom {
                 setTimeout(resolve, time * 1000);
             });
             
+            // 核心修复：动画等待结束后，再次检查节点是否依然有效
+            // 如果在此期间被炸弹爆炸销毁，则终止后续逻辑
+            if (!one || !two || !one.node || !two.node || !one.node.isValid || !two.node.isValid) {
+                console.warn("startChangeCurTwoPos: nodes became invalid during animation.");
+                this.isStartChange = false;
+                this.isStartTouch = false;
+                this.resetSelected();
+                return;
+            }
+
             // 动画完成后处理逻辑
             if (!isBack) {
                 // 交换数据
@@ -2033,6 +2056,12 @@ export class Game extends BaseNodeCom {
      * @param {gridCmpt} item2 - 第二个方块组件
      */
     changeData(item1: gridCmpt, item2: gridCmpt) {
+        // 核心保护：确保组件和数据均有效，防止 Cannot read properties of null (reading 'h')
+        if (!item1 || !item2 || !item1.data || !item2.data) {
+            console.error("changeData failed: item or item.data is null.", { item1, item2 });
+            return;
+        }
+
         /** 数据交换 */
         let temp = item1.data;
         item1.data = item2.data;
@@ -2043,11 +2072,27 @@ export class Game extends BaseNodeCom {
         let y1 = item1.data.v;
         let x2 = item2.data.h;
         let y2 = item2.data.v;
+        
+        // 索引越界检查
+        if (!this.blockArr[x1] || !this.blockArr[x2]) return;
+
         let pTemp = this.blockArr[x1][y1];
         this.blockArr[x1][y1] = this.blockArr[x2][y2]
         this.blockArr[x2][y2] = pTemp;
-        this.blockArr[x1][y1].getComponent(gridCmpt).initData(this.blockArr[x1][y1].getComponent(gridCmpt).data.h, this.blockArr[x1][y1].getComponent(gridCmpt).data.v);
-        this.blockArr[x2][y2].getComponent(gridCmpt).initData(this.blockArr[x2][y2].getComponent(gridCmpt).data.h, this.blockArr[x2][y2].getComponent(gridCmpt).data.v);
+
+        // 节点有效性检查后再初始化
+        if (this.blockArr[x1][y1] && this.blockArr[x1][y1].isValid) {
+            const comp = this.blockArr[x1][y1].getComponent(gridCmpt);
+            if (comp && comp.data) {
+                comp.initData(comp.data.h, comp.data.v);
+            }
+        }
+        if (this.blockArr[x2][y2] && this.blockArr[x2][y2].isValid) {
+            const comp = this.blockArr[x2][y2].getComponent(gridCmpt);
+            if (comp && comp.data) {
+                comp.initData(comp.data.h, comp.data.v);
+            }
+        }
     }
 
     /**

@@ -1,22 +1,19 @@
 ## 任务目标
-修复使用炸弹道具后滑动水果导致的 Game.ts:2044 `Cannot read properties of null (reading 'h')` 运行时崩溃。
+解决使用道具后滑动方块导致的 TypeError: Cannot read properties of null (reading 'h') 报错，消除异步操作冲突。
 
 ## 技术方案
-### 1. 修复 startChangeCurTwoPos (Game.ts)
-- 在所有 await 异步点（setTimeout 等待、handleBomb 调用）后增加 `isValid(one) && isValid(two)` 校验。
-- 只有在节点依然有效时才执行 `changeData` 或后续的 `handleBomb` 逻辑。
+### 1. 棋盘状态锁定 (Game.ts)
+- 在 evtTouchStart 中增加对 this.isChecking 的检查，如果为 true 则拒绝新的触摸操作。
+- 在 evtTouchMove 中同步增加 isChecking 检查，防止在处理爆炸或下落时触发滑动交换。
 
-### 2. 修复 changeData (Game.ts)
-- 增加防御性编程：检查 `item1.data` 和 `item2.data` 是否为 null。
-- 只有在数据完整时才进行 blockArr 数组的索引更新。
+### 2. 增强 changeData 健壮性 (Game.ts)
+- 在交换 item1.data 和 item2.data 前，增加 if (!item1 || !item2 || !item1.data || !item2.data) 保护。
+- 在调用 initData 刷新网格前，检查 blockArr[x][y] 是否依然有效（isValid）。
 
-### 3. 修复下落逻辑动画同步 (Game.ts)
-- 重构 `checkMoveDown` 和 `checkReplenishBlock` 的 Promise 返回逻辑。
-- 确保必须等待**所有**下落方块的 Tween 动画完成后，再 resolve 结果，防止下落过程中玩家提前操作导致的数据不一致。
-
-### 4. 触摸事件安全过滤 (Game.ts)
-- 在 `evtTouchMove` 中，在执行 `isNeighbor` 判断前，先校验 `this.curTwo[0]` 是否依然有效。
+### 3. 异步流程保护 (Game.ts)
+- 在 startChangeCurTwoPos 的 tween 动画等待结束后，增加对交换双方节点的 isValid 检查。
+- 如果节点在动画期间被炸弹逻辑销毁，则通过 catch 块安全捕获错误并重置 touch 状态。
 
 ## 验证计划
-- 连续使用 Bomb.bomb 道具，并在爆炸动画期间尝试疯狂滑动屏幕上的水果。
-- 观察控制台是否还有 TypeError 报错，确认游戏是否能稳定运行并正常进入下落补位流程。
+- 使用炸弹道具后，在爆炸动画期间尝试滑动方块，确认不会触发新的交换且不会报错。
+- 确认正常的消除和下落逻辑依然流畅。
