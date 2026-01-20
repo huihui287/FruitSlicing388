@@ -1003,18 +1003,19 @@ export class Game extends BaseNodeCom {
      * 保护措施
      * 防止玩家快速操作引起的游戏中断
      * @description 当玩家进行快速操作时，设置保护机制以避免游戏状态混乱
+     * 2024-01-26: 注释掉强制重置逻辑，避免在长动画过程中错误地解锁操作，导致逻辑冲突
      */
     handleProtected() {
-        if ((this.isStartChange || this.isStartTouch) && !this.isRecording) {
-            this.isRecording = true;
-            this.scheduleOnce(() => {
-                if (this.isValid) {
-                    this.isRecording = false;
-                    this.isStartChange = false;
-                    this.isStartTouch = false;
-                }
-            }, 5)
-        }
+        // if ((this.isStartChange || this.isStartTouch) && !this.isRecording) {
+        //     this.isRecording = true;
+        //     this.scheduleOnce(() => {
+        //         if (this.isValid) {
+        //             this.isRecording = false;
+        //             this.isStartChange = false;
+        //             this.isStartTouch = false;
+        //         }
+        //     }, 5)
+        // }
     }
     /**
      * 是否是炸弹
@@ -1214,66 +1215,133 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<void>} 异步操作，完成方块交换
      */
     async startChangeCurTwoPos(isBack: boolean = false) {
-        let time = Constant.changeTime;
-        let one = this.curTwo[0], two = this.curTwo[1];
-        if (!isBack) {
-            AudioManager.getInstance().playSound("ui_banner_down_show")
-        }
-        else {
-            AudioManager.getInstance().playSound("ui_banner_up_hide")
-        }
-        if (!one || !two) return;
-        
-        // 保存原始位置，避免数据交换后位置计算错误
-        const onePos = this.blockPosArr[one.h][one.v].clone();
-        const twoPos = this.blockPosArr[two.h][two.v].clone();
-        
-        // 执行交换动画
-        const oneTween = tween(one.node).to(time, { position: twoPos });
-        const twoTween = tween(two.node).to(time, { position: onePos });
-        
-        // 同时启动两个动画
-        oneTween.start();
-        twoTween.start();
-        
-        // 使用Promise等待两个动画完成
-        await new Promise<void>((resolve) => {
-            // 监听第二个动画完成
-            setTimeout(resolve, time * 1000);
-        });
-        
-        // 动画完成后处理逻辑
-        if (!isBack) {
-            // 交换数据
-            this.changeData(one, two);
-            
-            // 检查是否形成消除
-            let isbomb1 = await this.handleBomb(one);
-            let isbomb2 = await this.handleBomb(two);
-            let bool = await this.startCheckThree((bl) => {
-     
-            });
-            
-            if (bool || (isbomb1 || isbomb2)) {
-                // 有消除，继续检查
-                this.checkAgain();
+        try {
+            let time = Constant.changeTime;
+            let one = this.curTwo[0], two = this.curTwo[1];
+            if (!isBack) {
+                AudioManager.getInstance().playSound("ui_banner_down_show")
             }
             else {
-                // 无消除，交换回原位
-                console.log("No match found, swapping back");
-
-                await this.startChangeCurTwoPos(true);
+                AudioManager.getInstance().playSound("ui_banner_up_hide")
             }
-        }
-        else {
-            // 交换回原位，恢复数据
-            this.changeData(one, two);
+            if (!one || !two) return;
             
-            // 重置状态
+            // 保存原始位置，避免数据交换后位置计算错误
+            const onePos = this.blockPosArr[one.h][one.v].clone();
+            const twoPos = this.blockPosArr[two.h][two.v].clone();
+            
+            // 执行交换动画
+            const oneTween = tween(one.node).to(time, { position: twoPos });
+            const twoTween = tween(two.node).to(time, { position: onePos });
+            
+            // 同时启动两个动画
+            oneTween.start();
+            twoTween.start();
+            
+            // 使用Promise等待两个动画完成
+            await new Promise<void>((resolve) => {
+                // 监听第二个动画完成
+                setTimeout(resolve, time * 1000);
+            });
+            
+            // 动画完成后处理逻辑
+            if (!isBack) {
+                // 交换数据
+                this.changeData(one, two);
+                
+                // 检查是否形成消除
+                let isbomb1 = await this.handleBomb(one);
+                let isbomb2 = await this.handleBomb(two);
+                let bool = await this.startCheckThree((bl) => {
+        
+                });
+                
+                if (bool || (isbomb1 || isbomb2)) {
+                    // 有消除，继续检查
+                    this.checkAgain();
+                }
+                else {
+                    // 无消除，交换回原位
+                    console.log("No match found, swapping back");
+
+                    await this.startChangeCurTwoPos(true);
+                }
+            }
+            else {
+                // 交换回原位，恢复数据
+                this.changeData(one, two);
+                
+                // 重置状态
+                this.isStartChange = false;
+                this.isStartTouch = false;
+                this.resetSelected();
+            }
+        } catch (error) {
+            console.error("startChangeCurTwoPos error:", error);
             this.isStartChange = false;
             this.isStartTouch = false;
             this.resetSelected();
         }
+        // let time = Constant.changeTime;
+        // let one = this.curTwo[0], two = this.curTwo[1];
+        // if (!isBack) {
+        //     AudioManager.getInstance().playSound("ui_banner_down_show")
+        // }
+        // else {
+        //     AudioManager.getInstance().playSound("ui_banner_up_hide")
+        // }
+        // if (!one || !two) return;
+        
+        // // 保存原始位置，避免数据交换后位置计算错误
+        // const onePos = this.blockPosArr[one.h][one.v].clone();
+        // const twoPos = this.blockPosArr[two.h][two.v].clone();
+        
+        // // 执行交换动画
+        // const oneTween = tween(one.node).to(time, { position: twoPos });
+        // const twoTween = tween(two.node).to(time, { position: onePos });
+        
+        // // 同时启动两个动画
+        // oneTween.start();
+        // twoTween.start();
+        
+        // // 使用Promise等待两个动画完成
+        // await new Promise<void>((resolve) => {
+        //     // 监听第二个动画完成
+        //     setTimeout(resolve, time * 1000);
+        // });
+        
+        // // 动画完成后处理逻辑
+        // if (!isBack) {
+        //     // 交换数据
+        //     this.changeData(one, two);
+            
+        //     // 检查是否形成消除
+        //     let isbomb1 = await this.handleBomb(one);
+        //     let isbomb2 = await this.handleBomb(two);
+        //     let bool = await this.startCheckThree((bl) => {
+    
+        //     });
+            
+        //     if (bool || (isbomb1 || isbomb2)) {
+        //         // 有消除，继续检查
+        //         this.checkAgain();
+        //     }
+        //     else {
+        //         // 无消除，交换回原位
+        //         console.log("No match found, swapping back");
+
+        //         await this.startChangeCurTwoPos(true);
+        //     }
+        // }
+        // else {
+        //     // 交换回原位，恢复数据
+        //     this.changeData(one, two);
+            
+        //     // 重置状态
+        //     this.isStartChange = false;
+        //     this.isStartTouch = false;
+        //     this.resetSelected();
+        // }
     }
 
     /**
@@ -1300,20 +1368,42 @@ export class Game extends BaseNodeCom {
      * @param {boolean} isResult - 是否为结果检查
      */
     async checkAgain(isResult: boolean = false) {
-        let bool = await this.startCheckThree();
-        if (bool) {
-            this.checkAgain(isResult);
-        }
-        else {
+        try {
+            let bool = await this.startCheckThree();
+            if (bool) {
+                this.checkAgain(isResult);
+            }
+            else {
+                this.resetSelected();
+                this.isStartChange = false;
+                this.isStartTouch = false;
+                this.isChecking = false;
+                if (isResult) {
+                    console.log(isResult);
+                    this.checkAllBomb();
+                }
+            }
+        } catch (error) {
+            console.error("checkAgain error:", error);
             this.resetSelected();
             this.isStartChange = false;
             this.isStartTouch = false;
             this.isChecking = false;
-            if (isResult) {
-                console.log(isResult);
-                this.checkAllBomb();
-            }
         }
+        // let bool = await this.startCheckThree();
+        // if (bool) {
+        //     this.checkAgain(isResult);
+        // }
+        // else {
+        //     this.resetSelected();
+        //     this.isStartChange = false;
+        //     this.isStartTouch = false;
+        //     this.isChecking = false;
+        //     if (isResult) {
+        //         console.log(isResult);
+        //         this.checkAllBomb();
+        //     }
+        // }
     }
     /**
      * 开始检测是否有满足消除条件的存在
@@ -1412,8 +1502,8 @@ export class Game extends BaseNodeCom {
                 }
                 
             }
-            if (CM.mainCH && CM.mainCH.vibrateShort) {
-                CM.mainCH.vibrateShort();
+                    if (CM.mainCH && CM.mainCH.vibrateShort) {
+            CM.mainCH.vibrateShort();
         }
             await ToolsHelper.delayTime(0.2);
             await this.checkMoveDown();
