@@ -120,6 +120,12 @@ export class Game extends BaseNodeCom {
     private V: number = Constant.layCount;
     /** 游戏状态：是否开始触摸 */
     private isStartTouch: boolean = false;
+    // 2024-01-20: 游戏结束等待状态标记
+    private isGameOverWaiting: boolean = false;
+    // 2024-01-20: 游戏结束等待计时
+    private gameOverWaitTime: number = 0;
+    // 2024-01-20: 游戏结束最大等待时间（秒）
+    private readonly GAME_OVER_TIMEOUT: number = 5;
     /** 当前选中的两个方块 */
     private curTwo: gridCmpt[] = [];
     /** 游戏状态：是否开始交换方块 */
@@ -538,6 +544,23 @@ export class Game extends BaseNodeCom {
         if (App.gameCtr.isPause) return;
         this.UPAlert();
         this.UPdownTime(dt);
+
+        // 2024-01-20: 处理游戏结束等待逻辑
+        if (this.isGameOverWaiting) {
+            this.gameOverWaitTime += dt;
+            
+            // 检查是否所有操作都已完成（空闲状态）
+            // 空闲条件：没有正在交换，没有正在检查消除，没有触摸操作，且没有活跃的爆炸粒子
+            const activeParticles = this.particleManager.getActiveParticleCount('particle');
+            const isIdle = !this.isStartChange && !this.isChecking && !this.isStartTouch && activeParticles === 0;
+            
+            // 严格等待所有效果结束，不设超时强制结算
+            if (isIdle) {
+                console.log(`Game over drain out finished. Idle: ${isIdle}, Time: ${this.gameOverWaitTime.toFixed(2)}s`);
+                this.isGameOverWaiting = false; // 重置等待状态
+                this.performGameOver(); // 执行真正的结算
+            }
+        }
     }
 
     /**
@@ -680,19 +703,10 @@ export class Game extends BaseNodeCom {
         if (count == this.AchievetheGoal.length) {
             this.gameState = GameState.WIN;
             
-            // 暂停游戏
-            EventManager.emit(EventName.Game.Pause);
-            // 获取奖励炸弹
-            this.getRewardBombs();
-            // 显示胜利界面
-            LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
-                let resultNode = instantiate(prefab);
-                ViewManager.show({
-                    node: resultNode,
-                    name: "ResultView",
-                    data: { level: LevelConfig.getCurLevel(), isWin: true, rewardBombs: this.rewardBombs }
-                });
-            });
+            // 2024-01-20: 胜利也需要等待特效播放完毕
+            this.isGameOverWaiting = true;
+            this.gameOverWaitTime = 0;
+            console.log("Game Win: Waiting for animations to finish...");
         }
     }
 
@@ -910,19 +924,51 @@ export class Game extends BaseNodeCom {
      */
     GameOver() {
         console.log("Game over: Handling game failure");
-        // this.isWin = false;
-        this.gameState = GameState.GAME_OVER;
+        // 2024-01-20: 注释掉原逻辑，改为进入等待状态
+        // // this.isWin = false;
+        // this.gameState = GameState.GAME_OVER;
 
+        // App.gameCtr.setPause(true);
+  
+        // this.getRewardBombs();
+        // // 加载并显示结果界面
+        // LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
+        //     let resultNode = instantiate(prefab);
+        //     ViewManager.show({
+        //         node: resultNode,
+        //         name: "ResultView",
+        //         data: { level: LevelConfig.getCurLevel(), isWin: false, rewardBombs: this.rewardBombs }
+        //     });
+        // });
+
+        // 2024-01-20: 进入等待状态，等待动画播放完毕
+        this.isGameOverWaiting = true;
+        this.gameOverWaitTime = 0;
+        console.log("Game over: Waiting for animations to finish...");
+    }
+
+    /**
+     * 执行真正的游戏结束逻辑（弹窗）
+     * 2024-01-20: 新增方法，用于在等待结束后调用
+     */
+    private performGameOver() {
+        // 只有非胜利状态才强制设为 GAME_OVER，否则保持 WIN 状态
+        if (this.gameState !== GameState.WIN) {
+            this.gameState = GameState.GAME_OVER;
+        }
+        
         App.gameCtr.setPause(true);
   
         this.getRewardBombs();
+        const isWin = this.gameState === GameState.WIN;
+        
         // 加载并显示结果界面
         LoaderManeger.instance.loadPrefab('prefab/ui/resultView').then((prefab) => {
             let resultNode = instantiate(prefab);
             ViewManager.show({
                 node: resultNode,
                 name: "ResultView",
-                data: { level: LevelConfig.getCurLevel(), isWin: false, rewardBombs: this.rewardBombs }
+                data: { level: LevelConfig.getCurLevel(), isWin: isWin, rewardBombs: this.rewardBombs }
             });
         });
     }
@@ -938,6 +984,8 @@ export class Game extends BaseNodeCom {
      */
     async evtTouchStart(p: Vec2) {
         if (App.gameCtr.isPause) return;
+        // 2024-01-20: 游戏结束等待期间禁止操作
+        if (this.isGameOverWaiting) return;
         console.log(this.isStartTouch, this.isStartChange);
         if (this.hand)
             this.hand.active = false;
@@ -1547,8 +1595,8 @@ export class Game extends BaseNodeCom {
             item.active = +item.name == ele.type;
             item.getComponent(ParticleSystem2D).resetSystem();
         });
-        // 粒子特效播放完成后回收
-        this.particleManager.ParticleWithTimer('particle', particle);
+        // 粒子特效播放完成后回收，设置0.8秒，只关注视觉爆炸时间
+        this.particleManager.ParticleWithTimer('particle', particle, 0.8);
     }
 
     /**
@@ -1609,8 +1657,8 @@ export class Game extends BaseNodeCom {
             item.active = +item.name == targetComp.type;
             item.getComponent(ParticleSystem2D).resetSystem();
         });
-        // 粒子特效播放完成后回收
-        this.particleManager.ParticleWithTimer('particle', hitParticle);
+        // 粒子特效播放完成后回收，设置0.8秒，只关注视觉爆炸时间
+        this.particleManager.ParticleWithTimer('particle', hitParticle, 0.8);
 
         // 扣除真实血量并处理销毁
         targetComp.takeDamage(damage, () => {
@@ -2248,6 +2296,9 @@ export class Game extends BaseNodeCom {
         this.blockPosArr = [];
         this.isStartChange = false;
         this.isStartTouch = false;
+        // 2024-01-20: 重置等待状态
+        this.isGameOverWaiting = false;
+        this.gameOverWaitTime = 0;
     }
 
     // /** 加积分 */
@@ -2374,14 +2425,16 @@ export class Game extends BaseNodeCom {
                     item.active = +item.name == pos.type;
                     item.getComponent(ParticleSystem2D).resetSystem();
                 });
-                // 粒子特效播放完成后回收
-                this.particleManager.ParticleWithTimer('particle', particle);
+                // 粒子特效播放完成后回收，设置0.8秒，只关注视觉爆炸时间
+                this.particleManager.ParticleWithTimer('particle', particle, 0.8);
             });
         }
     }
 
     /** 设置 */
     onClick_setBtn() {
+        // 2024-01-20: 游戏结束等待期间禁止操作
+        if (this.isGameOverWaiting) return;
         App.gameCtr.setPause(true);
         LoaderManeger.instance.loadPrefab('prefab/ui/settingGameView').then((prefab) => {
             let settingNode = instantiate(prefab);
@@ -2394,6 +2447,8 @@ export class Game extends BaseNodeCom {
 
     /** 购买金币 */
     onClick_buyBtn() {
+        // 2024-01-20: 游戏结束等待期间禁止操作
+        if (this.isGameOverWaiting) return;
         AudioManager.getInstance().playSound('button_click');
         // App.view.openView(ViewName.Single.eBuyView);
            LoaderManeger.instance.loadPrefab('prefab/ui/getGold').then((prefab) => {
@@ -2473,6 +2528,8 @@ export class Game extends BaseNodeCom {
     }
 
     onClickVideoButton(btnNode: Node) {
+        // 2024-01-20: 游戏结束等待期间禁止操作
+        if (this.gameState === GameState.GAME_OVER || this.isGameOverWaiting) return;
         AudioManager.getInstance().playSound('button_click');
         let type: number = -1;
         switch (btnNode.name) {
@@ -2505,6 +2562,8 @@ export class Game extends BaseNodeCom {
     private isUsingBomb: boolean = false;
     /** 道具 */
     onClickToolButton(btnNode: Node) {
+        // 2024-01-20: 游戏结束等待期间禁止操作
+        if (this.isGameOverWaiting) return;
         if (this.getTimeInterval() > 0) {
             ViewManager.toast("操作太快")
             return;
@@ -2555,6 +2614,8 @@ export class Game extends BaseNodeCom {
      * @returns 第一组可用提示组合（group 列表）；找不到则返回 null
      */
     onClick_tipsBtn(isGuide: boolean=false): Node[] | null {
+        // 2024-01-20: 游戏结束等待期间禁止操作
+        if (this.isGameOverWaiting) return null;
         this.lastTipsCenter = null;
         if (!this.blockArr || this.blockArr.length === 0) {
             return null;

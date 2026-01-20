@@ -225,9 +225,18 @@ export class Turret extends BaseNodeCom {
     public get maxCapacity(): number {
         return this._baseCapacity * GameData.loadData(GameData.TurretLevel, 1);
     }
-   
+    /**
+* 容量动画和显示
+*/
+    CapacityAm: Node = null;
+
     /** 存储的grid数据还剩多少个 */
     public gridDataCountLb: Label = null;
+
+    /** 容量显示是否正在播放动画 */
+    private isAnimatingCapacity: boolean = false;
+    /** 容量显示当前是否处于上方状态 */
+    private isCapacityUp: boolean = false;
     /**
      * 组件加载时调用
      * 初始化DownGridManager引用
@@ -258,6 +267,8 @@ export class Turret extends BaseNodeCom {
             this.bulletPrefab = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
         }
         this.gridDataCountLb = this.viewList.get('Label').getComponent(Label);
+        this.CapacityAm = this.viewList.get('Capacity/Mask/Am');
+        this.updateCapacityView();
     }
     
     /**
@@ -443,6 +454,7 @@ export class Turret extends BaseNodeCom {
             }
         }
         this.updateGridDataCountLb();
+        this.updateCapacityView();
     }
 
     /**
@@ -613,6 +625,31 @@ export class Turret extends BaseNodeCom {
         this.gridDataCountLb.string = `${value}/${this.maxCapacity}`;
     }
 
+    /**
+     * 更新容量显示
+     * 将gridDataList的数据同步显示到CapacityAm的子节点上
+     */
+    public updateCapacityView() {
+        if (!this.CapacityAm) return;
+        let gridData = this.getGroupedGridData();
+        const children = this.CapacityAm.children;
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            
+            if (i < gridData.length) {
+                child.active = true;
+                const gridComp = child.getComponent(gridCmpt);
+                if (gridComp) {
+                    gridComp.setType(gridData[i].type);
+                    gridComp.setCount(gridData[i].count);
+                }
+            } else {
+                // 没有数据的节点隐藏
+                child.active = false;
+            }
+        }
+    }
+
     public addGridData(gridData: GridData): void {
         // 检查是否达到最大容量
         if (this.gridDataList.length >= this.maxCapacity) {
@@ -628,10 +665,57 @@ export class Turret extends BaseNodeCom {
                 // 添加数据到数组
                 this.gridDataList.push(gridData);
                 this.updateGridDataCountLb();
+                this.updateCapacityView();
             }
         }
     }
     
+    /**
+     * 获取归类后的Grid数据
+     * 将gridDataList按水果种类分类，并统计每种的数量
+     * @returns 包含种类和数量的对象数组
+     */
+    public getGroupedGridData(): { type: GridType, count: number }[] {
+        const summary = new Map<GridType, number>();
+
+        // 统计每种类型的数量
+        for (const data of this.gridDataList) {
+            const count = summary.get(data.type) || 0;
+            summary.set(data.type, count + 1);
+        }
+
+        // 转换为数组格式
+        const result: { type: GridType, count: number }[] = [];
+        summary.forEach((count, type) => {
+            result.push({ type, count });
+        });
+
+        // 按类型排序，保证顺序一致
+        result.sort((a, b) => a.type - b.type);
+
+        return result;
+    }
+    //点击炮塔图标弹出已经添加的水果种类和数量
+    onClick_Turret() {
+        if (this.isAnimatingCapacity || !this.CapacityAm) return;
+
+        this.isAnimatingCapacity = true;
+        
+        // 计算目标位置：如果已经在上方则向下移200，否则向上移200
+        const moveDistance = this.isCapacityUp ? -200 : 200;
+        const targetPos = this.CapacityAm.position.clone().add(v3(0, moveDistance, 0));
+
+        this.CapacityAm.active = true;
+
+        tween(this.CapacityAm)
+            .to(0.5, { position: targetPos }, { easing: 'sineOut' })
+            .call(() => {
+                this.isAnimatingCapacity = false;
+                this.isCapacityUp = !this.isCapacityUp;
+                console.log(`CapacityAm animation finished. isCapacityUp: ${this.isCapacityUp}`);
+            })
+            .start();
+    }
     /**
      * 设置攻击间隔
      * 调整炮塔的攻击速度
