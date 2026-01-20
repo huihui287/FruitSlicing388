@@ -2,12 +2,12 @@
   "ver": "1.1.50",
   "importer": "prefab",
   "imported": true,
-  "uuid": "10e6547f-52fe-4058-99fd-3e1b138d2e2a",
+  "uuid": "d3068779-8d05-41ef-9416-f084048d85d6",
   "files": [
     ".json"
   ],
   "subMetas": {},
   "userData": {
-    "syncNodeName": "homeView"
+    "syncNodeName": "coins"
   }
 }

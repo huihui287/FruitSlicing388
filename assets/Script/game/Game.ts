@@ -61,12 +61,6 @@ export class Game extends BaseNodeCom {
     private target2: Node = null;
     /** UI引用：目标背景节点 */
     private targetBg: Node = null;
-    /** UI引用：步数显示节点 */
-    private lbStep: Node = null;
-    /** UI引用：进度条显示节点 */
-    private spPro: Node = null;
-    /** UI引用：星级显示节点 */
-    private star: Node = null;
     /** UI引用：道具1数量显示节点 */
     private lbTool1: Node = null;
     /** UI引用：道具2数量显示节点 */
@@ -124,8 +118,6 @@ export class Game extends BaseNodeCom {
     private isGameOverWaiting: boolean = false;
     // 2024-01-20: 游戏结束等待计时
     private gameOverWaitTime: number = 0;
-    // 2024-01-20: 游戏结束最大等待时间（秒）
-    private readonly GAME_OVER_TIMEOUT: number = 5;
     /** 当前选中的两个方块 */
     private curTwo: gridCmpt[] = [];
     /** 游戏状态：是否开始交换方块 */
@@ -263,9 +255,6 @@ export class Game extends BaseNodeCom {
         this.targetBg = this.viewList.get('top/content/targetBg');
         this.target1 = this.viewList.get('top/target1');
         this.target2 = this.viewList.get('top/target2');
-        this.lbStep = this.viewList.get('top/lbStep');
-        this.spPro = this.viewList.get('top/probg/spPro');
-        this.star = this.viewList.get('top/star');
         this.lbTool1 = this.viewList.get('bottom/proppenal/tool1/prompt/lbTool1');
         this.lbTool2 = this.viewList.get('bottom/proppenal/tool2/prompt/lbTool2');
         this.lbTool3 = this.viewList.get('bottom/proppenal/tool3/prompt/lbTool3');
@@ -285,10 +274,11 @@ export class Game extends BaseNodeCom {
         this.hand.active = false;
         
         // 设置初始关卡并加载数据 - 从第一关开始
-        if (DEV) {
-            LevelConfig.setCurLevel(1);
-        }
-         LevelConfig.setCurLevel(1);
+        // if (DEV) {
+        //     LevelConfig.setCurLevel(1);
+        // }
+        //  LevelConfig.setCurLevel(1);
+
         this.loadExtraData(LevelConfig.getCurLevel());
         // 添加事件监听器
         this.addEvents();
@@ -408,21 +398,17 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<void>} 异步操作，完成后加载关卡数据
      */
     async loadExtraData(lv: number) {
+        console.log('loadExtraData', lv);
         // Advertise.showInterstitialAds();
         this.data = await LevelConfig.getLevelData(lv);
         App.gameCtr.blockCount = this.data.blockCount;
         this.setLevelInfo();
-        if (lv == 1) {
-            this.gridPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
-            this.rocketPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/rocket');
-            await this.initLayout();
-            this.startDownGrid();
-            
-        } else {
-            // 非第一关暂不执行新手引导
-        }
+        this.gridPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
+        this.rocketPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/rocket');
+        await this.initLayout();
+        this.startDownGrid();
+
         this.Guide();
-        // this.isWin = false;
         this.gameState = GameState.PLAYING;
         App.gameCtr.setPause(false);
     }
@@ -798,7 +784,7 @@ export class Game extends BaseNodeCom {
      */
     throwTools(bombType: number = -1, worldPosition: Vec3 = null) {
         AudioManager.getInstance().playSound("prop_missle");
-        let originPos = worldPosition || this.lbStep.worldPosition;
+        let originPos = worldPosition ;
         
         // 找到一个随机方块作为目标
         let item: gridCmpt = this.getRandomBlock();

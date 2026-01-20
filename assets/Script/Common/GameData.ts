@@ -17,6 +17,28 @@ export default class GameData {
     public static TurretLevel = 'TurretLevel';
     public static MusicOn = 'MusicOn';
     public static SoundOn = 'SoundOn';
+        /** 当前最新关卡 */
+    public static MaxLevel = 'MaxLevel';
+
+    /**
+     * 获取最大解锁关卡
+     * @returns 最大解锁关卡
+     */
+    static getMaxLevel(): number {
+        return Number(GameData.loadData(GameData.MaxLevel, 1));
+    }
+
+    /**
+     * 更新最大解锁关卡（只升不降）
+     * @param level 新关卡
+     */
+    static updateMaxLevel(level: number): void {
+        const currentMax = this.getMaxLevel();
+        if (level > currentMax) {
+            GameData.saveData(GameData.MaxLevel, level);
+            DEV && console.log(`MaxLevel updated: ${currentMax} -> ${level}`);
+        }
+    }
     /**
      * 保存游戏数据
      * @param key 数据键名

@@ -8,19 +8,20 @@ class config {
     /** 下一关，并本地缓存已通过关卡 */
     nextLevel() {
         let lv = +this.getCurLevel();
-        // StorageHelper.setData(StorageHelperKey.Level, lv + 1);
-        GameData.saveData(GameData.Level, lv + 1);
-        App.gameCtr.curLevel = lv + 1;
+        const nextLv = lv + 1;
+        GameData.saveData(GameData.Level, nextLv);
+        GameData.updateMaxLevel(nextLv);
+        App.gameCtr.curLevel = nextLv;
         return App.gameCtr.curLevel;
     }
 
     getCurLevel() {
-        // return +StorageHelper.getData(StorageHelperKey.Level, 1);
         return GameData.loadData(GameData.Level, 1);
     }
     setCurLevel(lv: number) {
         App.gameCtr.curLevel = lv;
         GameData.saveData(GameData.Level, lv);
+        GameData.updateMaxLevel(lv);
     }
 
     async getLevelData(id: number | string): Promise<LevelData> {

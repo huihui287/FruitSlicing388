@@ -79,8 +79,8 @@ export class getGold extends BaseDialog {
             // 渠道广告不可用，直接给予金币（作为兼容方案）
             console.log('广告不可用，直接获得金币');
             const goldReward = 500;
-            const currentGold = GameData.loadData('gold', 0);
-            GameData.saveData('gold', currentGold + goldReward);
+            const currentGold = GameData.loadData('Gold', 0);
+            GameData.saveData('Gold', currentGold + goldReward);
             this.dismiss();
         }
     }

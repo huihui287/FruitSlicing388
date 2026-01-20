@@ -2,12 +2,12 @@
   "ver": "1.1.50",
   "importer": "prefab",
   "imported": true,
-  "uuid": "485d18c7-adb3-4a85-8b8d-2d7fad60393d",
+  "uuid": "1c3d36e1-c257-442b-b0a2-c8f3cd6c4908",
   "files": [
     ".json"
   ],
   "subMetas": {},
   "userData": {
-    "syncNodeName": "acrossView"
+    "syncNodeName": "fnt"
   }
 }

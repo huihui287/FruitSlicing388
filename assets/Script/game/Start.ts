@@ -70,6 +70,17 @@ export class Start extends BaseNodeCom {
             });
         });
     }
+
+    onClick_levelBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        LoaderManeger.instance.loadPrefab('prefab/ui/levelSelect').then((prefab) => {
+            let levelSelect = instantiate(prefab);
+            ViewManager.show({
+                node: levelSelect,
+                name: "LevelSelect"
+            });
+        });
+    }
 }
 
 

@@ -373,19 +373,33 @@ export default class ViewManager extends Component {
 
     // 修改后的toast函数 - 修复color函数使用
     static toast(message: string, textColor: Color = new Color(255, 255, 255), showTime = 1.5, fontSize = 0) {
+        console.log("ViewManager.toast called with message:", message);
         if (!ViewManager.checkValid()) {
+            console.error("ViewManager.toast failed: ViewManager not initialized.");
             return;
         }
         let old = ViewManager.getPopupView(ViewManager.View.ToastView);
         let toast;
         let toastView: ToastView
         if (old instanceof ToastView) {
+            console.log("ViewManager.toast: reusing old toast node.");
             toast = old.node;
             toastView = old;
         } else {
+            if (!ViewManager.mViewManager.toastView) {
+                console.error("ViewManager.toast failed: toastView prefab is null in ViewManager.");
+                return;
+            }
+            console.log("ViewManager.toast: instantiating new toast node.");
             toast =  instantiate(ViewManager.mViewManager.toastView);
             toastView = toast.getComponent(ToastView);
         }
+        
+        if (!toastView) {
+            console.error("ViewManager.toast failed: ToastView component not found on prefab.");
+            return;
+        }
+
         toastView.setMessage(message);
         toastView.setFontSize(fontSize);
         toastView.setTextColor(textColor);
