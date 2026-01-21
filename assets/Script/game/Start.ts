@@ -18,6 +18,7 @@ export class Start extends BaseNodeCom {
 
     protected onLoad(): void {
         super.onLoad();
+        
     }
 
     onClick_startBtn() {

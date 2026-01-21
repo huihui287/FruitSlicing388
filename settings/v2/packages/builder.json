@@ -161,7 +161,7 @@
     },
     "background": {
       "type": "custom",
-      "image": "project://settings/bg.png"
+      "image": "project://settings/bg.jpg"
     }
   }
 }
