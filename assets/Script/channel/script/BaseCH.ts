@@ -66,6 +66,9 @@ export default class BaseCH implements BaseINT {
         if (this.ch) {
             let call = (res) => {
                 console.log("监听回到前台事件 总是:", res);
+                if (res && res.scene) {
+                    ChannelDB.sourceScene = res.scene;
+                }
                 // AddPhysical.initData();
             };
             this.ch.onShow(call);
@@ -237,10 +240,10 @@ export default class BaseCH implements BaseINT {
      * 写入用户云存储数据
      * @param kvData 要写入的键值对对象，value 可以是字符串或可序列化对象
      */
-        kvData: {
-        "score": 100,
-        "progress": 10
-    }
+    //     kvData: {
+    //     "score": 100,
+    //     "progress": 10
+    // }
     setUserCloudStorage(kvData?: { }) {
         if (!this.ch || !this.ch.setUserCloudStorage) {
             return;
@@ -271,10 +274,10 @@ export default class BaseCH implements BaseINT {
      * @param callback 读取完成回调，参数为平台返回的 KVDataList 或 null
      */
 
-    KVDataList: {
-        "score": 100,
-        "progress": 10
-    }
+    // KVDataList: {
+    //     "score": 100,
+    //     "progress": 10
+    // }
 
     getUserCloudStorage( callback?: (data:string) => void) {
         if (!this.ch || !this.ch.getUserCloudStorage ) {
@@ -305,6 +308,22 @@ export default class BaseCH implements BaseINT {
         });
     }
 
+    /**
+     * 检测侧边栏是否存在 (Douyin only)
+     * @param callback 
+     */
+    checkSideBar(callback: (isExist: boolean) => void) {
+        console.log("BaseCH checkSideBar: not implemented");
+        if (callback) callback(false);
+    }
+
+    /**
+     * 跳转到侧边栏 (Douyin only)
+     * @param callback 
+     */
+    navigateToSideBar(callback: (success: boolean) => void) {
+        console.log("BaseCH navigateToSideBar: not implemented");
+        if (callback) callback(false);
+    }
 
 }
-

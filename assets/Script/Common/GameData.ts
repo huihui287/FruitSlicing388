@@ -20,6 +20,9 @@ export default class GameData {
         /** 当前最新关卡 */
     public static MaxLevel = 'MaxLevel';
 
+    /** 侧边栏奖励最后领取日期 */
+    public static SidebarRewardDate = 'SidebarRewardDate';
+
     /**
      * 获取最大解锁关卡
      * @returns 最大解锁关卡
@@ -165,5 +168,22 @@ static loadData(key: string, defaultValue: any): any {
         let currentGold = Number(GameData.loadData(GameData.Gold, 0));
         currentGold += goldReward;
         GameData.saveData(GameData.Gold, currentGold);
+    }
+
+    /**
+     * 检查今日是否已领取侧边栏奖励
+     */
+    static isSidebarRewardClaimedToday(): boolean {
+        const lastDate = GameData.loadData(GameData.SidebarRewardDate, '');
+        const today = new Date().toDateString();
+        return lastDate === today;
+    }
+
+    /**
+     * 标记今日侧边栏奖励已领取
+     */
+    static setSidebarRewardClaimed(): void {
+        const today = new Date().toDateString();
+        GameData.saveData(GameData.SidebarRewardDate, today);
     }
 }

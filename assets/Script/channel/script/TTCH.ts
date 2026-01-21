@@ -1,6 +1,9 @@
 import BaseCH from "./BaseCH";
 import { BaseINT } from "./BaseINT";
 import ChannelDB from "../ChannelDB";
+import { director } from "cc";
+import EventManager from "../../Common/view/EventManager";
+import { EventName } from "../../Tools/eventName";
 // import OperationManager from "../../dbmodule/OperationManager";
 // import SwitchManager from "../../global/SwitchManager";
 /**
@@ -40,6 +43,9 @@ export default class TTCH extends BaseCH implements BaseINT {
 
     //显示视频回调
     public videoCallback = null;
+
+    // 抖音侧边栏场景值 (02=抖音, 1036=侧边栏)
+    private readonly SIDEBAR_SCENE_ID = '021036';
 
     constructor(ch) {
         super(ch);
@@ -510,4 +516,75 @@ export default class TTCH extends BaseCH implements BaseINT {
         load();
     }
 
+    /**
+     * 重写 onShowAlways 以支持侧边栏检测和 director.resume
+     */
+    onShowAlways() {
+        if (this.ch) {
+            let call = (res) => {
+                console.log("TTCH 监听回到前台事件:", res);
+                if (res && res.scene) {
+                    ChannelDB.sourceScene = res.scene;
+                    
+                    // 侧边栏复访特殊处理
+                    if (res.scene === this.SIDEBAR_SCENE_ID) {
+                        console.log("TTCH: Launch/Resume from sidebar");
+                        // 确保游戏恢复运行 (Fix for some Douyin pausing issues)
+                        director.resume();
+                        // 发送侧边栏启动事件
+                        EventManager.emit(EventName.Game.LaunchFromSidebar);
+                    }
+                }
+            };
+            this.ch.onShow(call);
+        }
+    }
+
+    /**
+     * 检测侧边栏是否存在
+     * @param callback (isExist: boolean) => void
+     */
+    checkSideBar(callback: (isExist: boolean) => void) {
+        if (!this.ch || !this.ch.checkScene) {
+            console.log('[TTCH] checkSideBar: Not supported');
+            if (callback) callback(false);
+            return;
+        }
+
+        this.ch.checkScene({
+            scene: "sidebar",
+            success: (res: any) => {
+                console.log("[TTCH] checkScene success:", res.isExist);
+                if (callback) callback(!!res.isExist);
+            },
+            fail: (res: any) => {
+                console.warn("[TTCH] checkScene fail:", res);
+                if (callback) callback(false);
+            }
+        });
+    }
+
+    /**
+     * 跳转到侧边栏
+     * @param callback (success: boolean) => void
+     */
+    navigateToSideBar(callback: (success: boolean) => void) {
+        if (!this.ch) {
+            console.warn("[TTCH] navigateToSideBar: Channel not initialized");
+            if (callback) callback(false);
+            return;
+        }
+
+        this.ch.navigateToScene({
+            scene: "sidebar",
+            success: () => {
+                console.log("[TTCH] navigateToScene success");
+                if (callback) callback(true);
+            },
+            fail: (res: any) => {
+                console.error("[TTCH] navigateToScene failed:", res);
+                if (callback) callback(false);
+            },
+        });
+    }
 }

@@ -71,6 +71,8 @@ export namespace EventName {
         /** 扣血 */
         Damage = "Damage",
 
+        /** 侧边栏启动/恢复 */
+        LaunchFromSidebar = "LaunchFromSidebar",
     }
 
     export enum UI {
