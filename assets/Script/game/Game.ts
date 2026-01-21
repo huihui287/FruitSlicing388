@@ -144,7 +144,6 @@ export class Game extends BaseNodeCom {
     private flyItemPool: Node[] = [];
     /** 飞grid对象池最大容量 */
     private maxFlyItemPoolSize: number = 30;
-    private lastTipsCenter: gridCmpt | null = null;
 
     /**
      * 从对象池获取飞grid节点
@@ -2647,7 +2646,7 @@ export class Game extends BaseNodeCom {
     onClick_tipsBtn(isGuide: boolean=false): Node[] | null {
         // 2024-01-20: 游戏结束等待期间禁止操作
         if (this.isGameOverWaiting) return null;
-        this.lastTipsCenter = null;
+
         if (!this.blockArr || this.blockArr.length === 0) {
             return null;
         }
@@ -2667,7 +2666,7 @@ export class Game extends BaseNodeCom {
                         }
                     }
                     if (count == 0) {
-                        this.lastTipsCenter = ele;
+          
                         arr.forEach(item => {
                             if (isGuide) {
                                 item.getComponent(gridCmpt).showTipsGuide(true);
@@ -2687,178 +2686,120 @@ export class Game extends BaseNodeCom {
 
     /**
      * 获取提示组合中需要移动的格子以及移动方向
-     * 使用 onClick_tipsBtn 返回的 group 结果，避免重复遍历棋盘
-     * 逻辑：
-     * 1. 在 group 中找出“异类格子”（与另外两个格子既不同行也不同列）
-     * 2. 另外两个格子必然在同一行或同一列，代表“三消所在的直线”
-     * 3. 由“异类格子”的行/列与这条直线求交点，得到它需要移动到的目标格子坐标
-     * 4. 根据当前坐标与目标坐标的差值，计算移动方向（left/right/up/down）
-     * 5. 如果未能严格找到这三点关系，则退化为：在 group 内任意找到一对相邻格子，取其中一个作为移动格子
-     * @param group onClick_tipsBtn 返回的组合结果（提示用到的格子列表）
-     * @returns { grid, dir } grid 为需要移动的格子，dir 为移动方向；若没有则返回 null
+     * 逻辑修正：
+     * 1. 遍历 group 中的每一个格子，检查它是否可以通过与“外部”的某个格子交换来形成消除。
+     *    注意：这里的“外部”指的是 group 列表之外的格子，或者是 group 内部但位置不对的格子。
+     *    实际上，提示系统返回的 group 是指“这几个格子将会连成一线”。
+     *    所以我们需要找的是：谁移动一步，就能让这几个格子（可能加上移动的目标格子）连起来。
+     * 2. 遍历 group 中的每个格子，尝试往 4 个方向交换。
+     * 3. 关键点：我们不仅要看能不能消除，还要看消除的主体是不是 group 里的这些格子。
+     *    不过简化逻辑，只要能促成三消，就是有效提示。
+     * @param group onClick_tipsBtn 返回的组合结果
+     */
+    /**
+     * 获取提示组合中需要移动的格子以及移动方向
+     * 逻辑修正：
+     * 完全基于几何位置分析，不再进行模拟交换
+     * 核心思想：给定的3个格子中，必然有两个构成了“消除基座”（相邻或隔一格），
+     * 第三个格子（Mover）就在基座的“补位点”旁边。
+     * @param group onClick_tipsBtn 返回的组合结果
      */
     getTipsMoveInfo(group: Node[] | null): { grid: gridCmpt, dir: Direction } | null {
-        if (!group || group.length === 0) {
-            return null;
-        }
-        if (group.length < 2) {
-            return null;
-        }
+        if (!group || group.length < 3) return null;
 
-        let center = this.lastTipsCenter;
-        if (!center) {
-            return null;
-        }
-
+        // 提取组件
         let comps: gridCmpt[] = [];
         for (let i = 0; i < group.length; i++) {
-            if (!group[i]) continue;
-            let c = group[i].getComponent(gridCmpt);
-            if (!c) continue;
-            comps.push(c);
-        }
-        if (comps.length === 0) return null;
-
-        let candidates: gridCmpt[] = [];
-        for (let i = 0; i < comps.length; i++) {
-            let g = comps[i];
-            let dh = g.data.h - center.data.h;
-            let dv = g.data.v - center.data.v;
-            if (Math.abs(dh) + Math.abs(dv) === 1) {
-                candidates.push(g);
+            if (group[i] && group[i].isValid) {
+                let c = group[i].getComponent(gridCmpt);
+                if (c) comps.push(c);
             }
         }
+        if (comps.length < 3) return null;
 
-        for (let i = 0; i < candidates.length; i++) {
-            let target = candidates[i];
-            if (this.canSwapFormMatch(center, target)) {
-                let dh = center.data.h - target.data.h;
-                let dv = center.data.v - target.data.v;
-                let dir: Direction | null = null;
-                if (dh === -1 && dv === 0) dir = Direction.left;
-                else if (dh === 1 && dv === 0) dir = Direction.right;
-                else if (dh === 0 && dv === 1) dir = Direction.up;
-                else if (dh === 0 && dv === -1) dir = Direction.down;
-                if (dir !== null) {
-                    if (DEV) {
-                        console.log(
-                            "提示移动：",
-                            target.data.h + "," + target.data.v,
-                            "->",
-                            center.data.h + "," + center.data.v,
-                            "方向：",
-                            dir
-                        );
-                    }
-                    return { grid: target, dir };
+        // 遍历所有可能的两两组合作为“基座”
+        // 性能说明：通常 group 只有 3 个元素，循环次数极少 (C(3,2)=3次)，
+        // 即使是 5 连消提示 (C(5,2)=10次)，性能消耗也可忽略不计。
+        for (let i = 0; i < comps.length; i++) {
+            for (let j = i + 1; j < comps.length; j++) {
+                let c1 = comps[i];
+                let c2 = comps[j];
+
+                // 快速剪枝：如果两个基座距离太远（曼哈顿距离 > 2），直接跳过
+                // 因为即使是夹心型 X_X，坐标差最大也是 2。
+                if (Math.abs(c1.data.h - c2.data.h) > 2 || Math.abs(c1.data.v - c2.data.v) > 2) {
+                    continue;
                 }
-            }
-        }
 
-        for (let i = 0; i < comps.length; i++) {
-            for (let j = 0; j < comps.length; j++) {
-                if (i === j) continue;
-                let a = comps[i];
-                let b = comps[j];
-                let dh = b.data.h - a.data.h;
-                let dv = b.data.v - a.data.v;
-                if (Math.abs(dh) + Math.abs(dv) === 1) {
-                    let dir: Direction | null = null;
-                    if (dh === -1 && dv === 0) dir = Direction.left;
-                    else if (dh === 1 && dv === 0) dir = Direction.right;
-                    else if (dh === 0 && dv === 1) dir = Direction.up;
-                    else if (dh === 0 && dv === -1) dir = Direction.down;
-                    if (dir !== null) {
-                        if (DEV) {
-                            console.log(
-                                "提示移动兜底：",
-                                a.data.h + "," + a.data.v,
-                                "->",
-                                b.data.h + "," + b.data.v,
-                                "方向：",
-                                dir
-                            );
+                // 检查函数：判断 Mover 是否在补位点旁边
+                // 使用闭包避免创建 holes 数组，减少 GC
+                const checkHoleAndFindMover = (holeH: number, holeV: number): { grid: gridCmpt, dir: Direction } | null => {
+                     // 坐标合法性检查
+                    if (holeH < 0 || holeH >= this.H || holeV < 0 || holeV >= this.V) return null;
+
+                    // 在剩余的格子中寻找“Mover”
+                    for (let k = 0; k < comps.length; k++) {
+                        if (k === i || k === j) continue;
+                        let mover = comps[k];
+
+                        let dh = holeH - mover.data.h;
+                        let dv = holeV - mover.data.v;
+
+                        // 判断是否相邻 (曼哈顿距离为1)
+                        if (Math.abs(dh) + Math.abs(dv) === 1) {
+                            let dir: Direction;
+                            if (dh === 1) dir = Direction.right;
+                            else if (dh === -1) dir = Direction.left;
+                            else if (dv === 1) dir = Direction.up;
+                            else dir = Direction.down;
+                            
+                            if (DEV) {
+                                console.log(`Tips Geometric: Found pair (${c1.data.h},${c1.data.v})&(${c2.data.h},${c2.data.v}), Mover (${mover.data.h},${mover.data.v}) -> ${dir}`);
+                            }
+                            return { grid: mover, dir: dir };
                         }
-                        return { grid: a, dir };
+                    }
+                    return null;
+                };
+
+                // 检查水平关系
+                if (c1.data.v === c2.data.v) {
+                    let diffH = Math.abs(c1.data.h - c2.data.h);
+                    if (diffH === 1) { 
+                        // 情况1：XX型（相邻），补位点在两头：_XX 或 XX_
+                        let res = checkHoleAndFindMover(Math.min(c1.data.h, c2.data.h) - 1, c1.data.v);
+                        if (res) return res;
+                        res = checkHoleAndFindMover(Math.max(c1.data.h, c2.data.h) + 1, c1.data.v);
+                        if (res) return res;
+                    } else if (diffH === 2) {
+                        // 情况2：X_X型（夹心），补位点在中间
+                        let res = checkHoleAndFindMover((c1.data.h + c2.data.h) / 2, c1.data.v);
+                        if (res) return res;
+                    }
+                }
+                // 检查垂直关系
+                else if (c1.data.h === c2.data.h) {
+                    let diffV = Math.abs(c1.data.v - c2.data.v);
+                    if (diffV === 1) {
+                        // 情况3：垂直相邻，补位点在上下
+                        let res = checkHoleAndFindMover(c1.data.h, Math.min(c1.data.v, c2.data.v) - 1);
+                        if (res) return res;
+                        res = checkHoleAndFindMover(c1.data.h, Math.max(c1.data.v, c2.data.v) + 1);
+                        if (res) return res;
+                    } else if (diffV === 2) {
+                        // 情况4：垂直夹心，补位点在中间
+                        let res = checkHoleAndFindMover(c1.data.h, (c1.data.v + c2.data.v) / 2);
+                        if (res) return res;
                     }
                 }
             }
         }
 
         return null;
-
     }
 
-    private canSwapFormMatch(a: gridCmpt, b: gridCmpt): boolean {
-        if (!this.blockArr || this.blockArr.length === 0) {
-            return false;
-        }
+    // canSwapFormMatch removed
 
-        let ax = a.data.h;
-        let ay = a.data.v;
-        let bx = b.data.h;
-        let by = b.data.v;
-        let typeA = a.type;
-        let typeB = b.type;
-
-        let getTypeAt = (x: number, y: number): number => {
-            if (x === ax && y === ay) {
-                return typeB;
-            }
-            if (x === bx && y === by) {
-                return typeA;
-            }
-            if (x < 0 || x >= this.H || y < 0 || y >= this.V) {
-                return -1;
-            }
-            let node = this.blockArr[x][y];
-            if (!node) return -1;
-            let c = node.getComponent(gridCmpt);
-            if (!c) return -1;
-            return c.type;
-        };
-
-        let checkPos = (x: number, y: number, type: number): boolean => {
-            if (type >= Constant.NormalType) return false;
-            let lenH = 1;
-            let i = x - 1;
-            while (i >= 0) {
-                let t = getTypeAt(i, y);
-                if (t !== type || t >= Constant.NormalType) break;
-                lenH++;
-                i--;
-            }
-            i = x + 1;
-            while (i < this.H) {
-                let t = getTypeAt(i, y);
-                if (t !== type || t >= Constant.NormalType) break;
-                lenH++;
-                i++;
-            }
-
-            let lenV = 1;
-            let j = y - 1;
-            while (j >= 0) {
-                let t = getTypeAt(x, j);
-                if (t !== type || t >= Constant.NormalType) break;
-                lenV++;
-                j--;
-            }
-            j = y + 1;
-            while (j < this.V) {
-                let t = getTypeAt(x, j);
-                if (t !== type || t >= Constant.NormalType) break;
-                lenV++;
-                j++;
-            }
-
-            return lenH >= 3 || lenV >= 3;
-        };
-
-        if (checkPos(ax, ay, typeB)) return true;
-        if (checkPos(bx, by, typeA)) return true;
-        return false;
-    }
     /**
      * 从对象池获取火箭效果
      */

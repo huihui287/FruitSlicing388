@@ -414,7 +414,13 @@ export default class ViewManager extends Component {
     }
 
     static getRoot() {
-        return  director.getScene().getChildByName("Canvas");
+        let root = director.getScene().getChildByName("Canvas");
+        if (!root && director.getScene().children.length > 0) {
+            // 如果找不到名为 Canvas 的节点，尝试返回第一个节点作为根节点
+            root = director.getScene().children[0];
+            console.warn("ViewManager.getRoot: 'Canvas' not found, using first child as root:", root.name);
+        }
+        return root;
     }
 
     // 原始findChildByName函数

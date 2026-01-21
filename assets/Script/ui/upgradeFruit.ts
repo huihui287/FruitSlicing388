@@ -45,7 +45,7 @@ export class upgradeFruit extends BaseDialog {
         // 检查金币是否足够
         const currentGold = GameData.getGold();
         if (currentGold < buyPrice) {
-            console.log("金币不足，无法购买");
+            ViewManager.toast("金币不足，无法购买");
             // 弹出购买金币界面
             LoaderManeger.instance.loadPrefab('prefab/ui/getGold').then((prefab) => {
                 let getGoldNode = instantiate(prefab);
@@ -60,7 +60,7 @@ export class upgradeFruit extends BaseDialog {
         // 花费金币
         const spendSuccess = GameData.spendGold(buyPrice);
         if (!spendSuccess) {
-            console.log("购买失败");
+            ViewManager.toast("购买失败");
             return;
         }
         
@@ -87,7 +87,7 @@ export class upgradeFruit extends BaseDialog {
         const gridTypeTemp = 'LVAttack' + type;
         const currentLevel = GameData.loadData(gridTypeTemp, 1);
         GameData.saveData(gridTypeTemp, currentLevel + 1);
-        console.log(`购买成功，水果类型 ${type} 攻击提升到等级 ${currentLevel + 1}`);
+        ViewManager.toast(`购买成功，水果类型 ${type} 攻击提升到等级 ${currentLevel + 1}`);
         
         // 更新界面显示
         this.updateLbData();

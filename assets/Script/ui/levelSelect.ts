@@ -189,7 +189,8 @@ export class levelSelect extends BaseDialog {
         this.dismiss();
     }
 
-    onClick_playBtn(node: Node) {
+    onClick_playBtn() {
+        App.GoGame();
         this.dismiss();
     }
     

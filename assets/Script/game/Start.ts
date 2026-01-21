@@ -21,8 +21,15 @@ export class Start extends BaseNodeCom {
     }
 
     onClick_startBtn() {
-        App.gameCtr.curLevel = LevelConfig.getCurLevel();
-        App.GoGame();
+        LoaderManeger.instance.loadPrefab('prefab/ui/levelSelect').then((prefab) => {
+            let levelSelect = instantiate(prefab);
+            ViewManager.show({
+                node: levelSelect,
+                name: "LevelSelect"
+            });
+        });
+        // App.gameCtr.curLevel = LevelConfig.getCurLevel();
+        // App.GoGame();
     }
     onClick_shopBtn() {
         AudioManager.getInstance().playSound('button_click');
@@ -61,7 +68,6 @@ export class Start extends BaseNodeCom {
 
     onClick_upgradeFruitBtn() {
         AudioManager.getInstance().playSound('button_click');
-        // App.view.openView(ViewName.Single.eSettingView);
         LoaderManeger.instance.loadPrefab('prefab/ui/upgradeFruit').then((prefab) => {
             let upgradeFruit = instantiate(prefab);
             ViewManager.show({

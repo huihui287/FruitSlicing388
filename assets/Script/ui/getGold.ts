@@ -11,6 +11,7 @@ import BaseDialog from '../Common/view/BaseDialog';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
+import ViewManager from '../Common/view/ViewManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('getGold')
@@ -40,13 +41,13 @@ export class getGold extends BaseDialog {
                     // 分享成功，给予金币奖励
                     const goldReward = 100; // 可以根据实际需求调整奖励数量
                     GameData.addGold(goldReward);
-                    console.log(`分享成功，获得 ${goldReward} 金币`);
+                    ViewManager.toast(`分享成功，获得 ${goldReward} 金币`);
                     // 可以在这里添加获得金币的动画或提示
                     this.dismiss();
                 }
             });
         } else {
-            console.error("分享功能不可用");
+            ViewManager.toast("分享功能不可用");
         }
     }
 
@@ -67,17 +68,17 @@ export class getGold extends BaseDialog {
                     // 视频观看成功，给予金币奖励
                     const goldReward = 500; // 可以根据实际需求调整奖励数量
                     GameData.addGold(goldReward);
-                    console.log(`视频观看成功，获得 ${goldReward} 金币`);
+                    ViewManager.toast(`视频观看成功，获得 ${goldReward} 金币`);
                     // 可以在这里添加获得金币的动画或提示
                     this.dismiss();
                 } else {
                     // 视频观看失败或中途退出
-                    console.log('视频观看失败');
+                    ViewManager.toast('视频观看失败');
                 }
             });
         } else {
             // 渠道广告不可用，直接给予金币（作为兼容方案）
-            console.log('广告不可用，直接获得金币');
+            ViewManager.toast('广告不可用，直接获得金币');
             const goldReward = 500;
             const currentGold = GameData.loadData('Gold', 0);
             GameData.saveData('Gold', currentGold + goldReward);

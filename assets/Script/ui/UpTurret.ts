@@ -16,17 +16,20 @@ const { ccclass, property } = _decorator;
 
 @ccclass('getGold')
 export class getGold extends BaseDialog {
-    @property({type: Node})
     Label001: Node = null;
+maxCapacity=50;
+    description: Node = null;
     onLoad() {
         super.onLoad();
         this.Label001= this.viewList.get('bg/Label001');
+        this.description = this.viewList.get('bg/description');
         this.upTurretLevel();
     }
 
     upTurretLevel() {
         let turretLevel = GameData.loadData(GameData.TurretLevel, 1);
         this.Label001.getComponent(Label).string = '当前炮塔等级：' + turretLevel;
+        this.description.getComponent(Label).string = '下一级可以炮塔容量可以增加'+this.maxCapacity*turretLevel;
     }
     onClick_upBtn() {
         AudioManager.getInstance().playSound('button_click');
