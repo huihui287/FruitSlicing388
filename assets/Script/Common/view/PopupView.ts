@@ -67,11 +67,19 @@ export default class PopupView extends Component {
     
     // 修改后的show方法 - 使用tween动画系统
     show(parent: Node) {
-        if (!isValid(this) || !isValid(parent)) {
+        if (!isValid(this)) {
+            return;
+        }
+        if (!isValid(parent)) {
             return;
         }
         this.node.parent = parent;
-        // this.node.setSiblingIndex(this._localZOrder);// || 0);
+        this.node.active = true;
+        if (this._localZOrder > 0) {
+            this.node.setSiblingIndex(this._localZOrder);
+        } else {
+            this.node.setSiblingIndex(this.node.parent.children.length - 1);
+        }
         if (isValid(this._showActionTarget) && isValid(this._showAction)) {
             tween(this._showActionTarget).stop().then(this._showAction).start();
         }

@@ -15,7 +15,7 @@ export default class ToastView extends PopupView {
     messageLabel: Label = null;
 
     private message: string;
-    private _showTime = 1.5;//显示时长
+    private _showTime = 0.8;//显示时长
     private _initialPos: Vec3 = null; // 记录初始位置
 
     onLoad() {
@@ -61,31 +61,26 @@ export default class ToastView extends PopupView {
         if (!uiOpacity) {
             uiOpacity = this.node.addComponent(UIOpacity);
         }
-        
-        // --- 核心修复：重置状态 ---
         // 1. 停止该节点和透明度组件上的所有正在运行的动画
         Tween.stopAllByTarget(this.node);
         Tween.stopAllByTarget(uiOpacity);
-
         // 2. 恢复初始位置和透明度
         if (this._initialPos) {
             this.node.setPosition(this._initialPos);
         }
         uiOpacity.opacity = 255;
-
         // --- 重新开始动画逻辑 ---
-        const currentPos = this.node.position;
-        
-        // tween(uiOpacity)
-        //     .delay(this._showTime) // 停留时长
-        //     .parallel(
-        //         tween().to(0.8, { opacity: 0 }, { easing: 'sineOut' }), // 逐渐消失
-        //         tween(this.node).to(0.8, { position: v3(currentPos.x, currentPos.y + 150, currentPos.z) }, { easing: 'sineOut' }) // 向上飘动
-        //     )
-        //     .call(() => {
-        //         this.dismiss(); // 动画结束后调用 dismiss 销毁或回收
-        //     })
-        //     .start();
+        const currentPos = this.node.position.clone();
+        tween(uiOpacity)
+            .delay(this._showTime)
+            .parallel(
+                tween().to(0.4, { opacity: 0 }, { easing: 'sineOut' }),
+                tween(this.node).to(0.4, { position: v3(currentPos.x, currentPos.y + 150, currentPos.z) }, { easing: 'sineOut' })
+            )
+            .call(() => {
+                this.dismiss();
+            })
+            .start();
     }
 
     private delayDismiss() {

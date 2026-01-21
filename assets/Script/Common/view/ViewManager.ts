@@ -372,7 +372,7 @@ export default class ViewManager extends Component {
     // static toast(message: string, textColor:  Color =  color(255, 255, 255), showTime = 1.5, fontSize = 0) {
 
     // 修改后的toast函数 - 修复color函数使用
-    static toast(message: string, textColor: Color = new Color(255, 255, 255), showTime = 1.5, fontSize = 0) {
+    static toast(message: string, textColor: Color = new Color(255, 255, 255), showTime = 0.8, fontSize = 0) {
         console.log("ViewManager.toast called with message:", message);
         if (!ViewManager.checkValid()) {
             console.error("ViewManager.toast failed: ViewManager not initialized.");
