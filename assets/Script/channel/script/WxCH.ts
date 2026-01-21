@@ -1,8 +1,6 @@
 import BaseCH from "./BaseCH";
 import { BaseINT } from "./BaseINT";
 import ChannelDB from "../ChannelDB";
-// import OperationManager from "../../dbmodule/OperationManager";
-// import SwitchManager from "../../global/SwitchManager";
 
 /**
  * oppo渠道
@@ -38,12 +36,13 @@ export default class WxCH extends BaseCH implements BaseINT {
         this.getSystem();
         this.getLaunchOptions();
         this.onShowAlways();
-        // this.createBannerAd();
-        // this.createVideoAd();
-        // this.createInterstitialAd();
-        // this.setShareAppMessage();
+        this.createBannerAd();
+        this.createVideoAd();
+        this.createInterstitialAd();
+        this.setShareAppMessage();
         this.checkUpdate();
         this.onHide();
+        console.log("微信渠道初始化完成");
     }
 
     /**创建视频广告*/
@@ -220,21 +219,18 @@ export default class WxCH extends BaseCH implements BaseINT {
     public setShareAppMessage() {
         if (this.ch) {
             console.log("设置转发信息");
-            // OperationManager.shareDataLoad(() => {
-            //     this.ch.onShareAppMessage(() => {
-            //         let sdb = OperationManager.getOneShareData();
-            //         console.log("setShareAppMessage sdb: ", sdb);
-            //         return {
-            //             title: sdb.title,
-            //             imageUrl: sdb.img_url,
-            //             success: (res) => {
-            //             },
-            //             fail: (res) => {
-
-            //             }
-            //         }
-            //     });
-            // });
+            this.ch.onShareAppMessage(() => {
+                return {
+                    title: "好玩的水果消除游戏，快来挑战吧！",
+                    imageUrl: "", // 默认分享图
+                    success: (res) => {
+                        console.log("转发成功");
+                    },
+                    fail: (res) => {
+                        console.log("转发失败");
+                    }
+                }
+            });
         }
     }
 
@@ -242,23 +238,16 @@ export default class WxCH extends BaseCH implements BaseINT {
     /**普通分享*/
     share(callback = null) {
         if (this.ch) {
-            // if (!OperationManager.isCanShareToday()) {
-            //     this.showToast("今日奖励次数已达上限");
-            //     return;
-            // }
-
             //记录分享开始时间
-            // this.share_start_time = Laya.Browser.now();
             this.share_start_time = Date.now();
-            //设置分享后回调行为
+            
+            //设置分享后回调行为 (通过 onShow 检测)
             let call: Function = (res) => {
                 //记录分享结束时间
-                // this.share_end_time = Laya.Browser.now();
                 this.share_end_time = Date.now();
                 if (this.share_end_time - this.share_start_time >= this.share_interval_time) {
-                    //分享成功
+                    //分享成功 (模拟)
                     if (callback) callback(true);
-                   // OperationManager.addShareToday();
                 } else {
                     //分享失败
                     if (callback) callback(false);
@@ -267,16 +256,12 @@ export default class WxCH extends BaseCH implements BaseINT {
             this.onShow(call);
 
             //拉起分享
-            // OperationManager.shareDataLoad(() => {
-            //     let sdb = OperationManager.getOneShareData();
-            //     // let sn = Laya.Browser.now() + "" + ~~((0.1 + Math.random() / 2) * 10000);
-            //     let sn = Date.now() + "" + ~~((0.1 + Math.random() / 2) * 10000);
-            //     this.ch.shareAppMessage({
-            //         title: sdb.title,
-            //         imageUrl: sdb.img_url,
-            //         query: "&sn=" + sn + "&share_id=" + sdb.id,
-            //     });
-            // });
+            let sn = Date.now() + "" + ~~((0.1 + Math.random() / 2) * 10000);
+            this.ch.shareAppMessage({
+                title: "好玩的水果消除游戏，快来挑战吧！",
+                imageUrl: "",
+                query: "&sn=" + sn,
+            });
         }
     }
 

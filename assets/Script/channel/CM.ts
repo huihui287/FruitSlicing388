@@ -36,12 +36,11 @@ export default class CM {
 
 
     constructor(platform) {
-        console.log("platform:", platform)
          CM.platform = platform;
          this.initPlatform();
-         CM.mainCH.getSystem();
-         CM.mainCH.getLaunchOptions();
-         CM.mainCH.onShowAlways();
+        //  CM.mainCH.getSystem();
+        //  CM.mainCH.getLaunchOptions();
+        //  CM.mainCH.onShowAlways();
         // CM.mainCH.createBannerAd();
         // CM.mainCH.createVideoAd();
         // CM.mainCH.createInterstitialAd();//wx qq oppo vivo
@@ -54,7 +53,6 @@ export default class CM {
 
     private initPlatform() {
         console.log("CM.platform:", CM.platform)
-        console.log("CM:", 1)
         if (CM.platform == CM.CH_WEIXIN)
             CM.mainCH = new WxCH(CM.onWindow()) as any
         // else if (CM.platform == CM.CH_QQ)

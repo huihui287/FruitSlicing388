@@ -1289,7 +1289,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "SendReward",
+    "_name": "NextLevelBtn",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -5320,7 +5320,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 3.801,
-      "y": -404.927,
+      "y": -291.699,
       "z": 0
     },
     "_lrot": {
@@ -8871,7 +8871,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "继续",
+    "_string": "复活",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 50,

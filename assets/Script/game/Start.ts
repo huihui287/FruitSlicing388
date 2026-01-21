@@ -157,6 +157,12 @@ export class Start extends BaseNodeCom {
         }
     }
 
+    //点击分享按钮
+    onClick_shareBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        CM.mainCH.share();
+    }
+    
     onClick_startBtn() {
         LoaderManeger.instance.loadPrefab('prefab/ui/levelSelect').then((prefab) => {
             let levelSelect = instantiate(prefab);

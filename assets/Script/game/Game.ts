@@ -291,20 +291,24 @@ export class Game extends BaseNodeCom {
      * - 非新玩家：延时展示“操作提示”逻辑（handleTimePro）
      */
     Guide() {
-        let isnew = GameData.isNewPlayer();
-        if (isnew) {
-            // 新玩家：直接触发一次提示和手势教学，引导基础操作
+        try {
+            let isnew = GameData.isNewPlayer();
+            if (isnew == 0) {
+                // 新玩家：直接触发一次提示和手势教学，引导基础操作
 
-            let tips = this.onClick_tipsBtn(true);
-            console.log('tips', tips);
-            let info = this.getTipsMoveInfo(tips);
-            console.log('info', info);
-            if (info) {
-                this.playHandGuide(info.grid, info.dir);
+                let tips = this.onClick_tipsBtn(true);
+                // console.log('tips', tips);
+                let info = this.getTipsMoveInfo(tips);
+                // console.log('info', info);
+                if (info) {
+                    this.playHandGuide(info.grid, info.dir);
+                }
+
+            } else {
+                // 老玩家：保持原逻辑，3 秒后开始“不操作提示”计时
             }
-
-        } else {
-            // 老玩家：保持原逻辑，3 秒后开始“不操作提示”计时
+        } catch (error) {
+            console.error("Guide error:", error);
         }
     }
 
@@ -639,7 +643,7 @@ export class Game extends BaseNodeCom {
 
         // 首次降到阈值以下时创建定时器
         if (this.downTime <= 0 ) {
-            if (GameData.isNewPlayer()) {
+            if (GameData.isNewPlayer() == 0) {
                 return;
             }
             // 老玩家：进入 5 秒一次的提示循环
@@ -1588,8 +1592,8 @@ export class Game extends BaseNodeCom {
         this.destroyGridNode(ele);
 
         // 5. 检查是否为新玩家，若为新玩家则设置为非新玩家
-        if (GameData.isNewPlayer()) {
-            GameData.setNewPlayer(false);
+        if (GameData.isNewPlayer()==0) {
+            GameData.setNewPlayer(1);
         }
     }
 

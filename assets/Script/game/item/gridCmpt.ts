@@ -48,6 +48,7 @@ export class gridCmpt extends Component {
 
     getAttack() {
         this.attack = GameData.loadData('LVAttack' + this.type, 1);
+        console.log('this.attack', this.attack);
         return this.attack;
     }
     
@@ -146,7 +147,10 @@ export class gridCmpt extends Component {
 
     /** 显示提示教学 */
     async showTipsGuide(isshow: boolean) {
-        this.node.getChildByName("selected").active = isshow;
+        let node = this.node.getChildByName("selected");
+        if (node) {
+            node.active = isshow;
+        }
     }
     
     /** 重置grid状态 */

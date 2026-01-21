@@ -12,19 +12,33 @@ const { ccclass, property } = _decorator;
 @ccclass('levelSelect')
 export class levelSelect extends BaseDialog {
     
+    /** 滚动视图节点，用于显示关卡列表 */
     @property(Node)
     ScrollViewNd: Node = null;
 
+    /** 关卡项预制体 */
     private levelItemPrefab: Prefab = null;
+    /** 当前已加载的关卡数量 */
     private loadedLevelCount: number = 0;
+    /** 每页加载的数量，分批加载以优化性能 */
     private pageSize: number = 24; // 增加每页数量，通常是 3 或 4 的倍数
+    /** 是否正在加载中，防止重复触发 */
     private isLoading: boolean = false;
+    /** 滚动视图的内容节点 */
     private contentNd: Node = null;
+    /** 滚动视图组件 */
     private scrollView: ScrollView = null;
+    /** 内容节点的布局组件 */
     private contentLayout: Layout = null;
+    /** 关卡总上限 */
     private readonly MAX_LEVEL: number = 1700; // 关卡上限
+    /** 玩家当前已解锁的最大关卡 */
     private maxUnlockedLevel: number = 1;
     
+    /**
+     * 生命周期：加载时调用
+     * 初始化UI引用、布局模式及事件监听
+     */
     onLoad(): void {
         super.onLoad();
         this.maxUnlockedLevel = GameData.getMaxLevel();
@@ -44,6 +58,10 @@ export class levelSelect extends BaseDialog {
         }
     }
 
+    /**
+     * 生命周期：开始时调用
+     * 加载预制体并初始化第一批关卡数据
+     */
     async start() {
         // 加载预制体
         this.levelItemPrefab = await LoaderManeger.instance.loadPrefab('prefab/ui/levelttem');
@@ -60,7 +78,8 @@ export class levelSelect extends BaseDialog {
     }
 
     /**
-     * 滚动监听：实现预加载
+     * 滚动监听回调
+     * 检测是否滚动到底部，触发加载下一页逻辑
      */
     private onScrolling() {
         if (this.isLoading || this.loadedLevelCount >= this.MAX_LEVEL) return;
@@ -78,6 +97,7 @@ export class levelSelect extends BaseDialog {
 
     /**
      * 异步分帧加载更多关卡
+     * 使用分帧策略避免一次性创建大量节点导致的主线程阻塞
      */
     private async loadMoreLevels() {
         if (this.isLoading || this.loadedLevelCount >= this.MAX_LEVEL) return;
@@ -114,6 +134,8 @@ export class levelSelect extends BaseDialog {
 
     /**
      * 等待下一帧
+     * 辅助方法，用于分帧加载时的异步等待
+     * @returns Promise<void>
      */
     private waitNextFrame(): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, 0));
@@ -121,6 +143,8 @@ export class levelSelect extends BaseDialog {
 
     /**
      * 创建单个关卡项
+     * @param levelIndex 关卡索引（关卡号）
+     * 实例化预制体，设置关卡数字、解锁状态和点击事件
      */
     private createLevelItem(levelIndex: number) {
         if (!this.levelItemPrefab || !this.contentNd) return;
@@ -167,12 +191,22 @@ export class levelSelect extends BaseDialog {
         
     }
 
+    /**
+     * 关闭按钮点击事件
+     * 清理资源并关闭弹窗
+     * @param node 按钮节点
+     */
     onClick_closeBtn(node: Node) {
         this.ScrollViewNd.removeAllChildren();
         this.ScrollViewNd.destroyAllChildren();
        this.dismiss();
     }
 
+    /**
+     * 关卡项点击事件
+     * 检查关卡是否解锁，若解锁则开始游戏
+     * @param node 被点击的关卡节点，name属性存储关卡号
+     */
     onClick_levelBtn(node: Node) {
         let level = parseInt(node.name);
         if (isNaN(level)) return;
@@ -189,6 +223,10 @@ export class levelSelect extends BaseDialog {
         this.dismiss();
     }
 
+    /**
+     * 开始游戏按钮点击事件
+     * 直接开始当前关卡（通常是最高解锁关卡或上次游玩的关卡）
+     */
     onClick_playBtn() {
         App.GoGame();
         this.dismiss();

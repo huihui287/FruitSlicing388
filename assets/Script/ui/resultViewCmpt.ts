@@ -1,4 +1,4 @@
-import { _decorator, Label, Node, tween, v3 } from 'cc';
+import { _decorator, instantiate, Label, Node, tween, v3 } from 'cc';
         
 import { App } from '../Controller/app';
 import { LevelConfig } from '../Tools/levelConfig';
@@ -11,6 +11,8 @@ import BaseDialog from '../Common/view/BaseDialog';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
+import ViewManager from '../Common/view/ViewManager';
+import LoaderManeger from '../sysloader/LoaderManeger';
 const { ccclass, property } = _decorator;
 
 @ccclass('resultViewCmpt')
@@ -72,13 +74,8 @@ export class ResultViewCmpt extends BaseDialog  {
     handleLose() {
         // 失败处理逻辑
     }
-
-    onClick_guanbiBtn_End() {
-        AudioManager.getInstance().playSound('button_click');
-        this.dismiss();
-    }
     
-    onClick_SendReward_End() {
+    onClick_NextLevelBtn() {
         AudioManager.getInstance().playSound('button_click');
         // 发送事件
         EventManager.emit(EventName.Game.SendReward);
@@ -88,21 +85,45 @@ export class ResultViewCmpt extends BaseDialog  {
     handleWin(rewardBombs: {type: number, count: number}[]) {
         let target = this.viewList.get('animNode/win/target');
         target.active=false;
-        // target.children.forEach((item, idx) => {
-        //     if (!rewardBombs) return;
-        //     item.active = idx < rewardBombs.length;
-        //     if (idx < rewardBombs.length) {
-        //         item.getComponent(gridCmpt).setType(rewardBombs[idx].type);
-        //         item.getComponent(gridCmpt).setCount(rewardBombs[idx].count);
-        //     }
-        // });
         this.showgoldnum();
     }
 
+    onClick_continueVideoBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        
+        const cost = 200;
+        if (GameData.spendGold(cost)) {
+            // 复活成功
+            EventManager.emit(EventName.Game.ContinueGame);
+            this.dismiss();
+        } else {
+            // 金币不足
+             LoaderManeger.instance.loadPrefab('prefab/ui/getGold').then((prefab) => {
+                let getGold = instantiate(prefab);
+                ViewManager.show({
+                    node: getGold,
+                    name: "GetGold"
+                });
+            });
+        }
+    }
     /** 分享 */
     onClick_shareBtn() {
         AudioManager.getInstance().playSound('button_click');
-        EventManager.emit(EventName.Game.Share, this.level);
+        
+        if (CM.mainCH) {
+            CM.mainCH.share((success: boolean) => {
+                if (success) {
+                    // 分享成功，复活游戏
+                    console.log("分享成功，复活游戏");
+                    EventManager.emit(EventName.Game.ContinueGame);
+                    this.dismiss();
+                } else {
+                    // 分享失败
+                    ViewManager.toast("分享失败");
+                }
+            });
+        }
     }
 
     onClick_guanbiBtn() {

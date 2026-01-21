@@ -70,11 +70,11 @@ export default class GameData {
  * @returns 加载的数据
  */
 static loadData(key: string, defaultValue: any): any {
-    try {
-        const dataStr = sys.localStorage.getItem(key);
-        if (dataStr === null) {
-            return defaultValue;
-        }
+        try {
+            const dataStr = sys.localStorage.getItem(key);
+            if (dataStr === null || dataStr === "") {
+                return defaultValue;
+            }
         
         // 尝试解析为JSON对象/数组
         try {
@@ -128,13 +128,13 @@ static loadData(key: string, defaultValue: any): any {
  * @returns 如果是新玩家则返回true，否则返回false
  */
     static isNewPlayer() {
-        return GameData.loadData(GameData.IsNewPlayer, true);
+        return GameData.loadData(GameData.IsNewPlayer, 0);
     }
     /**
  * 设置是否为新玩家
  * @param isNew 是否为新玩家
  */
-        static setNewPlayer(isNew: boolean) {
+        static setNewPlayer(isNew: Number) {
         GameData.saveData(GameData.IsNewPlayer, isNew);
     }
     /**

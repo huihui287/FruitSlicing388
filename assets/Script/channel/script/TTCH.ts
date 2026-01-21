@@ -4,8 +4,7 @@ import ChannelDB from "../ChannelDB";
 import { director } from "cc";
 import EventManager from "../../Common/view/EventManager";
 import { EventName } from "../../Tools/eventName";
-// import OperationManager from "../../dbmodule/OperationManager";
-// import SwitchManager from "../../global/SwitchManager";
+
 /**
  * 头条渠道
  */
@@ -52,6 +51,7 @@ export default class TTCH extends BaseCH implements BaseINT {
         this.getSystem();
         this.getLaunchOptions();
         this.onShowAlways();
+        this.setShareAppMessage();
         this.createBannerAd();
         this.createVideoAd();
         this.createInterstitialAd();
@@ -61,52 +61,64 @@ export default class TTCH extends BaseCH implements BaseINT {
         console.log("头条渠道初始化完成");
     }
 
+    //设置转发信息（右上角按钮点击->转发）
+    public setShareAppMessage() {
+        if (this.ch) {
+            console.log("设置转发信息");
+            this.ch.onShareAppMessage(() => {
+                return {
+                    title: "好玩的水果消除游戏，快来挑战吧！",
+                    imageUrl: "", // 默认分享图
+                    success: (res) => {
+                        console.log("转发成功");
+                    },
+                    fail: (res) => {
+                        console.log("转发失败");
+                    }
+                }
+            });
+        }
+    }
+
     /**
      * 分享
      */
     public share(callback = null, channel = "article", extra = {}): void {
-        // if (this.ch) {
-        //     let sdb = OperationManager.getOneShareData();
-        //     let sn = Date.now() + "" + ~~((0.1 + Math.random() / 2) * 10000);
-        //     //正常分享
-        //     if (channel == "article") {
-        //         this.ch.shareAppMessage({
-        //             title: sdb.title,
-        //             imageUrl: sdb.img_url,
-        //             // desc: sdb.desc,
-        //             query: "&sn=" + sn + "&share_id=" + sdb.id,
-        //             extra: extra,
-        //             success() {
-        //                 //console.log("分享成功");
-        //                 if (callback) callback(true);
-        //             },
-        //             fail(e) {
-        //                 //console.log("分享失败");
-        //                 if (callback) callback(false);
-        //             },
-        //         });
-        //     }
-        //     //斗音特殊处理，不能带channel参数，否则无法拉起分享 
-        //     else {
-        //         this.ch.shareAppMessage({
-        //             channel: channel,
-        //             title: sdb.title,
-        //             imageUrl: sdb.img_url,
-        //             // desc: sdb.desc,
-        //             query: "&sn=" + sn + "&share_id=" + sdb.id,
-        //             extra: extra,
-        //             success() {
-        //                 //console.log("分享成功");
-        //                 if (callback) callback(true);
-        //             },
-        //             fail(e) {
-        //                 //console.log("分享失败");
-        //                 if (callback) callback(false);
-        //             },
-        //         });
-        //     }
-        //     // });
-        // }
+        if (!this.ch) return;
+
+        // 默认分享配置 (替代 OperationManager)
+        const defaultShareData = {
+            title: "好玩的水果消除游戏，快来挑战吧！",
+            img_url: "", // 如果有默认分享图URL可填入，否则留空或使用截图
+            id: "default_share_id"
+        };
+
+        let title = defaultShareData.title;
+        let imageUrl = defaultShareData.img_url;
+        let shareId = defaultShareData.id;
+        let sn = Date.now() + "" + ~~((0.1 + Math.random() / 2) * 10000);
+
+        const shareParams: any = {
+            title: title,
+            imageUrl: imageUrl,
+            query: `sn=${sn}&share_id=${shareId}`,
+            extra: extra,
+            success() {
+                console.log("分享成功");
+                if (callback) callback(true);
+            },
+            fail(e) {
+                console.log("分享失败", e);
+                if (callback) callback(false);
+            }
+        };
+
+        // 抖音/头条特殊处理
+        if (channel !== "article") {
+            shareParams.channel = channel;
+        }
+
+        this.ch.shareAppMessage(shareParams);
     }
 
     /**创建视频广告*/

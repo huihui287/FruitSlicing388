@@ -34,9 +34,6 @@ export class Load extends Component {
         // LevelConfig.setCurLevel(1);
         // App.gameCtr.curLevel = LevelConfig.getCurLevel();
         //StorageHelper.initData();
-
-        App.gameCtr.curLevel = LevelConfig.getCurLevel();
-        LevelConfig.setCurLevel(App.gameCtr.curLevel);
         this.loadSubPackages();
     
     }
@@ -109,9 +106,12 @@ export class Load extends Component {
      */
     onSubPackagesLoaded() {
         // 使用App结构跳转到游戏场景
-        if (GameData.isNewPlayer()) {
+        if (GameData.isNewPlayer()==0) {
+            console.log("新玩家");
+            LevelConfig.setCurLevel(1);
             App.GoGame();
         } else {
+            console.log("旧玩家");
             App.backStart();
         }
     }
