@@ -11,6 +11,7 @@ export default class GameData {
     public static BombVer = "BomVerr";
     public static BombBomb = "BombBomb";
     public static BombAllSame = "BombAllSame";
+    public static BombChangecolor = "BombChangecolor";
     public static Level = 'Level';
     public static IsNewPlayer = 'IsNewPlayer';
     public static Gold = 'Gold';
@@ -101,6 +102,8 @@ static loadData(key: string, defaultValue: any): any {
                 return +GameData.loadData(GameData.BombBomb,0);
             case Bomb.allSame:
                 return +GameData.loadData(GameData.BombAllSame,0);
+            case Bomb.changecolor:
+                return +GameData.loadData(GameData.BombChangecolor,0);
         }
     }
 
@@ -119,6 +122,9 @@ static loadData(key: string, defaultValue: any): any {
                 break;
             case Bomb.allSame:
                 GameData.saveData(GameData.BombAllSame, ct + "");
+                break;
+            case Bomb.changecolor:
+                GameData.saveData(GameData.BombChangecolor, ct + "");
                 break;
         }
     }

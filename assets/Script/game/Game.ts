@@ -69,6 +69,9 @@ export class Game extends BaseNodeCom {
     private lbTool3: Node = null;
     /** UI引用：道具4数量显示节点 */
     private lbTool4: Node = null;
+    /** UI引用：道具5数量显示节点 */
+    private lbTool5: Node = null;   
+
     /** UI引用：道具1添加按钮 */
     private addBtn1: Node = null;
     /** UI引用：道具2添加按钮 */
@@ -77,6 +80,8 @@ export class Game extends BaseNodeCom {
     private addBtn3: Node = null;
     /** UI引用：道具4添加按钮 */
     private addBtn4: Node = null;
+    /** UI引用：道具5添加按钮 */
+    private addBtn5: Node = null;
     /** UI引用：道具1视频按钮 */
     private video1: Node = null;
     /** UI引用：道具2视频按钮 */
@@ -85,6 +90,9 @@ export class Game extends BaseNodeCom {
     private video3: Node = null;
     /** UI引用：道具4视频按钮 */
     private video4: Node = null;
+    /** UI引用：道具5视频按钮 */
+    private video5: Node = null;
+
     /** UI引用：教学手图片 */
     private hand: Node = null;
     /** UI引用：升级水果攻击值 */
@@ -232,8 +240,8 @@ export class Game extends BaseNodeCom {
      * @description 游戏启动时的初始化方法，设置游戏状态和加载必要资源
      */
     onLoad() {
-        // 绑定按钮事件 - 为4个道具按钮绑定点击事件
-        for (let i = 1; i < 5; i++) {
+        // 绑定按钮事件 - 为5个道具按钮绑定点击事件
+        for (let i = 1; i < 6; i++) {
             this[`onClick_addBtn${i}`] = this.onClickAddButton.bind(this);
             this[`onClick_toolBtn${i}`] = this.onClickToolButton.bind(this);
             this[`onClick_video${i}`] = this.onClickVideoButton.bind(this);
@@ -258,14 +266,20 @@ export class Game extends BaseNodeCom {
         this.lbTool2 = this.viewList.get('bottom/proppenal/tool2/prompt/lbTool2');
         this.lbTool3 = this.viewList.get('bottom/proppenal/tool3/prompt/lbTool3');
         this.lbTool4 = this.viewList.get('bottom/proppenal/tool4/prompt/lbTool4');
+        this.lbTool5 = this.viewList.get('bottom/proppenal/tool5/prompt/lbTool5');
+        
         this.addBtn1 = this.viewList.get('bottom/proppenal/tool1/addBtn1');
         this.addBtn2 = this.viewList.get('bottom/proppenal/tool2/addBtn2');
         this.addBtn3 = this.viewList.get('bottom/proppenal/tool3/addBtn3');
         this.addBtn4 = this.viewList.get('bottom/proppenal/tool4/addBtn4');
+        this.addBtn5 = this.viewList.get('bottom/proppenal/tool5/addBtn5');
+        
         this.video1 = this.viewList.get('bottom/proppenal/tool1/video1');
         this.video2 = this.viewList.get('bottom/proppenal/tool2/video2');
         this.video3 = this.viewList.get('bottom/proppenal/tool3/video3');
         this.video4 = this.viewList.get('bottom/proppenal/tool4/video4');
+        this.video5 = this.viewList.get('bottom/proppenal/tool5/video5');
+        
         this.Alert = this.viewList.get('ui/Alert');
       
         this.spHealth = this.viewList.get('ui/spHealth');
@@ -518,22 +532,26 @@ export class Game extends BaseNodeCom {
         let verCount = GameData.loadData(GameData.BombVer, 0);
         let horCount = GameData.loadData(GameData.BombHor, 0);
         let allCount = GameData.loadData(GameData.BombAllSame, 0);
+        let changeCount = GameData.loadData(GameData.BombChangecolor, 0);
         
         // 更新UI显示
         CocosHelper.updateLabelText(this.lbTool1, bombCount);
         CocosHelper.updateLabelText(this.lbTool2, horCount);
         CocosHelper.updateLabelText(this.lbTool3, verCount);
         CocosHelper.updateLabelText(this.lbTool4, allCount);
+        CocosHelper.updateLabelText(this.lbTool5, changeCount);
         
         // 控制按钮显示状态
         this.addBtn1.active = bombCount <= 0;
         this.addBtn2.active = horCount <= 0;
         this.addBtn3.active = verCount <= 0;
         this.addBtn4.active = allCount <= 0;
+        this.addBtn5.active = changeCount <= 0;
         this.video1.active = false;// bombCount <= 0;
         this.video2.active = false;// horCount <= 0;
         this.video3.active = false;// verCount <= 0;
         this.video4.active = false;// allCount <= 0;
+        this.video5.active = false;// changeCount <= 0;
     }
 
     /**
@@ -2564,6 +2582,9 @@ export class Game extends BaseNodeCom {
             case "addBtn4":
                 type = Bomb.allSame;
                 break;
+            case "addBtn5":
+                type = Bomb.changecolor;
+                break;
         }
 
         if (type === -1) {
@@ -2665,6 +2686,9 @@ export class Game extends BaseNodeCom {
             case "toolBtn4":
                 type = Bomb.allSame;
                 break;
+            case "toolBtn5":
+                type = Bomb.changecolor;
+                break;
         }
         let bombCount = GameData.getBomb(type);
         if (bombCount <= 0) {
@@ -2672,9 +2696,133 @@ export class Game extends BaseNodeCom {
             return;
         }
         GameData.setBomb(type, -1);
+        
         let pos = this.gridMgr.node.getComponent(UITransform).convertToNodeSpaceAR(btnNode.worldPosition);
+        // 2026-01-22: 特殊处理 changecolor：直接释放技能，不生成炸弹
+        // 技能效果：将棋盘上数量最少的一种水果，全部变成下方(DownGridMgr)数量最多的那种类型
+        if (type === Bomb.changecolor) {
+            this.updateToolsInfo();
+            this.triggerChangeColorSkill(pos);
+            return;
+        }
         this.throwTools(type, pos);
         this.updateToolsInfo();
+    }
+
+    /**
+     * 触发变色技能
+     */
+    triggerChangeColorSkill(pos: Vec3) {
+        // 1. 找 DownGridMgr 中最多的类型
+        let targetType = this.DownGridMgr.getMostFrequentType();
+        
+        // 如果下方没有怪，或者 targetType 无效，随机选一个普通类型
+        if (targetType === -1) {
+             targetType = Math.floor(Math.random() * (App.gameCtr.blockCount || 5));
+        }
+
+        // 2. 优化：获取棋盘上数量最多的普通类型及其对应的组件列表
+        let result = this.getMostFrequentNormalTypeInfo();
+        
+        if (result.type === -1 || result.list.length === 0) {
+            ViewManager.toast("棋盘上没有可消除的水果");
+            return; 
+        }
+
+        // 3. 锁定玩家操作，防止技能期间被干扰
+        this.isStartChange = true;
+        this.isChecking = true;
+
+        // 4.飞特效：从道具按钮位置飞向目标方块
+        let hasChange = false;
+        // 记录完成的动画数量
+        let finishedCount = 0;
+        let totalCount = result.list.length;
+
+        // 定义完成回调：当所有特效都播放完毕或变色完成后，解除锁定
+        const onSkillComplete = () => {
+            finishedCount++;
+            if (finishedCount >= totalCount) {
+                // 所有变色都已完成，解除锁定
+                this.isStartChange = false;
+                this.isChecking = false;
+                console.log("ChangeColor skill completed, input unlocked.");
+            }
+        };
+        
+        // 4. 直接使用返回的列表进行变换，无需再次遍历棋盘
+        for (let gc of result.list) {
+            if (gc && gc.isValid) {
+                // 创建并移动特效
+                let effect = this.particleManager.playParticle('bulletParticle', pos);
+                if (effect) {
+                    MoveManager.getInstance().moveToTargetWithBezier(effect, gc.node, 0.5, () => {
+                        // 特效到达后回收并变色
+                        this.particleManager.releaseParticle('bulletParticle', effect);
+                        if (gc && gc.isValid) {
+                            gc.setType(targetType);
+                        }
+                        onSkillComplete(); // 动画完成回调
+                    });
+                } else {
+                    // 特效失败直接变色
+                    gc.setType(targetType);
+                    onSkillComplete(); // 立即回调
+                }
+                hasChange = true;
+            } else {
+                // 如果节点无效，也算作完成，防止死锁
+                onSkillComplete();
+            }
+        }
+        
+        if (hasChange) {
+            AudioManager.getInstance().playSound("prop_bomb"); 
+        } else {
+            // 如果没有发生任何改变（例如列表全空或全无效），立即解锁
+            this.isStartChange = false;
+            this.isChecking = false;
+        }
+
+    }
+
+    /**
+     * 获取棋盘上数量最多的普通水果信息
+     * 优化：一次遍历同时获取类型和所有对应的组件列表，提升性能
+     */
+    getMostFrequentNormalTypeInfo(): { type: number, list: gridCmpt[] } {
+        // 键：类型，值：该类型的组件数组
+        let typeGroups = new Map<number, gridCmpt[]>();
+        
+        // 统计所有普通类型
+        for (let i = 0; i < this.H; i++) {
+            for (let j = 0; j < this.V; j++) {
+                let block = this.blockArr[i][j];
+                if (block && block.isValid) {
+                    let gc = block.getComponent(gridCmpt);
+                    if (gc && gc.type < Constant.NormalType) { // 只统计普通类型
+                        if (!typeGroups.has(gc.type)) {
+                            typeGroups.set(gc.type, []);
+                        }
+                        typeGroups.get(gc.type).push(gc);
+                    }
+                }
+            }
+        }
+        
+        let maxCount = 0;
+        let maxType = -1;
+        let maxList: gridCmpt[] = [];
+        
+        for (let [type, list] of typeGroups) {
+            if (list.length > maxCount) {
+                maxCount = list.length;
+                maxType = type;
+                maxList = list;
+            }
+        }
+        
+        return { type: maxType, list: maxList };
     }
     
     /**

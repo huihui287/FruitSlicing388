@@ -419,6 +419,33 @@ export class DownGridManager extends Component {
     }
 
     /**
+     * 获取当前活跃方块中数量最多的类型
+     */
+    public getMostFrequentType(): number {
+        if (this.activeGrids.length === 0) return -1;
+        
+        const typeCounts = new Map<number, number>();
+        let maxCount = 0;
+        let mostFrequentType = -1;
+
+        for (const gridNode of this.activeGrids) {
+            const gridCmpt = gridNode.getComponent(gridDownCmpt);
+            if (gridCmpt) {
+                const type = gridCmpt.type;
+                const count = (typeCounts.get(type) || 0) + 1;
+                typeCounts.set(type, count);
+                
+                if (count > maxCount) {
+                    maxCount = count;
+                    mostFrequentType = type;
+                }
+            }
+        }
+        
+        return mostFrequentType;
+    }
+
+    /**
      * 清空所有水果方块
      */
     public clearAllGrids() {
