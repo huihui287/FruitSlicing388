@@ -42,7 +42,7 @@ export let Constant = {
     layCount: 9,
     Width: 75,
     Height: 75,
-    NormalType: 12,
+    NormalType: 13,
 }
 
 
@@ -110,6 +110,8 @@ export enum Bomb {
     bomb = 10,
     /** 消灭所有同一类型 */
     allSame = 11,
+    /** 变颜色 */
+    changecolor = 12,
 }
 
 /** 页面跳转索引 */

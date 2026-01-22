@@ -18,7 +18,10 @@ export class gridDownCmpt extends Component {
     public health: number = 1;
     /** 虚拟血量：用于被选中时扣除 */
     public virtualHealth: number = 5;
-    private healthBl:Label=  null;
+
+    private healthBl: Label = null;
+
+    private ArmorPlating: Node = null;
     /**
      * 增加血量
      * @param amount 增加的血量值
@@ -51,7 +54,7 @@ export class gridDownCmpt extends Component {
     onLoad(): void {
         // 初始化healthBl引用
         this.healthBl = this.node.getChildByName('healthBl')?.getComponent(Label);
-
+        this.ArmorPlating = this.node.getChildByName('ArmorPlating');
     }
 
     /**
@@ -163,11 +166,56 @@ export class gridDownCmpt extends Component {
      * 更新血量显示
      */
     private updateHealthDisplay(): void {
-        if (this.healthBl&&this.health>=2) {
-            this.healthBl.string = this.health.toString();
+        if (this.healthBl) {
+            // 2026-01-22: 用户需求，同时显示血量数值
+            this.healthBl.node.active = false;
         }
-        else{
-            this.healthBl.string = '';
+
+        if (this.ArmorPlating) {
+            let children = this.ArmorPlating.children;
+            
+            // 2026-01-22: 按照用户需求优化护甲显示逻辑
+            // 1. 掉血掉到1时，护甲片全部掉完（基础血量为1）
+            // 2. 按照 (总血量-1) 的比例显示
+            // 3. 将护甲分为N等分（N=子节点数量），每掉一等分就少一个护甲片
+            // 4. 从最外层开始掉落（假设节点顺序为 [内层, ..., 外层]）
+            
+            let totalPlates = children.length;
+            
+            // 修正：如果当前血量大于记录的虚拟血量，说明虚拟血量数据过期或未同步
+            // 必须更新 this.virtualHealth 以“记住”这个新的最大值，
+            // 否则在掉血过程中，分母会随着分子一起减小，导致比例永远为 1
+            if (this.health > this.virtualHealth) {
+                this.virtualHealth = this.health;
+            }
+
+            // 计算最大护甲值 (例如9血 -> 8护甲)
+            let maxArmor = Math.max(1, this.virtualHealth - 1); 
+            // 计算当前护甲值 (例如当前5血 -> 4护甲)
+            let currentArmor = Math.max(0, this.health - 1);
+            
+            let ratio = currentArmor / maxArmor;
+            
+            // 根据比例计算显示数量 (向上取整)
+            // 确保只要有护甲(>0)，且比例 > 0，就至少显示 1 片 (Math.ceil确保了这点)
+            // 只有当 health=1 (currentArmor=0) 时，ratio=0，显示 0 片
+            // 示例 (5血4甲, 2个UI节点):
+            // - 5血(4甲) -> 100% -> 显示2片
+            // - 4血(3甲) -> 75%  -> 显示2片
+            // - 3血(2甲) -> 50%  -> 显示1片 (掉最外层)
+            // - 2血(1甲) -> 25%  -> 显示1片
+            // - 1血(0甲) -> 0%   -> 显示0片
+            let platesToShow = Math.ceil(ratio * totalPlates);
+            
+            for (let i = 0; i < children.length; i++) {
+                // i是从内层到外层的索引（0是内层，length-1是外层）
+                // i < platesToShow 表示保留内层的几个片
+                if (i < platesToShow) {
+                    children[i].active = true;
+                } else {
+                    children[i].active = false;
+                }
+            }
         }
     }
 

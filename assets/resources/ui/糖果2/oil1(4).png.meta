@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "c0c4c83b-03c9-424d-995b-d31ef98d10f8",
+  "uuid": "d05b40c8-6be2-4fdf-9ccf-a89ba3c60795",
   "files": [
     ".json",
     ".png"
@@ -10,8 +10,8 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "c0c4c83b-03c9-424d-995b-d31ef98d10f8@6c48a",
-      "displayName": "oil2",
+      "uuid": "d05b40c8-6be2-4fdf-9ccf-a89ba3c60795@6c48a",
+      "displayName": "oil1(4)",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -22,7 +22,7 @@
         "mipfilter": "none",
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "c0c4c83b-03c9-424d-995b-d31ef98d10f8",
+        "imageUuidOrDatabaseUri": "d05b40c8-6be2-4fdf-9ccf-a89ba3c60795",
         "visible": false
       },
       "ver": "1.0.22",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "c0c4c83b-03c9-424d-995b-d31ef98d10f8@f9941",
-      "displayName": "oil2",
+      "uuid": "d05b40c8-6be2-4fdf-9ccf-a89ba3c60795@f9941",
+      "displayName": "oil1(4)",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -113,7 +113,7 @@
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "c0c4c83b-03c9-424d-995b-d31ef98d10f8@6c48a",
+        "imageUuidOrDatabaseUri": "d05b40c8-6be2-4fdf-9ccf-a89ba3c60795@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "hasAlpha": true,
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
-    "redirect": "c0c4c83b-03c9-424d-995b-d31ef98d10f8@6c48a"
+    "redirect": "d05b40c8-6be2-4fdf-9ccf-a89ba3c60795@6c48a"
   }
 }
