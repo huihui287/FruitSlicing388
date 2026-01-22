@@ -67,7 +67,18 @@ export class ResultViewCmpt extends BaseDialog  {
     }
     
     showgoldnum() {
-        this.goldnum = 100 * GameData.loadData(GameData.Level, 1);
+        // 2026-01-22: 利用 MaxLevel 判断首通奖励
+        // 逻辑：如果当前通关的等级 >= 历史最大解锁等级，说明是首通（因为结算时尚未更新 MaxLevel）
+        const maxLv = GameData.getMaxLevel();
+        if (this.level >= maxLv) {
+            // 首通奖励
+            this.goldnum = 200;
+        } else {
+            // 重复通关奖励（根据需求设为0）
+            this.goldnum = 1;
+        }
+        
+        // this.goldnum = 100 * GameData.loadData(GameData.Level, 1);
         this.goldnumlb.getComponent(Label).string = this.goldnum.toString();
     }
 

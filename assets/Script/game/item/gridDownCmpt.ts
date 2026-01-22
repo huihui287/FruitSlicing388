@@ -175,10 +175,10 @@ export class gridDownCmpt extends Component {
             let children = this.ArmorPlating.children;
             
             // 2026-01-22: 按照用户需求优化护甲显示逻辑
-            // 1. 掉血掉到1时，护甲片全部掉完（基础血量为1）
-            // 2. 按照 (总血量-1) 的比例显示
-            // 3. 将护甲分为N等分（N=子节点数量），每掉一等分就少一个护甲片
-            // 4. 从最外层开始掉落（假设节点顺序为 [内层, ..., 外层]）
+            // 模式变更：互斥显示模式（Single Image Per Stage）
+            // 每一个阶段只有一个UI图片显示，不同阶段显示不同的图片
+            // 例如：剩余护甲越多，显示越“高级”或“完整”的图片（通常是索引较大的图片）
+            // 护甲减少时，切换到索引较小的图片
             
             let totalPlates = children.length;
             
@@ -194,23 +194,32 @@ export class gridDownCmpt extends Component {
             // 计算当前护甲值 (例如当前5血 -> 4护甲)
             let currentArmor = Math.max(0, this.health - 1);
             
+            // 特殊处理：如果总护甲量(maxArmor)小于护甲片数量(totalPlates)
+            // 说明血量很低(例如2血只有1护甲)，此时无法支撑显示所有护甲片
+            // 规则：最大只能显示 maxArmor 个护甲片
+            let limitPlates = Math.min(totalPlates, maxArmor);
+
             let ratio = currentArmor / maxArmor;
             
-            // 根据比例计算显示数量 (向上取整)
-            // 确保只要有护甲(>0)，且比例 > 0，就至少显示 1 片 (Math.ceil确保了这点)
-            // 只有当 health=1 (currentArmor=0) 时，ratio=0，显示 0 片
-            // 示例 (5血4甲, 2个UI节点):
-            // - 5血(4甲) -> 100% -> 显示2片
-            // - 4血(3甲) -> 75%  -> 显示2片
-            // - 3血(2甲) -> 50%  -> 显示1片 (掉最外层)
-            // - 2血(1甲) -> 25%  -> 显示1片
-            // - 1血(0甲) -> 0%   -> 显示0片
-            let platesToShow = Math.ceil(ratio * totalPlates);
+            // 根据比例计算显示等级 (1 ~ totalPlates)
+            // 示例 (totalPlates=3):
+            // ratio > 0.66 -> level 3 (显示children[2])
+            // 0.33 < ratio <= 0.66 -> level 2 (显示children[1])
+            // 0 < ratio <= 0.33 -> level 1 (显示children[0])
+            // ratio <= 0 -> level 0 (都不显示)
+            let displayLevel = Math.ceil(ratio * totalPlates);
             
+            // 应用限制：不能超过实际拥有的护甲点数
+            if (displayLevel > limitPlates) {
+                displayLevel = limitPlates;
+            }
+            
+            // 互斥显示逻辑：只显示对应等级的那一张图片
+            // 数组索引 = displayLevel - 1
+            // 例如 displayLevel=1 -> 显示 children[0]
+            //      displayLevel=2 -> 显示 children[1]
             for (let i = 0; i < children.length; i++) {
-                // i是从内层到外层的索引（0是内层，length-1是外层）
-                // i < platesToShow 表示保留内层的几个片
-                if (i < platesToShow) {
+                if (displayLevel > 0 && i === (displayLevel - 1)) {
                     children[i].active = true;
                 } else {
                     children[i].active = false;

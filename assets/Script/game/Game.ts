@@ -333,7 +333,10 @@ export class Game extends BaseNodeCom {
 
             // 配置参数 - 设置生成数量和下落速度
             this.DownGridMgr.totalGridCount = 1000;
-            this.DownGridMgr.fallSpeed = 20;
+            this.DownGridMgr.fallSpeed = 5;
+
+            // 2026-01-22: 启动动态速度递增接口
+            this.startSpeedIncrease();
 
             // 开始生成 - 启动水果方块下落系统
             this.DownGridMgr.startGenerate();
@@ -356,6 +359,41 @@ export class Game extends BaseNodeCom {
             //   }, 30000);
         } catch (error) {
             console.error("初始化DownCubeManager失败:", error);
+        }
+    }
+
+    /**
+     * 开始动态增加下落速度
+     * 每10秒增加0.5，直到最大值10
+     */
+    startSpeedIncrease() {
+        // 先停止已存在的计时器，防止重复调用
+        this.unschedule(this.increaseSpeed);
+        // 初始速度
+        this.DownGridMgr.fallSpeed = 10;
+        // 开启计时器：间隔10秒，重复执行（直到手动停止），延迟10秒后开始第一次
+        this.schedule(this.increaseSpeed, 5);
+    }
+
+    /**
+     * 增加速度的具体逻辑
+     */
+    increaseSpeed() {
+        // 如果游戏暂停或结束，不增加速度
+        if (this.gameState !== GameState.PLAYING) return;
+
+        let currentSpeed = this.DownGridMgr.fallSpeed;
+        if (currentSpeed < 20) {
+            let newSpeed = currentSpeed + 0.3;
+            // 确保不超过最大值10
+            newSpeed = Math.min(newSpeed, 20);
+            this.DownGridMgr.fallSpeed = newSpeed;
+            // this.DownGridMgr.setFallSpeed(newSpeed); // 如果DownGridMgr有这个方法，优先用这个
+            console.log(`[Game] Speed increased to: ${newSpeed}`);
+        } else {
+            // 达到最大值，停止计时器
+            this.unschedule(this.increaseSpeed);
+            console.log(`[Game] Speed reached max: 10`);
         }
     }
 
@@ -732,14 +770,14 @@ export class Game extends BaseNodeCom {
         this.loadExtraData(LevelConfig.nextLevel());
         
         // 将奖励道具存储到玩家道具库存中
-        for (let i = 0; i < this.rewardBombs.length; i++) {
-            let bomb = this.rewardBombs[i];
-            // 将道具数量添加到玩家库存
-            GameData.setBomb(bomb.type, bomb.count);
-        }
+        // for (let i = 0; i < this.rewardBombs.length; i++) {
+        //     let bomb = this.rewardBombs[i];
+        //     // 将道具数量添加到玩家库存
+        //     GameData.setBomb(bomb.type, bomb.count);
+        // }
         
-        // 更新道具显示
-        this.updateToolsInfo();
+        // // 更新道具显示
+        // this.updateToolsInfo();
         
         // 以下代码可根据需要启用
         // for (let i = 0; i < this.rewardBombs.length; i++) {
@@ -2443,6 +2481,8 @@ export class Game extends BaseNodeCom {
     // 重新开始游戏就是重头开始
     evtRestart() {
         this.loadExtraData(1);
+        // 2026-01-22: 重启时也重新开始速度递增
+        this.startSpeedIncrease();
     }
     /**
      *消除最前面3排水果方块

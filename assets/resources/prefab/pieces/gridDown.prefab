@@ -28,20 +28,20 @@
         "__id__": 138
       },
       {
-        "__id__": 154
+        "__id__": 156
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 160
+        "__id__": 162
       },
       {
-        "__id__": 162
+        "__id__": 164
       }
     ],
     "_prefab": {
-      "__id__": 164
+      "__id__": 166
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -3157,10 +3157,13 @@
     "_components": [
       {
         "__id__": 151
+      },
+      {
+        "__id__": 153
       }
     ],
     "_prefab": {
-      "__id__": 153
+      "__id__": 155
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -3492,6 +3495,25 @@
     "fileId": "f6CsgLd59NL5x4gzXb88Xf"
   },
   {
+    "__type__": "cc.UIOpacity",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 138
+    },
+    "_enabled": true,
+    "__prefab": {
+      "__id__": 154
+    },
+    "_opacity": 255,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.CompPrefabInfo",
+    "fileId": "58M2XXGaBGd7zsNbM8TtfR"
+  },
+  {
     "__type__": "cc.PrefabInfo",
     "root": {
       "__id__": 1
@@ -3516,14 +3538,14 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 155
+        "__id__": 157
       },
       {
-        "__id__": 157
+        "__id__": 159
       }
     ],
     "_prefab": {
-      "__id__": 159
+      "__id__": 161
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -3560,11 +3582,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 154
+      "__id__": 156
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 156
+      "__id__": 158
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -3588,11 +3610,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 154
+      "__id__": 156
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 158
+      "__id__": 160
     },
     "_customMaterial": null,
     "_srcBlendFactor": 2,
@@ -3676,7 +3698,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 161
+      "__id__": 163
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -3704,7 +3726,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 163
+      "__id__": 165
     },
     "_id": ""
   },

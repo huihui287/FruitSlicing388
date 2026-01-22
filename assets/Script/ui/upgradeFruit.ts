@@ -78,6 +78,7 @@ export class upgradeFruit extends BaseDialog {
                 break;
             case "add3":
                 type = GridType.YELLOW_LEMON;
+                break;
             case "add4":
                 type = GridType.ORANGE;
                 break;
