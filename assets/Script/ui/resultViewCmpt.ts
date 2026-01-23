@@ -157,4 +157,26 @@ export class ResultViewCmpt extends BaseDialog  {
         App.backStart(true);
         this.dismiss();
     }
+
+    onClick_upgridBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        LoaderManeger.instance.loadPrefab('prefab/ui/upgradeFruit').then((prefab) => {
+            let gridUpView = instantiate(prefab);
+            ViewManager.show({
+                node: gridUpView,
+                name: "UpgradeFruit"
+            });
+        });
+    }
+    
+    onClick_upTurretBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        LoaderManeger.instance.loadPrefab('prefab/ui/UpTurret').then((prefab) => {
+            let gridUpView = instantiate(prefab);
+            ViewManager.show({
+                node: gridUpView,
+                name: "UpTurret"
+            });
+        });
+    }
 }
