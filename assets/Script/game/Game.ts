@@ -30,7 +30,7 @@ const { ccclass, property } = _decorator;
 
 /**
  * 游戏主逻辑类
- * 负责处理游戏核心机制，包括方块消除、水果下落、游戏状态管理等
+ * 负责处理游戏核心机制，包括水果消除、水果下落、游戏状态管理等
  * @description 游戏主控制器，管理游戏的整个生命周期
  */
 @ccclass('Game')
@@ -41,7 +41,7 @@ export class Game extends BaseNodeCom {
 
     /** 网格管理器组件 */
     private gridMgr: gridManagerCmpt = null;
-    /**下落方块管理器组件 */
+    /**下落水果管理器组件 */
     private DownGridMgr: DownGridManager = null;
     /** 特效管理器 */
     private particleManager: ParticleManager = null;
@@ -102,7 +102,7 @@ export class Game extends BaseNodeCom {
     private Alert: Node = null;
     /** UI引用：血量进度条节点 */
     private spHealth: Node = null;    
-    /** 预制体引用：网格方块预制体 */
+    /** 预制体引用：网格水果预制体 */
     private gridPre: Prefab = null;    
     /** 预制体引用：火箭特效预制体 */
     private rocketPre: Prefab = null;
@@ -111,9 +111,9 @@ export class Game extends BaseNodeCom {
     /*********************************************  游戏状态和数据  *********************************************/
     /*********************************************  游戏状态和数据  *********************************************/
 
-    /** 游戏网格：二维数组存储所有方块节点 */
+    /** 游戏网格：二维数组存储所有水果节点 */
     private blockArr: Node[][] = []
-    /** 网格位置：二维数组存储所有方块的目标位置 */
+    /** 网格位置：二维数组存储所有水果的目标位置 */
     private blockPosArr: Vec3[][] = [];
     /** 隐藏列表：存储需要隐藏的网格位置 */
     private hideList = [];
@@ -127,9 +127,9 @@ export class Game extends BaseNodeCom {
     private isGameOverWaiting: boolean = false;
     // 2024-01-20: 游戏结束等待计时
     private gameOverWaitTime: number = 0;
-    /** 当前选中的两个方块 */
+    /** 当前选中的两个水果 */
     private curTwo: gridCmpt[] = [];
-    /** 游戏状态：是否开始交换方块 */
+    /** 游戏状态：是否开始交换水果 */
     private isStartChange: boolean = false;
     /** 游戏状态：是否正在检查消除 */
     private isChecking: boolean = false;
@@ -329,15 +329,15 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 开始下落水果方块
-     * 初始化DownGridManager并开始生成下落的水果方块
-     * @description 启动水果方块下落系统，创建并配置DownGridManager
-     * @returns {Promise<void>} 异步操作，完成后开始生成下落方块
+     * 开始下落水果水果
+     * 初始化DownGridManager并开始生成下落的水果水果
+     * @description 启动水果水果下落系统，创建并配置DownGridManager
+     * @returns {Promise<void>} 异步操作，完成后开始生成下落水果
      */
     async startDownGrid() {
         // 初始化DownCubeManager
         try {
-            // 先清理现有水果方块，避免等待预制体加载导致延迟
+            // 先清理现有水果水果，避免等待预制体加载导致延迟
             this.DownGridMgr.clearAllGrids();
             
             // 异步创建网格 - 加载必要的预制体和资源
@@ -354,7 +354,7 @@ export class Game extends BaseNodeCom {
             // 2026-01-22: 启动动态速度递增接口
             this.startSpeedIncrease();
 
-            // 开始生成 - 启动水果方块下落系统
+            // 开始生成 - 启动水果水果下落系统
             this.DownGridMgr.startGenerate();
               
             // 动态调整参数（注释掉的代码，可根据需要启用）
@@ -585,9 +585,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 每帧更新
-     * 检查水果方块位置并显示警告
+     * 检查水果水果位置并显示警告
      * @param {number} dt - 时间间隔
-     * @description 实时检查水果方块的位置，当方块过低时显示警告
+     * @description 实时检查水果水果的位置，当水果过低时显示警告
      */
     protected update(dt: number): void {
         if (App.gameCtr.isPause) return;
@@ -715,10 +715,10 @@ export class Game extends BaseNodeCom {
         }
     }
 
-    //检查最下方的水果方块是否低于阈值
+    //检查最下方的水果水果是否低于阈值
     UPAlert() {
         if (isValid(this.DownGridMgr) && isValid(this.Alert)) {
-            // 检查最下方的水果方块是否低于阈值
+            // 检查最下方的水果水果是否低于阈值
             if (this.DownGridMgr.isLowestGridBelowThreshold()) {
                 if (!this.Alert.active) {
                     this.Alert.active = true;
@@ -820,7 +820,7 @@ export class Game extends BaseNodeCom {
 
     /**
      * 投放道具
-     * 从屏幕上方发射道具到随机方块
+     * 从屏幕上方发射道具到随机水果
      * @param {number} bombType - 炸弹类型，-1表示随机类型
      * @param {Vec3} worldPosition - 发射位置
      */
@@ -828,10 +828,10 @@ export class Game extends BaseNodeCom {
         AudioManager.getInstance().playSound("prop_missle");
         let originPos = worldPosition ;
         
-        // 找到一个随机方块作为目标
+        // 找到一个随机水果作为目标
         let item: gridCmpt = this.getRandomBlock();
         if (!item) {
-            console.log("没有找到合适的方块");
+            console.log("没有找到合适的水果");
             return;
         }
         
@@ -854,17 +854,17 @@ export class Game extends BaseNodeCom {
                 this.particleManager.releaseParticle('bulletParticle', bulletParticle);
             }
             
-            // 设置方块类型为炸弹
+            // 设置水果类型为炸弹
             let rand = bombType == -1 ? Math.floor(Math.random() * 3) + 8 : bombType;
             item.setType(rand);
         });
     }
 
     /**
-     * 获取随机方块
-     * 随机选择一个有效的方块作为目标
+     * 获取随机水果
+     * 随机选择一个有效的水果作为目标
      * @param {number} maxAttempts - 最大尝试次数，默认100
-     * @returns {gridCmpt} 随机选中的方块组件
+     * @returns {gridCmpt} 随机选中的水果组件
      */
     getRandomBlock(maxAttempts: number = 100) {
         // 随机尝试一定次数
@@ -876,7 +876,7 @@ export class Game extends BaseNodeCom {
             }
         }
 
-        // 如果随机尝试失败，遍历整个网格寻找合适的方块
+        // 如果随机尝试失败，遍历整个网格寻找合适的水果
         for (let h = 0; h < this.H; h++) {
             for (let v = 0; v < this.V; v++) {
                 if (this.blockArr[h][v] && this.blockArr[h][v].getComponent(gridCmpt).type < 7) {
@@ -885,7 +885,7 @@ export class Game extends BaseNodeCom {
             }
         }
 
-        // 如果没有找到合适的方块，返回null
+        // 如果没有找到合适的水果，返回null
         return null;
     }
 
@@ -1108,8 +1108,8 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 是否是炸弹
-     * 检查方块是否为炸弹类型
-     * @param {gridCmpt} bc - 方块组件
+     * 检查水果是否为炸弹类型
+     * @param {gridCmpt} bc - 水果组件
      * @returns {boolean} 是否为炸弹
      */
     isBomb(bc: gridCmpt) {
@@ -1119,7 +1119,7 @@ export class Game extends BaseNodeCom {
     /**
      * 处理炸弹
      * 处理炸弹的爆炸逻辑和特效
-     * @param {gridCmpt} bc - 炸弹方块组件
+     * @param {gridCmpt} bc - 炸弹水果组件
      * @param {boolean} isResult - 是否为结果检查
      * @returns {Promise<boolean>} 异步操作，是否成功处理炸弹
      */
@@ -1133,10 +1133,10 @@ export class Game extends BaseNodeCom {
         if (this.isBomb(bc)) {
             // 设置检查状态，避免重复处理
             this.isChecking = true;
-            // 存储炸弹影响的方块列表
+            // 存储炸弹影响的水果列表
             let bombList = [];
             let list2 = [];
-            // 获取当前炸弹影响的方块列表
+            // 获取当前炸弹影响的水果列表
             let list: gridCmpt[] = await this.getBombList(bc);
             bombList.push(list);
             // 检查炸弹列表中的其他炸弹，递归处理
@@ -1148,7 +1148,7 @@ export class Game extends BaseNodeCom {
                     bombList.push(await this.getBombList(list[i]));
                 }
             }
-            // 去重处理 - 避免重复消除同一个方块
+            // 去重处理 - 避免重复消除同一个水果
             let func = (pc: gridCmpt) => {
                 for (let i = 0; i < list2.length; i++) {
                     if (list2[i].h == pc.h && list2[i].v == pc.v) {
@@ -1157,7 +1157,7 @@ export class Game extends BaseNodeCom {
                 }
                 return false;
             }
-            // 合并所有炸弹影响的方块列表
+            // 合并所有炸弹影响的水果列表
             for (let i = 0; i < bombList.length; i++) {
                 for (let j = 0; j < bombList[i].length; j++) {
                     let item = bombList[i][j];
@@ -1169,7 +1169,7 @@ export class Game extends BaseNodeCom {
 
             // 处理炸弹消除
             await this.handleSamelistBomb(list2);
-            // 检查是否还有其他可消除的方块
+            // 检查是否还有其他可消除的水果
             await this.checkAgain(isResult);
             return true;
         }
@@ -1178,9 +1178,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 获取炸弹炸掉的糖果列表
-     * 根据炸弹类型获取需要消除的方块列表
-     * @param {gridCmpt} bc - 炸弹方块组件
-     * @returns {Promise<gridCmpt[]>} 异步操作，返回炸弹影响的方块列表
+     * 根据炸弹类型获取需要消除的水果列表
+     * @param {gridCmpt} bc - 炸弹水果组件
+     * @returns {Promise<gridCmpt[]>} 异步操作，返回炸弹影响的水果列表
      */
     async getBombList(bc: gridCmpt): Promise<gridCmpt[]> {
         let list: gridCmpt[] = [];
@@ -1283,8 +1283,8 @@ export class Game extends BaseNodeCom {
 
     /**
      * 选中状态还原
-     * 重置所有选中方块的选中状态
-     * @description 将当前选中的方块重置为未选中状态
+     * 重置所有选中水果的选中状态
+     * @description 将当前选中的水果重置为未选中状态
      */
     resetSelected() {
         if (!this.isValid) {
@@ -1298,10 +1298,10 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 开始交换两个选中的方块
-     * 处理方块交换的动画和逻辑
+     * 开始交换两个选中的水果
+     * 处理水果交换的动画和逻辑
      * @param {boolean} isBack - 是否是交换回原位
-     * @returns {Promise<void>} 异步操作，完成方块交换
+     * @returns {Promise<void>} 异步操作，完成水果交换
      */
     async startChangeCurTwoPos(isBack: boolean = false) {
         try {
@@ -1444,10 +1444,10 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 检查方块是否已经存在于列表中
-     * 避免重复处理同一个方块
-     * @param {gridCmpt} item - 要检查的方块组件
-     * @param {any[]} samelist - 已处理的方块列表
+     * 检查水果是否已经存在于列表中
+     * 避免重复处理同一个水果
+     * @param {gridCmpt} item - 要检查的水果组件
+     * @param {any[]} samelist - 已处理的水果列表
      * @returns {boolean} 是否存在于列表中
      */
     private checkExist(item: gridCmpt, samelist: any[]) {
@@ -1463,7 +1463,7 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 反复检查
-     * 反复检查是否有可消除的方块
+     * 反复检查是否有可消除的水果
      * @param {boolean} isResult - 是否为结果检查
      */
     async checkAgain(isResult: boolean = false) {
@@ -1506,9 +1506,9 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 开始检测是否有满足消除条件的存在
-     * 检查网格中是否有可消除的方块组合
+     * 检查网格中是否有可消除的水果组合
      * @param {Function} cb - 回调函数
-     * @returns {Promise<boolean>} 异步操作，是否有可消除的方块
+     * @returns {Promise<boolean>} 异步操作，是否有可消除的水果
      */
     async startCheckThree(cb: Function = null): Promise<boolean> {
         return new Promise(async resolve => {
@@ -1555,9 +1555,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 处理消除列表
-     * 处理满足消除条件的方块列表
-     * @param {any[]} samelist - 可消除的方块列表
-     * @returns {Promise<void>} 异步操作，完成方块消除
+     * 处理满足消除条件的水果列表
+     * @param {any[]} samelist - 可消除的水果列表
+     * @returns {Promise<void>} 异步操作，完成水果消除
      */
     private async handleSamelist(samelist: any[]) {
         //  触发短震动反馈
@@ -1612,8 +1612,8 @@ export class Game extends BaseNodeCom {
 
     /**
      * 消除并获得积分
-     * 消除方块并处理特效和积分
-     * @param {gridCmpt} ele - 要消除的方块组件
+     * 消除水果并处理特效和积分
+     * @param {gridCmpt} ele - 要消除的水果组件
      */
     destroyGridAndGetScore(ele: gridCmpt) {
         if (!ele) return;
@@ -1621,13 +1621,13 @@ export class Game extends BaseNodeCom {
         // 1. 播放消除粒子特效
         this.playDestroyParticle(ele);
 
-        // 2. 攻击上方同类型下落方块
+        // 2. 攻击上方同类型下落水果
         this.attackTopDownGrid(ele);
 
         // 3. 处理物品飞行效果
         this.handleItemFly(ele);
 
-        // 4. 销毁方块
+        // 4. 销毁水果
         this.destroyGridNode(ele);
 
         // 5. 检查是否为新玩家，若为新玩家则设置为非新玩家
@@ -1638,7 +1638,7 @@ export class Game extends BaseNodeCom {
 
     /**
      * 播放消除粒子特效
-     * @param {gridCmpt} ele - 要消除的方块组件
+     * @param {gridCmpt} ele - 要消除的水果组件
      */
     private playDestroyParticle(ele: gridCmpt) {
         let particle = this.particleManager.playParticle('particle', this.blockPosArr[ele.h][ele.v]);
@@ -1651,11 +1651,11 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 攻击上方同类型下落方块
-     * @param {gridCmpt} ele - 要消除的方块组件
+     * 攻击上方同类型下落水果
+     * @param {gridCmpt} ele - 要消除的水果组件
      */
     private attackTopDownGrid(ele: gridCmpt) {
-        // 查找上面的水果方块能找到没有被锁定 同类型的水果方块
+        // 查找上面的水果水果能找到没有被锁定 同类型的水果水果
         let targetNode = this.DownGridMgr.getFrontGridByType(ele.type);
         
         if (targetNode) {
@@ -1665,7 +1665,7 @@ export class Game extends BaseNodeCom {
             // 发射子弹粒子
             this.fireBulletToTarget(ele, targetNode);
         } else {
-            // 如果没有找到目标下落方块，将方块的类型和攻击值添加到炮塔的gridDataList中
+            // 如果没有找到目标下落水果，将水果的类型和攻击值添加到炮塔的gridDataList中
             if (this.turret) {          
                  this.flyItemToTurret(ele, ele.node.worldPosition,this.turret.node);
             }
@@ -1674,8 +1674,8 @@ export class Game extends BaseNodeCom {
 
     /**
      * 发射子弹粒子到目标
-     * @param {gridCmpt} source - 源方块组件
-     * @param {Node} target - 目标下落方块节点
+     * @param {gridCmpt} source - 源水果组件
+     * @param {Node} target - 目标下落水果节点
      */
     private fireBulletToTarget(source: gridCmpt, target: Node) {
         let pbullet = this.particleManager.playParticle('bulletParticle', this.blockPosArr[source.h][source.v]);
@@ -1692,7 +1692,7 @@ export class Game extends BaseNodeCom {
 
     /**
      * 处理子弹击中效果
-     * @param {Node} target - 目标下落方块节点
+     * @param {Node} target - 目标下落水果节点
      * @param {number} damage - 伤害值
      */
     private handleBulletHit(target: Node, damage: number) {
@@ -1720,7 +1720,7 @@ export class Game extends BaseNodeCom {
 
     /**
      * 处理物品飞行效果
-     * @param {gridCmpt} ele - 要消除的方块组件
+     * @param {gridCmpt} ele - 要消除的水果组件
      */
     private handleItemFly(ele: gridCmpt) {
         let tp = ele.type;
@@ -1729,8 +1729,8 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 销毁方块节点
-     * @param {gridCmpt} ele - 要消除的方块组件
+     * 销毁水果节点
+     * @param {gridCmpt} ele - 要消除的水果组件
      */
     private destroyGridNode(ele: gridCmpt) {
         this.blockArr[ele.h][ele.v] = null;
@@ -1739,8 +1739,8 @@ export class Game extends BaseNodeCom {
 
     /**
      * 获取障碍物列表
-     * 从方块列表中筛选出障碍物类型的方块
-     * @param {Node[]} list - 方块节点列表
+     * 从水果列表中筛选出障碍物类型的水果
+     * @param {Node[]} list - 水果节点列表
      * @returns {Node[]} 障碍物节点列表
      */
     getObstacleList(list: Node[]) {
@@ -1756,9 +1756,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 获取一颗糖果四周的糖果
-     * 获取指定方块周围的相邻方块
-     * @param {gridCmpt} grid - 中心方块组件
-     * @returns {Node[]} 周围相邻的方块节点列表
+     * 获取指定水果周围的相邻水果
+     * @param {gridCmpt} grid - 中心水果组件
+     * @returns {Node[]} 周围相邻的水果节点列表
      */
     getAroundGrid(grid: gridCmpt) {
         if (grid.type > Constant.NormalType) return [];
@@ -1787,7 +1787,7 @@ export class Game extends BaseNodeCom {
     /**
      * 炸弹消除
      * 处理炸弹爆炸后的消除逻辑
-     * @param {any[]} samelist - 炸弹影响的方块列表
+     * @param {any[]} samelist - 炸弹影响的水果列表
      * @returns {Promise<void>} 异步操作，完成炸弹消除
      */
     private async handleSamelistBomb(samelist: any[]) {
@@ -1826,8 +1826,8 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 合成炸弹
-     * 将多个方块合成为炸弹
-     * @param {gridCmpt[]} item - 要合成的方块列表
+     * 将多个水果合成为炸弹
+     * @param {gridCmpt[]} item - 要合成的水果列表
      */
     synthesisBomb(item: gridCmpt[]) {
         /** 先找当前item中是否包含curTwo,包含就以curTwo为中心合成 */
@@ -1926,7 +1926,7 @@ export class Game extends BaseNodeCom {
 
     /**
      * 至少有三个同行且三个同列
-     * 检查消除组合是否至少有三个同行和三个同列的方块
+     * 检查消除组合是否至少有三个同行和三个同列的水果
      * @param {gridCmpt[]} list - 消除组合列表
      * @returns {boolean} 是否满足条件
      */
@@ -1990,7 +1990,7 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 去重复
-     * 去除消除组合列表中的重复方块
+     * 去除消除组合列表中的重复水果
      * @param {any[]} samelist - 消除组合列表
      */
     private _deleteDuplicates(samelist: any[]) {
@@ -2015,9 +2015,9 @@ export class Game extends BaseNodeCom {
     }
     /**
      * 以当前滑块为中心沿水平方向检查
-     * 检查水平方向上是否有可消除的方块组合
-     * @param {gridCmpt} item - 中心方块组件
-     * @returns {gridCmpt[]} 水平方向上的可消除方块列表
+     * 检查水平方向上是否有可消除的水果组合
+     * @param {gridCmpt} item - 中心水果组件
+     * @returns {gridCmpt[]} 水平方向上的可消除水果列表
      */
     private _checkHorizontal(item: gridCmpt): gridCmpt[] {
         let arr: gridCmpt[] = [item];
@@ -2054,9 +2054,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 以当前滑块为中心沿竖直方向检查
-     * 检查竖直方向上是否有可消除的方块组合
-     * @param {gridCmpt} item - 中心方块组件
-     * @returns {gridCmpt[]} 竖直方向上的可消除方块列表
+     * 检查竖直方向上是否有可消除的水果组合
+     * @param {gridCmpt} item - 中心水果组件
+     * @returns {gridCmpt[]} 竖直方向上的可消除水果列表
      */
     private _checkVertical(item: gridCmpt): gridCmpt[] {
         let arr: gridCmpt[] = [item];
@@ -2093,9 +2093,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 数据交换，网格位置交换
-     * 交换两个方块的数据和位置
-     * @param {gridCmpt} item1 - 第一个方块组件
-     * @param {gridCmpt} item2 - 第二个方块组件
+     * 交换两个水果的数据和位置
+     * @param {gridCmpt} item1 - 第一个水果组件
+     * @param {gridCmpt} item2 - 第二个水果组件
      */
     changeData(item1: gridCmpt, item2: gridCmpt) {
         // 核心保护：确保组件和数据均有效，防止 Cannot read properties of null (reading 'h')
@@ -2138,10 +2138,10 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 是否点击在方块上
-     * 检查点击位置是否在某个方块上
+     * 是否点击在水果上
+     * 检查点击位置是否在某个水果上
      * @param {Vec3} pos - 点击位置
-     * @returns {gridCmpt} 点击的方块组件
+     * @returns {gridCmpt} 点击的水果组件
      */
     checkClickOnBlock(pos: Vec3): gridCmpt {
         if (!this.isValid) return;
@@ -2161,8 +2161,8 @@ export class Game extends BaseNodeCom {
 
     /**
      * 消除后向下滑动
-     * 处理消除方块后，上方方块向下移动填补空缺
-     * @returns {Promise<void>} 异步操作，完成方块下移
+     * 处理消除水果后，上方水果向下移动填补空缺
+     * @returns {Promise<void>} 异步操作，完成水果下移
      */
     async checkMoveDown() {
         return new Promise(async resolve => {
@@ -2201,9 +2201,9 @@ export class Game extends BaseNodeCom {
 
     /**
      * 获取最终下落的格子数
-     * 计算方块需要下落的最终格子数
-     * @param {number} i - 方块的行坐标
-     * @param {number} j - 方块的列坐标
+     * 计算水果需要下落的最终格子数
+     * @param {number} i - 水果的行坐标
+     * @param {number} j - 水果的列坐标
      * @param {number} count - 初始下落格子数
      * @returns {Promise<number>} 异步操作，返回最终下落的格子数
      */
@@ -2223,9 +2223,9 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 补充新方块填补空缺
-     * 在空缺位置补充新的方块
-     * @returns {Promise<void>} 异步操作，完成方块补充
+     * 补充新水果填补空缺
+     * 在空缺位置补充新的水果
+     * @returns {Promise<void>} 异步操作，完成水果补充
      */
     async checkReplenishBlock() {
         return new Promise(async resolve => {
@@ -2249,7 +2249,7 @@ export class Game extends BaseNodeCom {
 
     /**
      * 初始化布局
-     * 初始化游戏网格布局和方块
+     * 初始化游戏网格布局和水果
      * @returns {Promise<void>} 异步操作，完成布局初始化
      */
     async initLayout() {
@@ -2331,13 +2331,13 @@ export class Game extends BaseNodeCom {
     }
 
     /**
-     * 添加方块
-     * 创建并添加新的方块到网格中
-     * @param {number} i - 方块的行坐标
-     * @param {number} j - 方块的列坐标
-     * @param {Vec3} pos - 方块的位置
-     * @param {number} type - 方块的类型，-1表示随机类型
-     * @returns {Node} 创建的方块节点
+     * 添加水果
+     * 创建并添加新的水果水果到网格中
+     * @param {number} i - 水果水果的行坐标
+     * @param {number} j - 水果水果的列坐标
+     * @param {Vec3} pos - 水果水果的位置
+     * @param {number} type - 水果水果的类型，-1表示随机类型
+     * @returns {Node} 创建的水果水果节点
      */
     addBlock(i: number, j: number, pos: Vec3 = null, type: number = -1) {
         let block = instantiate(this.gridPre);
@@ -2351,7 +2351,7 @@ export class Game extends BaseNodeCom {
 
     /**
      * 清除数据
-     * 清除游戏数据和方块
+     * 清除游戏数据和水果
      * @description 重置游戏状态和数据，准备重新开始游戏
      */
     clearData() {
@@ -2389,9 +2389,9 @@ export class Game extends BaseNodeCom {
     tempendPos = new Vec3();
     /**
      * 飞舞动画
-     * 播放方块消除后的飞舞动画
-     * @param {number} type - 方块类型
-     * @param {Vec3} pos - 方块位置
+     * 播放水果消除后的飞舞动画
+     * @param {number} type - 水果类型
+     * @param {Vec3} pos - 水果位置
      * @param {Node} target - 目标节点
      * @returns {Promise<void>} 异步操作，完成飞舞动画
      */
@@ -2400,7 +2400,7 @@ export class Game extends BaseNodeCom {
         const typeIndex = this.data.mapData[0].m_id.indexOf(type);
         if (typeIndex < 0) return;
 
-        // 从对象池获取方块实例
+        // 从对象池获取水果实例
         const item = this.getFlyItemFromPool();
         if (!item) return;
         
@@ -2408,7 +2408,7 @@ export class Game extends BaseNodeCom {
         this.node.getComponent(UITransform).convertToNodeSpaceAR(pos, this.tempstartPos);
         this.node.getComponent(UITransform).convertToNodeSpaceAR(target.worldPosition, this.tempendPos);
         
-        // 设置方块属性
+        // 设置水果属性
         item.setPosition(this.tempstartPos);
         this.node.addChild(item);
         item.getComponent(gridCmpt).setType(type);
@@ -2417,7 +2417,7 @@ export class Game extends BaseNodeCom {
         MoveManager.getInstance().flyItem(item, this.tempstartPos, this.tempendPos, undefined, () => {
             // 处理关卡目标
             this.handleLevelTarget(type);
-            // 回收方块到对象池
+            // 回收水果到对象池
             this.recycleFlyItemToPool(item);
             // 播放音效
             // AudioManager.getInstance().playSound('Full');
@@ -2426,15 +2426,15 @@ export class Game extends BaseNodeCom {
 
         /**
      * 飞舞动画到炮塔
-     * 播放方块消除后的飞舞动画
-     * @param {gridCmpt} ele - 方块组件
-     * @param {Vec3} pos - 方块位置
+     * 播放水果消除后的飞舞动画
+     * @param {gridCmpt} ele - 水果组件
+     * @param {Vec3} pos - 水果位置
      * @param {Node} target - 目标节点
      * @returns {Promise<void>} 异步操作，完成飞舞动画
      */
     async flyItemToTurret(ele: gridCmpt, pos: Vec3, target: Node) {
 
-        // 从对象池获取方块实例
+        // 从对象池获取水果实例
         const item = this.getFlyItemFromPool();
         if (!item) return;
 
@@ -2442,7 +2442,7 @@ export class Game extends BaseNodeCom {
         this.node.getComponent(UITransform).convertToNodeSpaceAR(pos, this.tempstartPos);
         this.node.getComponent(UITransform).convertToNodeSpaceAR(target.worldPosition, this.tempendPos);
 
-        // 设置方块属性
+        // 设置水果属性
         item.setPosition(this.tempstartPos);
         this.node.addChild(item);
         item.getComponent(gridCmpt).setType(ele.type);
@@ -2457,7 +2457,7 @@ export class Game extends BaseNodeCom {
             this.turret.getComponent(Turret).updateGridDataCountLb();
             // 处理关卡目标
             this.handleLevelTarget(gridData.type);
-            // 回收方块到对象池
+            // 回收水果到对象池
             this.recycleFlyItemToPool(item);
             // 播放音效
             // AudioManager.getInstance().playSound('Full');
@@ -2486,7 +2486,7 @@ export class Game extends BaseNodeCom {
         this.startSpeedIncrease();
     }
     /**
-     *消除最前面3排水果方块
+     *消除最前面3排水果水果
      */
     eliminateFrontNRows(rowsNum: number = 6) {
         // 假设 this.downGridManager 是 DownGridManager 的实例
@@ -2716,7 +2716,7 @@ export class Game extends BaseNodeCom {
         this.isStartChange = true;
         this.isChecking = true;
 
-        // 4.飞特效：从道具按钮位置飞向目标方块
+        // 4.飞特效：从道具按钮位置飞向目标水果
         let hasChange = false;
         // 记录完成的动画数量
         let finishedCount = 0;
