@@ -5,6 +5,7 @@ import { GridType } from '../../Tools/enumConst';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
 import { LevelConfig } from '../../Tools/levelConfig';
+import GameData from '../../Common/GameData';
 
 const { ccclass, property } = _decorator;
 
@@ -16,6 +17,8 @@ export class gridDownCmpt extends Component {
 
     /** 血量：用于标识水果方块的生命值 */
     public health: number = 1;
+    /** 最大血量：水果方块的初始最大血量 */
+    public maxHealth: number = 1;
     /** 虚拟血量：用于被选中时扣除 */
     public virtualHealth: number = 5;
 
@@ -29,6 +32,7 @@ export class gridDownCmpt extends Component {
     public addHealth(amount: number): void {
         this.health += amount;
         this.updateHealthDisplay();
+        this.upArmorPlating();
     }
 
     showDamageAm() {
@@ -42,6 +46,7 @@ export class gridDownCmpt extends Component {
     public takeDamage(damage: number,callback:()=>void) {
         this.health -= damage;
         this.updateHealthDisplay();
+        this.upArmorPlating();
         if (this.health <= 0) {
             callback();
         }
@@ -91,6 +96,7 @@ export class gridDownCmpt extends Component {
         this._showIconByType(this.type);
         // 初始化血量显示
         this.updateHealthDisplay();
+        this.upArmorPlating();
     }
     
     /**
@@ -105,7 +111,12 @@ export class gridDownCmpt extends Component {
     
     setHealth(health: number) {
         this.health = health;
+        // 确保 maxHealth 至少为当前血量（用于初始化时设置最大血量）
+        if (health > this.maxHealth) {
+            this.maxHealth = health;
+        }
         this.updateHealthDisplay();
+        this.upArmorPlating();
     }
     /**
      * 显示位置信息（预留方法）
@@ -162,69 +173,49 @@ export class gridDownCmpt extends Component {
         }
     }
 
+    protected upArmorPlating(): void {
+        if (this.ArmorPlating) {
+            let children = this.ArmorPlating.children;
+            if (children.length < 2) return; // 确保至少有两个子节点
+
+            // 直接使用当前血量和最大血量计算比例
+            let currentHealth = this.health;
+            let maxHealth = this.maxHealth;
+            
+            // 计算当前血量比例
+            let ratio = maxHealth > 0 ? currentHealth / maxHealth : 0;
+
+            // 获取该水果同类型grid的一次攻击伤害
+            let attackDamage = 1; // 默认攻击伤害
+            // 从GameData中获取对应类型的攻击等级，计算实际攻击伤害
+            const gridTypeTemp = 'LVAttack' + this.type;
+            const attackLevel = GameData.loadData(gridTypeTemp, 1);
+            attackDamage = attackLevel; // 假设攻击等级直接对应攻击伤害
+
+            // 根据逻辑决定显示哪个子节点
+            if (ratio > 0.5) {
+                // 大于50%：显示第二个子节点，隐藏第一个
+                children[0].active = false;
+                children[1].active = true;
+            } else if (currentHealth > attackDamage) {
+                // 小于50%但大于攻击伤害：显示第一个子节点，隐藏第二个
+                children[0].active = true;
+                children[1].active = false;
+            } else {
+                // 小于等于攻击伤害：都隐藏
+                children[0].active = false;
+                children[1].active = false;
+            }
+        }
+    }
     /**
      * 更新血量显示
      */
     private updateHealthDisplay(): void {
         if (this.healthBl) {
             // 2026-01-22: 用户需求，同时显示血量数值
-            this.healthBl.node.active = false;
-        }
-
-        if (this.ArmorPlating) {
-            let children = this.ArmorPlating.children;
-            
-            // 2026-01-22: 按照用户需求优化护甲显示逻辑
-            // 模式变更：互斥显示模式（Single Image Per Stage）
-            // 每一个阶段只有一个UI图片显示，不同阶段显示不同的图片
-            // 例如：剩余护甲越多，显示越“高级”或“完整”的图片（通常是索引较大的图片）
-            // 护甲减少时，切换到索引较小的图片
-            
-            let totalPlates = children.length;
-            
-            // 修正：如果当前血量大于记录的虚拟血量，说明虚拟血量数据过期或未同步
-            // 必须更新 this.virtualHealth 以“记住”这个新的最大值，
-            // 否则在掉血过程中，分母会随着分子一起减小，导致比例永远为 1
-            if (this.health > this.virtualHealth) {
-                this.virtualHealth = this.health;
-            }
-
-            // 计算最大护甲值 (例如9血 -> 8护甲)
-            let maxArmor = Math.max(1, this.virtualHealth - 1); 
-            // 计算当前护甲值 (例如当前5血 -> 4护甲)
-            let currentArmor = Math.max(0, this.health - 1);
-            
-            // 特殊处理：如果总护甲量(maxArmor)小于护甲片数量(totalPlates)
-            // 说明血量很低(例如2血只有1护甲)，此时无法支撑显示所有护甲片
-            // 规则：最大只能显示 maxArmor 个护甲片
-            let limitPlates = Math.min(totalPlates, maxArmor);
-
-            let ratio = currentArmor / maxArmor;
-            
-            // 根据比例计算显示等级 (1 ~ totalPlates)
-            // 示例 (totalPlates=3):
-            // ratio > 0.66 -> level 3 (显示children[2])
-            // 0.33 < ratio <= 0.66 -> level 2 (显示children[1])
-            // 0 < ratio <= 0.33 -> level 1 (显示children[0])
-            // ratio <= 0 -> level 0 (都不显示)
-            let displayLevel = Math.ceil(ratio * totalPlates);
-            
-            // 应用限制：不能超过实际拥有的护甲点数
-            if (displayLevel > limitPlates) {
-                displayLevel = limitPlates;
-            }
-            
-            // 互斥显示逻辑：只显示对应等级的那一张图片
-            // 数组索引 = displayLevel - 1
-            // 例如 displayLevel=1 -> 显示 children[0]
-            //      displayLevel=2 -> 显示 children[1]
-            for (let i = 0; i < children.length; i++) {
-                if (displayLevel > 0 && i === (displayLevel - 1)) {
-                    children[i].active = true;
-                } else {
-                    children[i].active = false;
-                }
-            }
+            this.healthBl.node.active = true;
+            this.healthBl.string = this.health.toString();
         }
     }
 
@@ -234,6 +225,7 @@ export class gridDownCmpt extends Component {
     public reset(): void {
         this.type = GridType.STRAWBERRY;
         this.setHealth(1);
+        this.maxHealth = 1; // 重置最大血量
         this.virtualHealth = this.health;
 
         // 清除所有定时器，避免内存泄漏

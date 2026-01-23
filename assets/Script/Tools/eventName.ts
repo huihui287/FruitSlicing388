@@ -13,8 +13,6 @@ export namespace EventName {
         TouchTile = "TouchTile",
         /** 刷新层数 */
         RefreshCurLevel = "RefreshCurLevel",
-        /** 下一关 */
-        NextLevel = "NextLevel",
         /** 加载地图 */
         LoadMap = "LoadMap",
         /** 返回主页 */
@@ -56,8 +54,8 @@ export namespace EventName {
         TIMER_DOWN = "TIMER_DOWN",
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /** 发送奖励 */
-        SendReward = "SendReward",
+        /** 下一关 */
+        NextLevel = "NextLevel",
         /** 游戏失败 */
         GameOver = "GameOver",
         /** 继续游戏 */

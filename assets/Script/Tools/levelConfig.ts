@@ -74,21 +74,25 @@ class config {
     }
 
     getLevelTargetCount() {//list: mapData[], idx
-        // let ctArr = list[0].m_ct;
-        // //let idArr = list[0].m_id;
-        // // if (idArr[idx] > Constant.NormalType) {//是障碍物
-        // //     return ctArr[idx];
-        // // }
-        // // 几何增长：基数 * (增长率 ^ (关卡-1)) * 系数
-        // // 增长率设为 1.15，确保后期难度提升，同时前期不会太难
-        // let count = Math.floor(ctArr[idx] * Math.pow(growthRate, App.gameCtr.curLevel - 1) * 2);
-
         // 确保至少有一个
-        // 比如：Level 1 = 1, Level 10 ≈ 3.5, Level 20 ≈ 14, Level 50 ≈ 900 (对比原线性的 100)
         const lv = Math.max(1, App.gameCtr.curLevel || 1);
-        const base = 20;          // 第一关基础目标数量
-        const growthRate = 3.12;  // 每关 12% 几何增长
-        let count = Math.ceil(base * Math.pow(growthRate, lv - 1));
+        const base = 30;          // 第一关基础目标数量，确保游戏时间约 2 分钟
+        let count: number;
+        
+        if (lv <= 5) {
+            // 前 5 关：较慢的线性增长
+            // 每关增加 5 个目标，确保增长平稳
+            count = base + (lv - 1) * 200;
+        } else {
+            // 5 关之后：较快的指数增长
+            // 以第 5 关的目标数量为基础，之后每关 15% 的增长率
+            const level10Count = base + 5 * 200; // 第 5 关的目标数量
+            const growthRate = 1.35; // 15% 的增长率
+            count = Math.ceil(level10Count * Math.pow(growthRate, lv - 5));
+        }
+        
+        // 确保目标数量至少为基础值
+        count = Math.max(base, count);
         return count;
     }
 }

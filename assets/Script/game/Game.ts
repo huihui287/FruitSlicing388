@@ -1,4 +1,4 @@
-import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid, ProgressBar } from 'cc';
+import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid, ProgressBar, Label } from 'cc';
 // 如果 enumConst.ts 已改名或迁移，请根据实际路径调整
 // 例如：'../../const/EnumConst' 或 '../../const/Enum'
 //import { Advertise } from '../../wx/advertise';//广告
@@ -92,7 +92,8 @@ export class Game extends BaseNodeCom {
     private video4: Node = null;
     /** UI引用：道具5视频按钮 */
     private video5: Node = null;
-
+    /** UI引用：当前关卡显示节点 */
+    private levelLb: Node = null;
     /** UI引用：教学手图片 */
     private hand: Node = null;
     /** UI引用：升级水果攻击值 */
@@ -227,7 +228,7 @@ export class Game extends BaseNodeCom {
         EventManager.off(EventName.Game.TouchStart, this.evtTouchStart, this);
         EventManager.off(EventName.Game.TouchMove, this.evtTouchMove, this);
         EventManager.off(EventName.Game.TouchEnd, this.evtTouchEnd, this);
-        EventManager.off(EventName.Game.SendReward, this.handleRewardAnim, this);
+        EventManager.off(EventName.Game.NextLevel, this.evtNextLevel, this);
         EventManager.off(EventName.Game.ContinueGame, this.evtContinueGame, this);
         EventManager.off(EventName.Game.Damage, this.evtDamage, this);
         EventManager.off(EventName.Game.RestartGame, this.evtRestart, this);
@@ -284,6 +285,7 @@ export class Game extends BaseNodeCom {
       
         this.spHealth = this.viewList.get('ui/spHealth');
         this.hand = this.viewList.get('ui/hand');
+        this.levelLb = this.viewList.get('ui/levelLb');
         this.hand.active = false;
         
         // 设置初始关卡并加载数据 - 从第一关开始
@@ -422,8 +424,8 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.TouchMove, this.evtTouchMove, this);
         EventManager.on(EventName.Game.TouchEnd, this.evtTouchEnd, this);
 
-        /** 接收奖励消息 */
-        EventManager.on(EventName.Game.SendReward, this.handleRewardAnim, this);
+        /** 下一关消息 */
+        EventManager.on(EventName.Game.NextLevel, this.evtNextLevel, this);
         /** 看完视频接收继续游戏消息 */
         EventManager.on(EventName.Game.ContinueGame, this.evtContinueGame, this);
         /** 接收扣血消息 */
@@ -520,6 +522,8 @@ export class Game extends BaseNodeCom {
         // 初始化血量显示
         this.playerHealth = 100;
         this.updateHealthDisplay();
+        // 更新关卡显示
+        this.updateLevelLb();
     }
     /**
      * 更新道具信息
@@ -781,33 +785,12 @@ export class Game extends BaseNodeCom {
      * 进入下一关并发放奖励
      * @returns {Promise<void>} 异步操作，完成后进入下一关
      */
-    async handleRewardAnim() {
+    async evtNextLevel() {
         // 恢复游戏
         EventManager.emit(EventName.Game.Resume);
         // 加载下一关
         this.loadExtraData(LevelConfig.nextLevel());
         
-        // 将奖励道具存储到玩家道具库存中
-        // for (let i = 0; i < this.rewardBombs.length; i++) {
-        //     let bomb = this.rewardBombs[i];
-        //     // 将道具数量添加到玩家库存
-        //     GameData.setBomb(bomb.type, bomb.count);
-        // }
-        
-        // // 更新道具显示
-        // this.updateToolsInfo();
-        
-        // 以下代码可根据需要启用
-        // for (let i = 0; i < this.rewardBombs.length; i++) {
-        //     let bomb = this.rewardBombs[i];
-        //     for (let j = 0; j < bomb.count; j++) {
-        //         await ToolsHelper.delayTime(0.1);
-        //         this.throwTools(bomb.type);
-        //     }
-        // }
-
-        // await ToolsHelper.delayTime(1);
-        // this.checkAllBomb();
     }
 
     /**
@@ -3018,5 +3001,16 @@ export class Game extends BaseNodeCom {
         } else {
             rocket.destroy();
         }
+    }
+
+    onClick_xialevelbtn() {
+        AudioManager.getInstance().playSound('button_click');
+        // 发送事件
+        EventManager.emit(EventName.Game.NextLevel);
+
+    }
+
+    updateLevelLb() {
+        this.levelLb.getComponent(Label).string = '第 ' + App.gameCtr.curLevel.toString() + ' 关';
     }
 }

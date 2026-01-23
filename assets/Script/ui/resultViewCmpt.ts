@@ -89,7 +89,7 @@ export class ResultViewCmpt extends BaseDialog  {
     onClick_NextLevelBtn() {
         AudioManager.getInstance().playSound('button_click');
         // 发送事件
-        EventManager.emit(EventName.Game.SendReward);
+        EventManager.emit(EventName.Game.NextLevel);
         this.dismiss();
     }
 
