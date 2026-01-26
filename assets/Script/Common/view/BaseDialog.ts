@@ -123,7 +123,8 @@ export default class BaseDialog extends Component {
 
     // 修改后的dismiss方法 - 使用类型安全的PopupView获取方式
     dismiss() {
-        if (!this.node.parent) {
+        if (!isValid(this.node) || !isValid(this.node.parent)) {
+            console.warn('BaseDialog.dismiss: node or node.parent is invalid');
             return;
         }
         if (this.NextUI != null) {
@@ -136,7 +137,7 @@ export default class BaseDialog extends Component {
         }
         // 使用类型安全的方法获取PopupView组件
         let popupView = this.node.parent.getComponent(PopupView);
-        if (!!popupView) {
+        if (!!popupView && isValid(popupView.node)) {
             popupView.dismiss();
         } else {
             this.node.destroy();

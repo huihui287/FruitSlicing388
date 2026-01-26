@@ -7,6 +7,21 @@ import { BaseINT } from "./BaseINT";
  * 通用渠道接口
  */
 export default class BaseCH implements BaseINT {
+    startGameRecorderManager() {
+        throw new Error('Method not implemented.');
+    }
+    stopGameRecorderManager() {
+        throw new Error('Method not implemented.');
+    }
+    setImRankData_Num(level: number) {
+        throw new Error('Method not implemented.');
+    }
+    getImRankList_Num() {
+        throw new Error('Method not implemented.');
+    }
+    recordShare(call: (resp: any) => void) {
+        throw new Error('Method not implemented.');
+    }
 
     /**当前渠道 */
     ch = null;

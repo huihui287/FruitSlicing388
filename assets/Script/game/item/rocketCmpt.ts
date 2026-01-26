@@ -1,6 +1,8 @@
 import { _decorator, Component, Node, tween, v3 } from 'cc';
 import { BaseNodeCom } from '../BaseNode';
 import { Bomb } from '../../Tools/enumConst';
+import EventManager from '../../Common/view/EventManager';
+import { EventName } from '../../Tools/eventName';
 const { ccclass, property } = _decorator;
 
 @ccclass('rocketCmpt')
@@ -18,13 +20,13 @@ export class rocketCmpt extends BaseNodeCom {
         if (type == Bomb.ver) {
             tween(this.viewList.get('down')).to(time, { position: v3(0, -800, 1) }).start();
             tween(this.viewList.get('up')).to(time, { position: v3(0, 800, 1) }).call(() => {
-                this.node.destroy();
+                EventManager.emit(EventName.Game.RecycleRocket, this.node);
             }).start();
         }
         else if (type == Bomb.hor) {
             tween(this.viewList.get('right')).to(time, { position: v3(720, 0, 1) }).start();
             tween(this.viewList.get('left')).to(time, { position: v3(-720, 0, 1) }).call(() => {
-                this.node.destroy();
+                EventManager.emit(EventName.Game.RecycleRocket, this.node);
             }).start();
         }
     }

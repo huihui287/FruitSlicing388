@@ -71,6 +71,9 @@ export namespace EventName {
 
         /** 侧边栏启动/恢复 */
         LaunchFromSidebar = "LaunchFromSidebar",
+
+        /** 回收火箭到对象池 */
+        RecycleRocket = "RecycleRocket",
     }
 
     export enum UI {

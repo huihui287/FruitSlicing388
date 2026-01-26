@@ -230,4 +230,9 @@ export class Start extends BaseNodeCom {
             });
         });
     }
+
+    onClick_LeaderboardBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        CM.mainCH.getImRankList_Num();
+    }
 }

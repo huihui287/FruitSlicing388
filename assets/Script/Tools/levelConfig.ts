@@ -3,6 +3,7 @@ import { App } from "../Controller/app";
 import { Constant, LevelData, mapData } from "./enumConst";
 import GameData from "../Common/GameData";
 import LoaderManeger from "../sysloader/LoaderManeger";
+import CM from "../channel/CM";
 
 class config {
     /** 下一关，并本地缓存已通过关卡 */
@@ -22,6 +23,7 @@ class config {
         App.gameCtr.curLevel = lv;
         GameData.saveData(GameData.Level, lv);
         GameData.updateMaxLevel(lv);
+        CM.mainCH.setImRankData_Num(lv);
     }
 
     async getLevelData(id: number | string): Promise<LevelData> {

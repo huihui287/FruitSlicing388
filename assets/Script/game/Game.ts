@@ -234,6 +234,7 @@ export class Game extends BaseNodeCom {
         EventManager.off(EventName.Game.RestartGame, this.evtRestart, this);
         EventManager.off(EventName.Game.Pause, this.evtPause, this);
         EventManager.off(EventName.Game.Resume, this.evtResume, this);
+        EventManager.off(EventName.Game.RecycleRocket, this.evtRecycleRocket, this);
     }
     /**
      * 组件加载时调用
@@ -436,6 +437,8 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.Pause, this.evtPause, this);
         /** 恢复游戏 */
         EventManager.on(EventName.Game.Resume, this.evtResume, this);
+        /** 回收火箭到对象池 */
+        EventManager.on(EventName.Game.RecycleRocket, this.evtRecycleRocket, this);
     }
     evtPause() {
     
@@ -446,6 +449,17 @@ export class Game extends BaseNodeCom {
    
         App.gameCtr.setPause(false);
         // throw new Error('Method not implemented.');
+    }
+
+    /**
+     * 回收火箭到对象池
+     * 处理火箭动画结束后的回收逻辑
+     * @param {Node} rocket - 要回收的火箭节点
+     */
+    evtRecycleRocket(rocket: Node) {
+        if (rocket && rocket.isValid) {
+            this.recycleRocket(rocket);
+        }
     }
     
     /**
@@ -462,12 +476,18 @@ export class Game extends BaseNodeCom {
         this.setLevelInfo();
         this.gridPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
         this.rocketPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/rocket');
+        
+        // 重置炮塔数据        
+        this.upTurret();
         await this.initLayout();
         this.startDownGrid();
 
         this.Guide();
         this.gameState = GameState.PLAYING;
         App.gameCtr.setPause(false);
+
+        // 开始记录游戏操作录屏
+        this.startGameRecorder();
     }
     /*********************************************  UI information *********************************************/
     /*********************************************  UI information *********************************************/
@@ -478,6 +498,7 @@ export class Game extends BaseNodeCom {
     /** 提示计时器索引：用于清除提示计时器 */
     private intervalTipsIndex: number = 0;
 
+    
     /**
      * 重置时间间隔
      * 重置提示计时器和倒计时
@@ -895,13 +916,19 @@ export class Game extends BaseNodeCom {
      * @description 当玩家观看视频后，恢复游戏状态并继续游戏
      */
     evtContinueGame() {
+        // 重置游戏状态
         this.isStartChange = false;
         this.isStartTouch = false;
-        this.updateToolsInfo();
+        this.isGameOverWaiting = false; // 重置游戏结束等待状态
+        this.gameState = GameState.PLAYING; // 重置游戏状态为播放中
+
+        // 消除前面几行
         this.eliminateFrontNRows();
-        // 恢复玩家血量 - 观看视频后恢复部分血量
-        this.playerHealth = 100; // 
-        this.updateHealthDisplay(); // 更新血量显示
+
+        // 恢复玩家血量
+        this.playerHealth = 100;
+        this.updateHealthDisplay();
+
         // 恢复水果下落
         if (this.DownGridMgr) {
             EventManager.emit(EventName.Game.Resume);
@@ -979,7 +1006,7 @@ export class Game extends BaseNodeCom {
      * 执行真正的游戏结束逻辑（弹窗）
      * 2024-01-20: 新增方法，用于在等待结束后调用
      */
-    private performGameOver() {
+    private async performGameOver() {
         // 只有非胜利状态才强制设为 GAME_OVER，否则保持 WIN 状态
         if (this.gameState !== GameState.WIN) {
             this.gameState = GameState.GAME_OVER;
@@ -997,6 +1024,21 @@ export class Game extends BaseNodeCom {
                 node: resultNode,
                 name: "ResultView",
                 data: { level: LevelConfig.getCurLevel(), isWin: isWin, rewardBombs: this.rewardBombs }
+            });
+        });
+
+        // 2024-01-20: 游戏结束后，结束录屏
+        this.endGameRecorder();
+
+        await ToolsHelper.delayTime(0.1);
+        
+        // 加载并显示分享录屏界面
+        LoaderManeger.instance.loadPrefab('prefab/ui/shareVView').then((prefab) => {
+            let shareVViewNode = instantiate(prefab);
+            ViewManager.show({
+                node: shareVViewNode,
+                name: "ShareVView",
+                data: {}
             });
         });
     }
@@ -3013,4 +3055,40 @@ export class Game extends BaseNodeCom {
     updateLevelLb() {
         this.levelLb.getComponent(Label).string = '第 ' + App.gameCtr.curLevel.toString() + ' 关';
     }
+
+    
+    upTurret() {
+        if (this.turret) {
+            this.turret.gridDataList = [];
+            this.turret.updateGridDataCountLb();
+            this.turret.updateCapacityView();
+        }
+    }
+
+    /**
+     * 开始游戏录屏
+     * 在开始关卡时调用渠道的录屏功能
+     */
+    private startGameRecorder() {
+        if (CM.mainCH && CM.mainCH.startGameRecorderManager) {
+            CM.mainCH.startGameRecorderManager();
+            console.log('开始游戏录屏');
+        } else {
+            console.log('当前平台不支持录屏功能');
+        }
+    }
+
+    /**
+     * 结束录屏
+     * 在游戏结束时调用渠道的录屏功能
+     */
+    private endGameRecorder() {
+        if (CM.mainCH && CM.mainCH.stopGameRecorderManager) {
+            CM.mainCH.stopGameRecorderManager();
+            console.log('结束游戏录屏');
+        } else {
+            console.log('当前平台不支持录屏功能');
+        }
+    }
+    
 }

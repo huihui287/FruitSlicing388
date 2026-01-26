@@ -4,6 +4,7 @@ import ChannelDB from "../ChannelDB";
 import { director } from "cc";
 import EventManager from "../../Common/view/EventManager";
 import { EventName } from "../../Tools/eventName";
+import { Utils } from "../../Tools/Utils";
 
 /**
  * 头条渠道
@@ -304,6 +305,7 @@ export default class TTCH extends BaseCH implements BaseINT {
 
             this.gameRecorderManager.onStart(res => {
                 //console.log('录屏开始');
+                this.recordResp = null;
                 this.isRecording = true;
                 this.recordingBeginTime = new Date().getTime();
             })
@@ -322,7 +324,7 @@ export default class TTCH extends BaseCH implements BaseINT {
     startGameRecorderManager() {
         if (this.ch) {
             this.gameRecorderManager.start({
-                duration: 300,
+                duration: 60,
             })
         }
     }
@@ -599,4 +601,107 @@ export default class TTCH extends BaseCH implements BaseINT {
             },
         });
     }
+
+    /**
+     * 设置 抖音排行榜  数字类型排行榜
+     * @param value     数值
+     */
+    setImRankData_Num(level: number) {
+        if (!this.ch) return;
+        const sysinfo = this.ch.getSystemInfoSync();
+        const sdkversion = sysinfo.SDKVersion;
+        let appname = sysinfo.appName;
+        let appVersion = sysinfo.version;
+        console.log(`sdkversion: ${sdkversion}`);
+        console.log(`appname: ${appname}`);
+        console.log(`appVersion: ${appVersion}`);
+        if (Utils.compareVersion(sdkversion, '2.70.0') >= 0
+            && (appname == 'Douyin' || appname == 'douyin_lite')
+            && Utils.compareVersion(appVersion, '23.2.0') >= 0) {
+            this.ch.setImRankData({
+                dataType: 0, //成绩为数字类型
+                value: "" + level, //该用户得了999999分
+                priority: 0, //dataType为数字类型，不需要权重，直接传0
+                extra: "extra",
+                success(res) {
+                    console.log(`setImRankData success res: ${res}`);
+                },
+                fail(res) {
+                    console.log(`setImRankData fail res: ${res.errMsg}`);
+                },
+            });
+        }
+    }
+
+    /**
+     * 获取数字类型原生排行榜
+     */
+    getImRankList_Num() {
+        if (!this.ch) return;
+        const sysinfo = this.ch.getSystemInfoSync();
+        const sdkversion = sysinfo.SDKVersion;
+        let appname = sysinfo.appName;
+        let appVersion = sysinfo.version;
+        console.log(`sdkversion: ${sdkversion}`);
+        console.log(`appname: ${appname}`);
+        console.log(`appVersion: ${appVersion}`);
+        if (Utils.compareVersion(sdkversion, '2.70.0') >= 0
+            && (appname == 'Douyin' || appname == 'douyin_lite')
+            && Utils.compareVersion(appVersion, '23.2.0') >= 0) {
+            this.ch.getImRankList({
+                relationType: "default", //只展示好友榜
+                dataType: 0, //只圈选type为数字类型的数据进行排序
+                rankType: "day", //每月1号更新，只对当月1号到现在写入的数据进行排序
+                suffix: "关", //数据后缀，成绩后续默认带上 “分”
+                rankTitle: "游戏排行榜", //标题
+                success(res) {
+                    console.log(`getImRankData success res: ${res}`);
+                },
+                fail(res) {
+                    console.log(`getImRankData fail res: `, res.errMsg);
+                },
+            });
+        } else {
+
+        }
+    }
+
+    /**
+     * 添加桌面
+     * @param scb 
+     * @param fcb 
+     */
+    addShortcut(scb: Function, fcb: Function) {
+        if (!this.ch) return;
+        this.ch.addShortcut({
+            success() {
+                console.log('添加桌面成功');
+                if (scb) scb();
+            },
+            fail(err) {
+                console.log('添加桌面失败', err.errMsg);
+                if (fcb) fcb();
+            },
+        });
+    }
+    
+    /**
+     * 检测是否添加到桌面 
+     * @returns true 不支持 或者 已添加
+     */
+    checkShortcut(){ 
+        if (!this.ch) return;
+        const version = this.ch.getSystemInfoSync().SDKVersion;
+        if (Utils.compareVersion(version, '2.46.0') >= 0) {
+            this.ch.checkShortcut({
+                success(res) {
+                    console.log("检查快捷方式", res.status);
+                },
+                fail(res) {
+                    console.log("检查快捷方式失败", res.errMsg);
+                },
+            });
+        }
+    }
+
 }

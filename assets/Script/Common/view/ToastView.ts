@@ -15,7 +15,7 @@ export default class ToastView extends PopupView {
     messageLabel: Label = null;
 
     private message: string;
-    private _showTime = 0.8;//显示时长
+    private _showTime = 1.5;//显示时长
     private _initialPos: Vec3 = null; // 记录初始位置
 
     onLoad() {
