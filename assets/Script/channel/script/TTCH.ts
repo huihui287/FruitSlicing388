@@ -13,11 +13,11 @@ export default class TTCH extends BaseCH implements BaseINT {
 
     //视频
     public videoAd = null;
-    public videoId = "2rqd5wdjpp40bmff4d";
+    public videoId = "9qr4riccib8282614a";
     //banner
     public bannerAd = null;
     public banIndex = 0;
-    public bannerId = ["d5qmn16ddbf2j3m7ia"];
+    public bannerId = ["2h43c55imi7a1j0355"];
     //插屏广告
     public insertAd = null;
     public insertId = "35e9gsqo2nt1iqvov0";
