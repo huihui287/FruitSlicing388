@@ -26,6 +26,8 @@ export class Start extends BaseNodeCom {
 
     protected start() {
         this.checkSidebarState();
+        this.checkDesktopShortcut();
+        
     }
 
     protected onLoad(): void {
@@ -254,4 +256,48 @@ export class Start extends BaseNodeCom {
             // });
         }
     }
+
+    /**
+     * 检查并添加桌面快捷启动（仅安卓平台和抖音渠道）
+     */
+    private checkDesktopShortcut() {
+        // 1. 检查是否为抖音渠道
+        if (!CM.isPlatform(CM.CH_ZJ)) {
+            console.log('CheckDesktopShortcut: 非抖音渠道，跳过检查');
+            return;
+        }
+
+        // 2. 检查是否为安卓平台
+        let isAndroid = false;
+        if (CM.mainCH?.isAndroid) {
+            // 优先使用渠道提供的平台检测方法
+            isAndroid = CM.mainCH.isAndroid();
+        } else {
+            // 回退到 navigator.userAgent 检测
+            isAndroid = /android/i.test(navigator.userAgent);
+        }
+
+        if (!isAndroid) {
+            console.log('CheckDesktopShortcut: 非安卓平台，跳过检查');
+            return;
+        }
+
+        // 3. 检查是否有桌面快捷启动的 API
+        if (!CM.mainCH  || !CM.mainCH.addShortcut) {
+            console.log('CheckDesktopShortcut: 抖音渠道不支持桌面快捷启动 API');
+            return;
+        }
+
+        // 4. 检查桌面上是否已经有快捷启动
+        let Exist = CM.mainCH.isExist();
+        if (Exist == false) {
+            LoaderManeger.instance.loadPrefab('prefab/ui/addShortcutView').then((prefab) => {
+                let addShortcutView = instantiate(prefab);
+                ViewManager.show({
+                    node: addShortcutView,
+                    name: "AddShortcutView"
+                });
+            });
+        }
+    }   
 }

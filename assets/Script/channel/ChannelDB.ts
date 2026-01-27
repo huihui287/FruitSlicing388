@@ -10,14 +10,14 @@ export default class ChannelDB {
     //今日头条：Toutiao  抖音短视屏：Douyin  西瓜视频：XiGua  头条极速版：news_article_lite
     static appName = "";
     //手机物理高度
-// static screenWidth = Laya.Browser.clientWidth;
-static screenWidth = window.innerWidth || 0;
-//手机物理宽度
-// static screenHeight = Laya.Browser.clientHeight;
-static screenHeight = window.innerHeight || 0;
-//设备像素比
-// static devicePixelRatio = Laya.Browser.pixelRatio;
-static devicePixelRatio = window.devicePixelRatio || 1;
+    // static screenWidth = Laya.Browser.clientWidth;
+    static screenWidth = window.innerWidth || 0;
+    //手机物理宽度
+    // static screenHeight = Laya.Browser.clientHeight;
+    static screenHeight = window.innerHeight || 0;
+    //设备像素比
+    // static devicePixelRatio = Laya.Browser.pixelRatio;
+    static devicePixelRatio = window.devicePixelRatio || 1;
 
     //启动参数
     static launchOption = null;

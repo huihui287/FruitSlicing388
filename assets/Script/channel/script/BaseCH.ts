@@ -7,20 +7,26 @@ import { BaseINT } from "./BaseINT";
  * 通用渠道接口
  */
 export default class BaseCH implements BaseINT {
+    isExist(): boolean {
+       return false;
+    }
+    addShortcut(scb: (isExist: boolean) => void, fcb: (isExist: boolean) => void) {
+       
+    }
     startGameRecorderManager() {
-        throw new Error('Method not implemented.');
+       
     }
     stopGameRecorderManager() {
-        throw new Error('Method not implemented.');
+      
     }
     setImRankData_Num(level: number) {
-        throw new Error('Method not implemented.');
+       
     }
     getImRankList_Num() {
-        throw new Error('Method not implemented.');
+       
     }
     recordShare(call: (resp: any) => void) {
-        throw new Error('Method not implemented.');
+        
     }
 
     /**当前渠道 */
@@ -337,8 +343,38 @@ export default class BaseCH implements BaseINT {
      * @param callback 
      */
     navigateToSideBar(callback: (success: boolean) => void) {
-        console.log("BaseCH navigateToSideBar: not implemented");
+        console.log("BaseCH navigateToSideBar: not implemente");
         if (callback) callback(false);
+    }
+
+    /**
+     * 判断是否为安卓平台
+     * @returns boolean 是否为安卓平台
+     */
+    isAndroid(): boolean {  
+        // 优先使用 ChannelDB 中存储的平台信息
+        if (ChannelDB.platform) {
+            return ChannelDB.platform === 'android';
+        }
+
+        // 如果 ChannelDB 中没有平台信息，使用 navigator.userAgent 检测
+        const userAgent = navigator.userAgent.toLowerCase();
+        return userAgent.indexOf('android') > -1;
+    }
+
+    /**
+     * 判断是否为 iOS 平台
+     * @returns boolean 是否为 iOS 平台
+     */
+    isIOS(): boolean {
+        // 优先使用 ChannelDB 中存储的平台信息
+        if (ChannelDB.platform) {
+            return ChannelDB.platform === 'ios';
+        }
+
+        // 如果 ChannelDB 中没有平台信息，使用 navigator.userAgent 检测
+        const userAgent = navigator.userAgent.toLowerCase();
+        return userAgent.indexOf('iphone') > -1 || userAgent.indexOf('ipad') > -1 || userAgent.indexOf('ipod') > -1;
     }
 
 }

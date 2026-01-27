@@ -47,6 +47,9 @@ export default class TTCH extends BaseCH implements BaseINT {
     // 抖音侧边栏场景值 (02=抖音, 1036=侧边栏)
     private readonly SIDEBAR_SCENE_ID = '021036';
 
+    //添加到桌面没 false 未添加 true 已添加
+    public exist = false;
+    
     constructor(ch) {
         super(ch);
         this.getSystem();
@@ -59,6 +62,7 @@ export default class TTCH extends BaseCH implements BaseINT {
         this.getGameRecorderManager();
         this.checkUpdate();
         this.onHide();
+        this.checkShortcut();
         console.log("头条渠道初始化完成");
     }
 
@@ -696,12 +700,17 @@ export default class TTCH extends BaseCH implements BaseINT {
             this.ch.checkShortcut({
                 success(res) {
                     console.log("检查快捷方式", res.status);
+                    this.exist = res.status.exist;
                 },
                 fail(res) {
                     console.log("检查快捷方式失败", res.errMsg);
                 },
             });
         }
+    }
+
+    isExist(){
+        return this.exist;
     }
 
 }
