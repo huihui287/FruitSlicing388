@@ -145,7 +145,7 @@
         "__id__": 250
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 288
@@ -641,7 +641,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 2,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 201,
@@ -821,7 +821,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 2,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 201,
@@ -1001,7 +1001,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 2,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 201,
@@ -1321,7 +1321,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 2,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 201,
@@ -4468,7 +4468,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 1,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 94,
@@ -4849,7 +4849,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 1,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 94,
@@ -5169,8 +5169,6 @@
       "__id__": 0
     },
     "fileId": "7b2p1awilF1IkKgTPAI9fo",
-    "instance": null,
-    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -5201,7 +5199,7 @@
         "__id__": 531
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 589
@@ -5555,7 +5553,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 2,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 201,
@@ -8295,7 +8293,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 1,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 94,
@@ -8632,7 +8630,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 1,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 173,
@@ -9150,7 +9148,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 1,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 173,
@@ -9725,7 +9723,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 1,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 173,
@@ -10246,7 +10244,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 1,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 94,
@@ -10562,7 +10560,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 1,
-    "_enableOutline": false,
+    "_enableOutline": true,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 94,

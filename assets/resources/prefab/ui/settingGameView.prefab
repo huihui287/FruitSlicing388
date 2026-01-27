@@ -847,7 +847,7 @@
         "__id__": 32
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 38
@@ -1232,7 +1232,9 @@
     "_disabledSprite": null,
     "_duration": 0.1,
     "_zoomScale": 1.2,
-    "_target": null,
+    "_target": {
+      "__id__": 24
+    },
     "_id": ""
   },
   {
@@ -1879,7 +1881,7 @@
         "__id__": 77
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 83

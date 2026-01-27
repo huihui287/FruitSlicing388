@@ -1032,15 +1032,36 @@ export class Game extends BaseNodeCom {
 
         await ToolsHelper.delayTime(0.1);
         
-        // 加载并显示分享录屏界面
-        LoaderManeger.instance.loadPrefab('prefab/ui/shareVView').then((prefab) => {
-            let shareVViewNode = instantiate(prefab);
-            ViewManager.show({
-                node: shareVViewNode,
-                name: "ShareVView",
-                data: {}
+        // 检查是否为抖音渠道
+        let isDouyinChannel = CM.isPlatform(CM.CH_ZJ);
+        
+        // 检查录屏时间是否足够（大于3秒）
+        let shouldShowShareView = false;
+        if (isDouyinChannel && CM.mainCH && (CM.mainCH as any).recordTime !== undefined) {
+            const recordTime = (CM.mainCH as any).recordTime;
+            if (recordTime > 3) {
+                shouldShowShareView = true;
+                console.log(`录屏时间充足：${recordTime}秒`);
+            } else {
+                console.log(`录屏时间不足：${recordTime}秒`);
+            }
+        } else {
+            console.log('当前平台不支持录屏或录屏时间不可用');
+        }
+
+        // 只有在抖音渠道且录屏时间充足的情况下才显示分享录屏界面
+        if (shouldShowShareView && isDouyinChannel) {
+            LoaderManeger.instance.loadPrefab('prefab/ui/shareVView').then((prefab) => {
+                let shareVViewNode = instantiate(prefab);
+                ViewManager.show({
+                    node: shareVViewNode,
+                    name: "ShareVView",
+                    data: {}
+                });
             });
-        });
+        } else {
+            console.log('非抖音渠道或录屏时间不足，不显示分享界面');
+        }
     }
 
     /*********************************************  gameLogic *********************************************/
