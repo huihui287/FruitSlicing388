@@ -27,7 +27,7 @@ export class RankSubView extends Component {
     ndSubContextView: SubContextView  = null;
 
     start() {
- this.ndSubContextView.
+
     }
 
     update(deltaTime: number) {

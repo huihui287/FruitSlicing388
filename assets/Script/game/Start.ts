@@ -244,14 +244,14 @@ export class Start extends BaseNodeCom {
             }
         } else {
             // 其他渠道：可以添加对应的排行榜逻辑
-            console.log('当前渠道不支持排行榜功能');
-            LoaderManeger.instance.loadPrefab('prefab/ui/RankSubView').then((prefab) => {
-                let rankSubView = instantiate(prefab);
-                ViewManager.show({
-                    node: rankSubView,
-                    name: "RankSubView"
-                });
-            });
+            // console.log('当前渠道不支持排行榜功能');
+            // LoaderManeger.instance.loadPrefab('prefab/ui/RankSubView').then((prefab) => {
+            //     let rankSubView = instantiate(prefab);
+            //     ViewManager.show({
+            //         node: rankSubView,
+            //         name: "RankSubView"
+            //     });
+            // });
         }
     }
 }
