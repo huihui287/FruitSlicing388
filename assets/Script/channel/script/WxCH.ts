@@ -33,16 +33,35 @@ export default class WxCH extends BaseCH implements BaseINT {
 
     constructor(ch) {
         super(ch);
+
+    }
+    initData(): void {
         this.getSystem();
         this.getLaunchOptions();
         this.onShowAlways();
-        this.createBannerAd();
-        this.createVideoAd();
-        this.createInterstitialAd();
+        // this.createBannerAd();
+        // this.createVideoAd();
+        // this.createInterstitialAd();
         this.setShareAppMessage();
         this.checkUpdate();
         this.onHide();
         console.log("微信渠道初始化完成");
+    }
+
+        /**登录微信*/
+    login(callback = null) {
+        if (this.ch) {
+            this.ch.login({
+                success: (res) => {
+                    if (callback) callback(true, res);
+                    console.log("登录成功", res);
+                },
+                fail: (res) => {
+                    if (callback) callback(false, res);
+                    console.log("登录失败", res);
+                }
+            })
+        }
     }
 
     /**创建视频广告*/

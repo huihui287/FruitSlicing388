@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, ScrollView, instantiate, Prefab, Label, Layout, UITransform, Color, Sprite, tween, v3 } from 'cc';
-import { BaseNodeCom } from '../game/BaseNode';
+import { BaseNodeCom } from '../game/BaseNodeCom';
 import BaseDialog from '../Common/view/BaseDialog';
 import LoaderManeger from '../sysloader/LoaderManeger';
 import { LevelConfig } from '../Tools/levelConfig';

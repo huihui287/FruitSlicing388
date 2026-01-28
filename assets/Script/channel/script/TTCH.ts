@@ -55,6 +55,9 @@ export default class TTCH extends BaseCH implements BaseINT {
     
     constructor(ch) {
         super(ch);
+    }
+
+    initData() {
         this.getSystem();
         this.getLaunchOptions();
         this.onShowAlways();
@@ -67,7 +70,23 @@ export default class TTCH extends BaseCH implements BaseINT {
         this.onHide();
         this.checkShortcut();
         this.checkFeedSubscribeStatus();
-        console.log("头条渠道初始化完成");
+          console.log("头条渠道初始化完成");
+    }
+    /**登录抖音*/
+    login(callback = null) {
+        if (this.ch) {
+            this.ch.login({
+                success: (res) => {
+                    if (callback)
+                        callback();
+                    console.log("登录成功", res);
+                },
+                fail: (res) => {
+
+                    console.log("登录失败", res);
+                }
+            })
+        }
     }
 
     //设置转发信息（右上角按钮点击->转发）
@@ -719,19 +738,19 @@ export default class TTCH extends BaseCH implements BaseINT {
 
     //检查订阅
     checkFeedSubscribeStatus() {
-        if (!this.ch) return;
-        if (!this.CheckFeedSubscribeAllScene()) return;
-        this.ch.checkFeedSubscribeStatus({
-            type: "play",
-              allScene: true,
-            success(res) {
-                console.log("检查订阅", res.status);
-                this.isFeedSubscribeSuc = res.status.exist;
-            },
-            fail(res) {
-                console.log("检查订阅失败", res.errMsg);
-            },
-        });
+        // if (!this.ch) return;
+        // if (!this.CheckFeedSubscribeAllScene()) return;
+        // this.ch.checkFeedSubscribeStatus({
+        //     type: "play",
+        //     allScene: true,
+        //     success(res) {
+        //         console.log("检查订阅", res);
+        //         this.isFeedSubscribeSuc = res.status.exist;
+        //     },
+        //     fail(res) {
+        //         console.log("检查订阅失败", res.errMsg);
+        //     },
+        // });
     }
 
      //是否已经订阅
@@ -761,6 +780,42 @@ export default class TTCH extends BaseCH implements BaseINT {
                 console.log(res.errMsg)
                 if (failCallback) failCallback(res);
             },
+        })
+    }
+
+    //上报场景数据
+    reportScene() {
+        if (!this.ch) return;
+        this.ch.reportScene({
+            sceneId: 1000,
+            costTime: 50,
+            dimension: {
+                d1: '2.1.0', // value仅支持传入String类型。若value表示Boolean，请将值处理为'0'、'1'进行上报；若value为Number，请转换为String进行上报
+            },
+            metric: {
+                m1: '546', // value仅支持传入数值且需要转换为String类型进行上报
+            },
+            success(res) {
+                // 上报接口执行完成后的回调，用于检查上报数据是否符合预期
+                console.log(res)
+            },
+            fail(res) {
+                // 上报报错时的回调，用于查看上报错误的原因：如参数类型错误等
+                console.log(res)
+            }
+        })
+
+    }
+
+    onFeedStatusChange() {
+        if (!this.ch) return;
+        this.ch.onFeedStatusChange(({ type }) => {
+            if (type === 'feedEnter') {
+                console.log('触发从Feed流进入小游戏事件回调')
+            }
+            if (type === 'feedExit') {
+                console.log('触发从小游戏退回到Feed流事件回调')
+            }
         })
     }
 }

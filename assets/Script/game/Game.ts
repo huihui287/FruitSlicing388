@@ -4,7 +4,7 @@ import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Tween, Pre
 //import { Advertise } from '../../wx/advertise';//广告
 import { gridCmpt } from './item/gridCmpt';
 import { rocketCmpt } from './item/rocketCmpt';
-import { BaseNodeCom } from './BaseNode';
+import { BaseNodeCom } from './BaseNodeCom';
 import { gridManagerCmpt } from './Manager/gridManagerCmpt';
 import { ToolsHelper } from '../Tools/toolsHelper';
 import { App } from '../Controller/app';
@@ -311,6 +311,8 @@ export class Game extends BaseNodeCom {
         try {
             let isnew = GameData.isNewPlayer();
             if (isnew == 0) {
+
+                GameData.addGold(100);
                 // 新玩家：直接触发一次提示和手势教学，引导基础操作
 
                 let tips = this.onClick_tipsBtn(true);

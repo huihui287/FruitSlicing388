@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8",
+  "uuid": "89df59d8-d296-4109-9ec1-414b1d7af431",
   "files": [
     ".json",
     ".png"
@@ -10,8 +10,8 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@6c48a",
-      "displayName": "水果_0000_金币",
+      "uuid": "89df59d8-d296-4109-9ec1-414b1d7af431@6c48a",
+      "displayName": "2",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -22,7 +22,7 @@
         "mipfilter": "none",
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8",
+        "imageUuidOrDatabaseUri": "89df59d8-d296-4109-9ec1-414b1d7af431",
         "visible": false
       },
       "ver": "1.0.22",
@@ -34,19 +34,19 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@f9941",
-      "displayName": "水果_0000_金币",
+      "uuid": "89df59d8-d296-4109-9ec1-414b1d7af431@f9941",
+      "displayName": "2",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
         "trimThreshold": 1,
         "rotated": false,
         "offsetX": 0,
-        "offsetY": 0,
+        "offsetY": 1,
         "trimX": 0,
         "trimY": 0,
         "width": 76,
-        "height": 76,
+        "height": 74,
         "rawWidth": 76,
         "rawHeight": 76,
         "borderTop": 0,
@@ -61,16 +61,16 @@
         "vertices": {
           "rawPosition": [
             -38,
-            -38,
+            -37,
             0,
             38,
-            -38,
+            -37,
             0,
             -38,
-            38,
+            37,
             0,
             38,
-            38,
+            37,
             0
           ],
           "indexes": [
@@ -87,15 +87,15 @@
             76,
             76,
             0,
-            0,
+            2,
             76,
-            0
+            2
           ],
           "nuv": [
             0,
-            0,
+            0.02631578947368421,
             1,
-            0,
+            0.02631578947368421,
             0,
             1,
             1,
@@ -103,17 +103,17 @@
           ],
           "minPos": [
             -38,
-            -38,
+            -37,
             0
           ],
           "maxPos": [
             38,
-            38,
+            37,
             0
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@6c48a",
+        "imageUuidOrDatabaseUri": "89df59d8-d296-4109-9ec1-414b1d7af431@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@6c48a"
+    "redirect": "89df59d8-d296-4109-9ec1-414b1d7af431@6c48a"
   }
 }

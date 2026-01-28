@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, tween, v3 } from 'cc';
-import { BaseNodeCom } from '../BaseNode';
+import { BaseNodeCom } from '../BaseNodeCom';
 import { Bomb } from '../../Tools/enumConst';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';

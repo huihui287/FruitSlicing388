@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8",
+  "uuid": "66fcffd5-511d-420b-89f4-6364a350591b",
   "files": [
     ".json",
     ".png"
@@ -10,8 +10,8 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@6c48a",
-      "displayName": "水果_0000_金币",
+      "uuid": "66fcffd5-511d-420b-89f4-6364a350591b@6c48a",
+      "displayName": "1",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -22,7 +22,7 @@
         "mipfilter": "none",
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8",
+        "imageUuidOrDatabaseUri": "66fcffd5-511d-420b-89f4-6364a350591b",
         "visible": false
       },
       "ver": "1.0.22",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@f9941",
-      "displayName": "水果_0000_金币",
+      "uuid": "66fcffd5-511d-420b-89f4-6364a350591b@f9941",
+      "displayName": "1",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -113,7 +113,7 @@
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@6c48a",
+        "imageUuidOrDatabaseUri": "66fcffd5-511d-420b-89f4-6364a350591b@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@6c48a"
+    "redirect": "66fcffd5-511d-420b-89f4-6364a350591b@6c48a"
   }
 }

@@ -1,7 +1,7 @@
 import { _decorator, Component } from "cc";
 // import { DouyinSideBar } from "./DouyinSideBar";
 import CM from "../CM";
-import { BaseNodeCom } from "../../game/BaseNode";
+import { BaseNodeCom } from "../../game/BaseNodeCom";
 import ViewManager from "../../Common/view/ViewManager";
 import BaseDialog from "../../Common/view/BaseDialog";
 

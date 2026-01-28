@@ -1,10 +1,10 @@
-import { _decorator, BaseNode, Component, instantiate, Node, ProgressBar } from 'cc';
+import { _decorator, Component, instantiate, Node, ProgressBar } from 'cc';
 import CM from '../channel/CM';
 import LoaderManeger from '../sysloader/LoaderManeger';
 import { App } from '../Controller/app';
 import { LevelConfig } from '../Tools/levelConfig';
 import GameData from '../Common/GameData';
-import { BaseNodeCom } from './BaseNode';
+import { BaseNodeCom } from './BaseNodeCom';
 import AudioManager from '../Common/AudioManager';
 import ViewManager from '../Common/view/ViewManager';
 import ChannelDB from '../channel/ChannelDB';

@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, instantiate, Prefab, Vec3, tween, v3, director, Quat,Tween, Label } from 'cc';
-import { BaseNodeCom } from '../BaseNode';
+import { BaseNodeCom } from '../BaseNodeCom';
 import { DownGridManager } from './DownGridManager';
 import { gridDownCmpt } from '../item/gridDownCmpt';
 import StateMachine, { IState } from '../../Common/StateMachine';

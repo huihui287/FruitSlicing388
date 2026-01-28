@@ -71,8 +71,8 @@ export enum GridType {
     GREEN_LEMON = 1,
     /** 蓝莓 */
     BLUEBERRY = 2,
-    /** 黄柠檬 */
-    YELLOW_LEMON = 3,
+    /** 樱桃 */
+    CHERRY = 3,
     /** 橘子 */
     ORANGE = 4,
     // /** 葡萄 */

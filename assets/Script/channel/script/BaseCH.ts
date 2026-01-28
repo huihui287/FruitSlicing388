@@ -7,6 +7,12 @@ import { BaseINT } from "./BaseINT";
  * 通用渠道接口
  */
 export default class BaseCH implements BaseINT {
+    initData() {
+        throw new Error('Method not implemented.');
+    }
+    login(arg0: () => void) {
+        throw new Error('Method not implemented.');
+    }
     requestFeedSubscribeAllScene(call: (resp: any) => void, arg1: null) {
         throw new Error('Method not implemented.');
     }
@@ -46,21 +52,6 @@ export default class BaseCH implements BaseINT {
         this.ch = channel;
     }
 
-    /**登录微信*/
-    login(callback = null) {
-        if (this.ch) {
-            this.ch.login({
-                success: (res) => {
-                    if (callback) callback(true, res);
-                    console.log("登录成功", res);
-                },
-                fail: (res) => {
-                    if (callback) callback(false, res);
-                    console.log("登录失败", res);
-                }
-            })
-        }
-    }
 
     /**获取系统参数*/
     getSystem() {

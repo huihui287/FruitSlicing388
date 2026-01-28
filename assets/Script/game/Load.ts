@@ -14,27 +14,25 @@ export class Load extends Component {
 
     start() {
 
-        new CM(CM.CH_ZJ);
+        //new CM(CM.CH_ZJ);
+        new CM(CM.CH_WEIXIN);
+
+
         new LoaderManeger();
         CM.mainCH.login(() => {
-
-            // console.log("登录成功");
-            //    //  GameData.saveData();
-            //         //  GameData.GetDataOne();
+            CM.mainCH.initData();
         });
-
-        GameData.addGold(10000);
-        // this.net.init();
-        // this.i18n.init();
-        // this.subGame.init();
-        // this.platform.init();
-        // App.user.init();
-        // this.audio.init(canvas);
-        // this.view.init(canvas);
-        // LevelConfig.setCurLevel(1);
-        // App.gameCtr.curLevel = LevelConfig.getCurLevel();
-        //StorageHelper.initData();
-        this.loadSubPackages();
+        // // this.net.init();
+        // // this.i18n.init();
+        // // this.subGame.init();
+        // // this.platform.init();
+        // // App.user.init();
+        // // this.audio.init(canvas);
+        // // this.view.init(canvas);
+        // // LevelConfig.setCurLevel(1);
+        // // App.gameCtr.curLevel = LevelConfig.getCurLevel();
+        // //StorageHelper.initData();
+         this.loadSubPackages();
     
     }
 

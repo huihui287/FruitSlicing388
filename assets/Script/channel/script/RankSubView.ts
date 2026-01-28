@@ -20,7 +20,8 @@ export class RankSubView extends Component {
     @property(Node)
     emptyTipNode: Node = null; // 空数据提示节点
 
-    private wx: any = window.wx;
+  //  private wx: any = window.wx;
+   private wx: any = null;
     private openDataContext: any = null;
 
     @property(SubContextView)

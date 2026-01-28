@@ -4814,7 +4814,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": -6.007,
-      "y": -269.194,
+      "y": -290.63,
       "z": 0
     },
     "_lrot": {
@@ -4975,7 +4975,7 @@
     "propertyPath": [
       "_fontSize"
     ],
-    "value": 20
+    "value": 40
   },
   {
     "__type__": "cc.TargetInfo",
@@ -4993,7 +4993,7 @@
     ],
     "value": {
       "__type__": "cc.Size",
-      "width": 84,
+      "width": 164,
       "height": 41.8
     }
   },
@@ -5011,7 +5011,7 @@
     "propertyPath": [
       "_actualFontSize"
     ],
-    "value": 20
+    "value": 40
   },
   {
     "__type__": "CCPropertyOverrideInfo",
@@ -5186,7 +5186,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 720,
-      "height": 1334
+      "height": 1333.9999999999998
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
