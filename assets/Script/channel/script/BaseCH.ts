@@ -7,7 +7,14 @@ import { BaseINT } from "./BaseINT";
  * 通用渠道接口
  */
 export default class BaseCH implements BaseINT {
-    isExist(): boolean {
+    requestFeedSubscribeAllScene(call: (resp: any) => void, arg1: null) {
+        throw new Error('Method not implemented.');
+    }
+    CheckFeedSubscribeAllScene() {
+     
+        return false;
+    }
+    isShortcutexist(): boolean {
        return false;
     }
     addShortcut(scb: (isExist: boolean) => void, fcb: (isExist: boolean) => void) {

@@ -251,7 +251,7 @@ export class Game extends BaseNodeCom {
         // 调用父类的onLoad方法
         super.onLoad();
         // 播放背景音乐
-        AudioManager.getInstance().playMusic('background', true);
+        AudioManager.getInstance().playMusic('background1', true);
 
         // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
         this.gridMgr = this.viewList.get('center/gridManager').getComponent(gridManagerCmpt);

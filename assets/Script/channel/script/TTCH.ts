@@ -48,7 +48,10 @@ export default class TTCH extends BaseCH implements BaseINT {
     private readonly SIDEBAR_SCENE_ID = '021036';
 
     //添加到桌面没 false 未添加 true 已添加
-    public exist = false;
+    public Shortcutexist = false;
+    
+     //是否订阅
+    public isFeedSubscribeSuc: boolean = false;
     
     constructor(ch) {
         super(ch);
@@ -63,6 +66,7 @@ export default class TTCH extends BaseCH implements BaseINT {
         this.checkUpdate();
         this.onHide();
         this.checkShortcut();
+        this.checkFeedSubscribeStatus();
         console.log("头条渠道初始化完成");
     }
 
@@ -709,8 +713,54 @@ export default class TTCH extends BaseCH implements BaseINT {
         }
     }
 
-    isExist(){
-        return this.exist;
+    isShortcutexist(){
+        return this.Shortcutexist;
     }
 
+    //检查订阅
+    checkFeedSubscribeStatus() {
+        if (!this.ch) return;
+        if (!this.CheckFeedSubscribeAllScene()) return;
+        this.ch.checkFeedSubscribeStatus({
+            type: "play",
+              allScene: true,
+            success(res) {
+                console.log("检查订阅", res.status);
+                this.isFeedSubscribeSuc = res.status.exist;
+            },
+            fail(res) {
+                console.log("检查订阅失败", res.errMsg);
+            },
+        });
+    }
+
+     //是否已经订阅
+    isCheckFeedSubscribeSuc() {
+        return this.isFeedSubscribeSuc;
+    }
+
+    //是否存在全局订阅
+    CheckFeedSubscribeAllScene() {
+        if (!this.ch) return;
+        if (this.ch.canIUse("checkFeedSubscribeStatus.object.allScene")) {
+            return true;
+        }
+        return false;
+    }
+
+    requestFeedSubscribeAllScene(successCallback: Function, failCallback: Function) {
+        if (!this.ch) return;
+        this.ch.requestFeedSubscribe({
+            type: "play",
+            allScene: true,
+            success(res) {
+                console.log(res.success)
+                if (successCallback) successCallback(res);
+            },
+            fail(res) {
+                console.log(res.errMsg)
+                if (failCallback) failCallback(res);
+            },
+        })
+    }
 }

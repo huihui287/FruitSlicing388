@@ -11,7 +11,6 @@ import ChannelDB from '../channel/ChannelDB';
 import EventManager from '../Common/view/EventManager';
 import { EventName } from '../Tools/eventName';
 const { ccclass, property } = _decorator;
-
 @ccclass('Start')
 export class Start extends BaseNodeCom {
 
@@ -24,10 +23,12 @@ export class Start extends BaseNodeCom {
     //菜单中侧边框的引导图标
     Icon_Menu_Guide: Node = null;
 
+    //订阅按钮
+    Subscribebtn: Node = null;
     protected start() {
         this.checkSidebarState();
         this.checkDesktopShortcut();
-        
+        this.showSubscribebtn();
     }
 
     protected onLoad(): void {
@@ -35,7 +36,7 @@ export class Start extends BaseNodeCom {
         this.SideBorderBtn = this.viewList.get('homeView/SideBorderBtn');
         this.Icon_Menu_Reword = this.viewList.get('homeView/SideBorderBtn/Icon_Menu_Reword');
         this.Icon_Menu_Guide = this.viewList.get('homeView/SideBorderBtn/Icon_Menu_Guide');
-
+        this.Subscribebtn = this.viewList.get('homeView/Subscribebtn');
         // 默认隐藏侧边栏按钮，检测后再显示
         if (this.SideBorderBtn) this.SideBorderBtn.active = false;
 
@@ -289,7 +290,7 @@ export class Start extends BaseNodeCom {
         }
 
         // 4. 检查桌面上是否已经有快捷启动
-        let Exist = CM.mainCH.isExist();
+        let Exist = CM.mainCH.isShortcutexist();
         if (Exist == false) {
             LoaderManeger.instance.loadPrefab('prefab/ui/addShortcutView').then((prefab) => {
                 let addShortcutView = instantiate(prefab);
@@ -300,4 +301,30 @@ export class Start extends BaseNodeCom {
             });
         }
     }   
+
+    showSubscribebtn() {
+        // 1. 检查是否为抖音渠道
+        if (!CM.isPlatform(CM.CH_ZJ)) {
+            console.log('CheckDesktopShortcut: 非抖音渠道，跳过检查');
+            return;
+        }
+        if (CM.mainCH.CheckFeedSubscribeAllScene()) {
+            this.Subscribebtn.active = true;
+        }
+        else {
+            this.Subscribebtn.active = false;
+        }
+    }
+
+    onClick_Subscribebtn() {
+        AudioManager.getInstance().playSound('button_click');
+        LoaderManeger.instance.loadPrefab('prefab/ui/SubscribeView').then((prefab) => {
+            let SubscribeView = instantiate(prefab);
+            ViewManager.show({
+                node: SubscribeView,
+                name: "SubscribeView"
+            });
+        });
+    }
+
 }
