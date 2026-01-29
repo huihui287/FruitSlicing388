@@ -23,7 +23,6 @@ class config {
         App.gameCtr.curLevel = lv;
         GameData.saveData(GameData.Level, lv);
         GameData.updateMaxLevel(lv);
-        CM.mainCH.setImRankData_Num(lv);
     }
 
     async getLevelData(id: number | string): Promise<LevelData> {

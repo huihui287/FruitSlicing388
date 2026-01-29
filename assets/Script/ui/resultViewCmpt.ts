@@ -59,7 +59,9 @@ export class ResultViewCmpt extends BaseDialog  {
         this.viewList.get('animNode/lose').active = !isWin;
         this.goldnumlb = this.viewList.get('animNode/win/coin8/goldnumlb');
         if (isWin) {
-            // LevelConfig.setLevelStar(lv, starCount);
+            if (CM.mainCH) {
+                CM.mainCH.setImRankData_Num(LevelConfig.getCurLevel());
+            }
             this.handleWin(this.rewardBombs);
         } else {
             this.handleLose();

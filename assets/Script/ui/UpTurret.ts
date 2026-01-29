@@ -17,32 +17,57 @@ const { ccclass, property } = _decorator;
 @ccclass('getGold')
 export class getGold extends BaseDialog {
     Label001: Node = null;
-maxCapacity=50;
+    maxCapacity = 50;
     description: Node = null;
+    LabelupBtn: Label = null;
+    
     onLoad() {
         super.onLoad();
         this.Label001= this.viewList.get('bg/Label001');
         this.description = this.viewList.get('bg/description');
+        this.LabelupBtn = this.viewList.get('btn/upBtn').getChildByName('LabelupBtn').getComponent(Label);
         this.upTurretLevel();
     }
 
     upTurretLevel() {
         let turretLevel = GameData.loadData(GameData.TurretLevel, 1);
         this.Label001.getComponent(Label).string = '当前炮塔等级：' + turretLevel;
-        this.description.getComponent(Label).string = '下一级可以炮塔容量可以增加'+this.maxCapacity*turretLevel;
+        
+        // 计算下一级所需的金币数量
+        const basePrice = 100;
+        const nextLevelPrice = turretLevel * basePrice;
+        
+        // 计算下一级的容量增加
+        const capacityIncrease = 50 * turretLevel;
+        
+        // 更新描述文本
+        this.description.getComponent(Label).string = `下一级炮塔容量增加${capacityIncrease}\n升级需要:${nextLevelPrice}金币`;
+        
+        // 更新升级按钮上的价格显示
+        if (this.LabelupBtn) {
+            this.LabelupBtn.string = `${nextLevelPrice}金币`;
+        }
     }
+    
     onClick_upBtn() {
         AudioManager.getInstance().playSound('button_click');
         
-        if (GameData.spendGold(100)) {
+        // 获取当前炮塔等级
+        let turretLevel = GameData.loadData(GameData.TurretLevel, 1);
+        
+        // 计算升级价格
+        const basePrice = 100;
+        const upgradePrice = turretLevel * basePrice;
+        
+        if (GameData.spendGold(upgradePrice)) {
             // 升级炮塔
             this.setupTurretLevel();
             
             // 提示成功
-            ViewManager.toast("升级成功");
+            ViewManager.toast(`升级成功，花费 ${upgradePrice} 金币`);
         } else {
             // 金币不足
-            ViewManager.toast("金币不足");
+            ViewManager.toast(`金币不足，需要 ${upgradePrice} 金币`);
             LoaderManeger.instance.loadPrefab('prefab/ui/getGold').then((prefab) => {
                 let getGold = instantiate(prefab);
                 ViewManager.show({
