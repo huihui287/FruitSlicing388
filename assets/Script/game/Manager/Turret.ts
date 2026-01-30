@@ -403,7 +403,7 @@ export class Turret extends BaseNodeCom {
      * @description 开始炮塔的自动攻击行为
      */
     public startAttack(): void {
-        this.onClick_Turret();
+        this.showCapacityPopup();
         if (this._stateMachine.currentStateName !== TurretState.ACTIVE) return;
         
         // 攻击逻辑在ActiveState的onUpdate方法中处理
@@ -709,6 +709,48 @@ export class Turret extends BaseNodeCom {
 
         return result;
     }
+    /**
+     * 显示炮塔图标弹出已经添加的水果种类和数量（公共接口）
+     * 功能：确保炮塔图标显示为弹出状态，展示已添加的水果种类和数量
+     * 
+     * 设计思路：
+     * 1. 检查是否正在动画或CapacityAm不存在
+     * 2. 检查是否已经在弹出状态
+     * 3. 如果不在弹出状态，执行弹出动画
+     * 4. 确保状态设置为弹出
+     * 
+     * @description 公共接口，用于外部触发炮塔图标弹出显示
+     */
+    public showCapacityPopup() {
+        // 检查是否正在动画或CapacityAm不存在
+        if (this.isAnimatingCapacity || !this.CapacityAm) return;
+
+        // 检查是否已经在弹出状态
+        if (this.isCapacityUp) {
+            // 已经在弹出状态，不需要任何操作
+            return;
+        }
+
+        this.isAnimatingCapacity = true;
+        
+        // 计算目标位置：向上移200到弹出状态
+        const moveDistance = 200;
+        const targetPos = this.CapacityAm.position.clone().add(v3(0, moveDistance, 0));
+
+        // 确保CapacityAm是激活状态
+        this.CapacityAm.active = true;
+
+        // 执行弹出动画
+        tween(this.CapacityAm)
+            .to(0.5, { position: targetPos }, { easing: 'sineOut' })
+            .call(() => {
+                this.isAnimatingCapacity = false;
+                this.isCapacityUp = true; // 确保状态设置为弹出
+                console.log(`Capacity popup shown. isCapacityUp: ${this.isCapacityUp}`);
+            })
+            .start();
+    }
+    
     //点击炮塔图标弹出已经添加的水果种类和数量
     onClick_Turret() {
         if (this.isAnimatingCapacity || !this.CapacityAm) return;

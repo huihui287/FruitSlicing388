@@ -60,6 +60,7 @@ export class gridDownCmpt extends Component {
         // 初始化healthBl引用
         this.healthBl = this.node.getChildByName('healthBl')?.getComponent(Label);
         this.ArmorPlating = this.node.getChildByName('ArmorPlating');
+        this.ArmorPlating.active = true;
     }
 
     /**
@@ -178,13 +179,9 @@ export class gridDownCmpt extends Component {
             let children = this.ArmorPlating.children;
             if (children.length < 2) return; // 确保至少有两个子节点
 
-            // 直接使用当前血量和最大血量计算比例
+            // 获取当前血量
             let currentHealth = this.health;
-            let maxHealth = this.maxHealth;
             
-            // 计算当前血量比例
-            let ratio = maxHealth > 0 ? currentHealth / maxHealth : 0;
-
             // 获取该水果同类型grid的一次攻击伤害
             let attackDamage = 1; // 默认攻击伤害
             // 从GameData中获取对应类型的攻击等级，计算实际攻击伤害
@@ -192,19 +189,28 @@ export class gridDownCmpt extends Component {
             const attackLevel = GameData.loadData(gridTypeTemp, 1);
             attackDamage = attackLevel; // 假设攻击等级直接对应攻击伤害
 
-            // 根据逻辑决定显示哪个子节点
-            if (ratio > 0.5) {
-                // 大于50%：显示第二个子节点，隐藏第一个
+            // 核心逻辑：当血量小于等于攻击等级时，隐藏所有甲片
+            if (currentHealth <= attackDamage) {
+                // 血量小于等于攻击等级：隐藏所有甲片
                 children[0].active = false;
-                children[1].active = true;
-            } else if (currentHealth > attackDamage) {
-                // 小于50%但大于攻击伤害：显示第一个子节点，隐藏第二个
-                children[0].active = true;
                 children[1].active = false;
             } else {
-                // 小于等于攻击伤害：都隐藏
-                children[0].active = false;
-                children[1].active = false;
+                // 血量大于攻击等级：根据血量比例显示对应甲片
+                // 直接使用当前血量和最大血量计算比例
+                let maxHealth = this.maxHealth;
+                
+                // 计算当前血量比例
+                let ratio = maxHealth > 0 ? currentHealth / maxHealth : 0;
+
+                if (ratio > 0.5) {
+                    // 大于50%：显示第二个子节点，隐藏第一个
+                    children[0].active = false;
+                    children[1].active = true;
+                } else {
+                    // 小于等于50%：显示第一个子节点，隐藏第二个
+                    children[0].active = true;
+                    children[1].active = false;
+                }
             }
         }
     }
