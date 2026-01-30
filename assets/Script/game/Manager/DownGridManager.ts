@@ -106,6 +106,50 @@ export class DownGridManager extends Component {
         // 修复预制体路径，resources.load会自动从assets/resources目录开始查找
         this.gridDownPre = await LoaderManeger.instance.loadPrefab('prefab/pieces/gridDown');
     }
+
+    /**
+     * 初始化并开始生成水果方块（新玩家第一关专用）
+     * 一次性生成10排水果，然后开始向下移动
+     * 
+     * 设计思路：
+     * 1. 一次性生成10排水果：使用generateRows()方法，跳过路径可用性检查
+     * 2. 设置生成状态为true：让水果方块开始下落
+     * 3. 启动路径可用性检查定时器：用于后续继续生成水果
+     * 4. 不重置generatedCount：保持已生成的数量，避免重复计数
+     * 
+     * @description 专为新玩家第一关设计的初始化方法，一次性生成10排水果后开始下落
+     */
+    async initAndStart() {
+        // 确保预制体已加载
+        if (!this.gridDownPre) {
+            console.error("水果方块预制体未加载，无法初始化");
+            return;
+        }
+
+        // 确保没有正在生成
+        if (this.isGenerating) {
+            console.warn("已经在生成中，无需重复初始化");
+            return;
+        }
+
+        // 一次性生成5排水果
+        // 参数说明：
+        // - rows: 5（生成5排）
+        // - skipPathCheck: true（跳过路径可用性检查，因为刚开始没有水果）
+        // - startRowIndex: 0（从第0排开始）
+        this.generateRows(5, true, 0);
+
+        // 设置生成状态为true，让水果方块开始下落
+        this.isGenerating = true;
+
+        // 启动路径可用性检查定时器（每0.1秒检查一次）
+        // 用于后续继续生成水果，保持正常的生成节奏
+        if (!this.pathCheckIntervalId) {
+            this.pathCheckIntervalId = this.schedule(this.checkAllPathsAvailability, 0.1);
+        }
+
+        console.log(`新玩家第一关初始化完成：已生成10排水果（共${this.generatedCount}个），开始下落`);
+    }
     
     /**
      * 开始生成水果方块
@@ -166,6 +210,7 @@ export class DownGridManager extends Component {
         // 如果所有路径都可用，生成一排水果方块
         if (canGenerateRow) {
             for (let pathIndex = 0; pathIndex < this.BirthPoint.children.length && this.generatedCount < this.totalGridCount; pathIndex++) {
+                // 正常生成时，默认更新路径映射
                 this.generateSingleGrid(pathIndex);
             }
         }
@@ -174,15 +219,18 @@ export class DownGridManager extends Component {
     /**
      * 生成单个水果方块
      * @param pathIndex 出生点位索引
+     * @param skipPathCheck 是否跳过路径可用性检查，默认为false
+     * @param yOffset Y轴偏移量，默认为0
+     * @param shouldUpdatePathMap 是否更新路径最后一个水果方块记录，默认为true
      */
-    private generateSingleGrid(pathIndex: number) {
+    private generateSingleGrid(pathIndex: number, skipPathCheck: boolean = false, yOffset: number = 0, shouldUpdatePathMap: boolean = true) {
         if (!this.gridDownPre) {
             console.error("水果方块预制体未加载");
             return;
         }
 
-        // 检查路径是否可用
-        if (!this.isPathAvailable(pathIndex)) {
+        // 检查路径是否可用（除非跳过检查）
+        if (!skipPathCheck && !this.isPathAvailable(pathIndex)) {
             console.log(`路径${pathIndex}不可用，跳过本次生成`);
             return;
         }
@@ -207,16 +255,18 @@ export class DownGridManager extends Component {
         if (gridComponent) {
             gridComponent.initData(randomType as GridType);
         }
-        // 设置生成位置：使用世界坐标
+        // 设置生成位置：使用世界坐标，并应用Y轴偏移
         const worldPosition = selectedBirthPoint.worldPosition;
-        gridNode.worldPosition = worldPosition;
+        gridNode.worldPosition = v3(worldPosition.x, worldPosition.y - yOffset, worldPosition.z);
         //console.log("生成位置:", worldPosition, "路径索引:", pathIndex);
 
         // 开始下落
         this.startFall(gridNode);
 
-        // 更新路径最后一个水果方块记录
-        this.pathLastGridMap.set(pathIndex, gridNode);
+        // 更新路径最后一个水果方块记录（只在需要时更新）
+        if (shouldUpdatePathMap) {
+            this.pathLastGridMap.set(pathIndex, gridNode);
+        }
 
         // 更新计数
         this.activeGrids.push(gridNode);
@@ -225,6 +275,25 @@ export class DownGridManager extends Component {
        // console.log("当前活跃水果方块数量:", this.activeGrids.length, "已生成总数:", this.generatedCount);
     }
     
+    /**
+     * 手动生成指定行数的水果（公共接口）
+     * @param rows 要生成的行数
+     * @param skipPathCheck 是否跳过路径可用性检查，默认为true
+     * @param startRowIndex 起始行索引，用于计算Y偏移，默认为0
+     */
+    public generateRows(rows: number, skipPathCheck: boolean = true, startRowIndex: number = 0) {
+        for (let row = 0; row < rows; row++) {
+            const yOffset = (startRowIndex + row) * this.gridHeight;
+            for (let pathIndex = 0; pathIndex < this.BirthPoint.children.length; pathIndex++) {
+                // 只在生成第一排（最上面的一排）时更新pathLastGridMap
+                // 这样可以确保pathLastGridMap中存储的是最上面的水果方块，避免后续生成时重合
+                // 注意：row=0时生成的是最上面的一排（Y坐标最高），row越大生成的位置越低
+                const shouldUpdatePathMap = (row === 0);
+                this.generateSingleGrid(pathIndex, skipPathCheck, yOffset, shouldUpdatePathMap);
+            }
+        }
+    }
+
     /**
      * 检查路径是否可用
      * 如果路径上没有水果方块，或者最后一个水果方块已经下落到距离起始点大于等于一个水果方块高度的位置，则路径可用

@@ -14,13 +14,12 @@ export class Load extends Component {
 
     start() {
 
-        //new CM(CM.CH_ZJ);
-        new CM(CM.CH_WEIXIN);
-
+        new CM(CM.CH_ZJ);
+        //new CM(CM.CH_WEIXIN);
 
         new LoaderManeger();
         CM.mainCH.login(() => {
-            CM.mainCH.initData();
+            CM.mainCH.initData(); 
         });
         // // this.net.init();
         // // this.i18n.init();

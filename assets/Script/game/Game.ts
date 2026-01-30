@@ -357,8 +357,17 @@ export class Game extends BaseNodeCom {
             // 2026-01-22: 启动动态速度递增接口
             this.startSpeedIncrease();
 
-            // 开始生成 - 启动水果水果下落系统
-            this.DownGridMgr.startGenerate();
+            // 判断是否为新玩家第一关
+            const isNewPlayer = GameData.isNewPlayer();
+            const currentLevel = App.gameCtr.curLevel;
+
+            // 新玩家第一关：一开始就生成10排，然后向下移动
+            if (isNewPlayer==0 && currentLevel === 1) {
+                await this.DownGridMgr.initAndStart();
+            } else {
+                // 老玩家或其他关卡：正常生成
+                this.DownGridMgr.startGenerate();
+            }
               
             // 动态调整参数（注释掉的代码，可根据需要启用）
             //   setTimeout(() => {

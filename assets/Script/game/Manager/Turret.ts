@@ -236,7 +236,7 @@ export class Turret extends BaseNodeCom {
     /** 容量显示是否正在播放动画 */
     private isAnimatingCapacity: boolean = false;
     /** 容量显示当前是否处于上方状态 */
-    private isCapacityUp: boolean = false;
+    private isCapacityUp: boolean = true;
     /**
      * 组件加载时调用
      * 初始化DownGridManager引用
@@ -268,6 +268,19 @@ export class Turret extends BaseNodeCom {
         }
         this.gridDataCountLb = this.viewList.get('Label').getComponent(Label);
         this.CapacityAm = this.viewList.get('Capacity/Mask/Am');
+        
+        // 初始化CapacityAm的位置：默认显示在上方
+        if (this.CapacityAm) {
+            // 设置为激活状态
+            this.CapacityAm.active = true;
+            // 如果默认是上方状态，确保它在上方位置
+            if (this.isCapacityUp) {
+                // 计算上方位置：向上移200
+                const targetPos = this.CapacityAm.position.clone().add(v3(0, 200, 0));
+                this.CapacityAm.position = targetPos;
+            }
+        }
+        
         this.updateCapacityView();
     }
     
@@ -390,6 +403,7 @@ export class Turret extends BaseNodeCom {
      * @description 开始炮塔的自动攻击行为
      */
     public startAttack(): void {
+        this.onClick_Turret();
         if (this._stateMachine.currentStateName !== TurretState.ACTIVE) return;
         
         // 攻击逻辑在ActiveState的onUpdate方法中处理
