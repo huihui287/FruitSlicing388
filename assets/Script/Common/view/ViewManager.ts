@@ -18,6 +18,7 @@ import AudioManager from "../AudioManager";
 import PopupView from "./PopupView";
 import { _decorator, Component, Node, Prefab, Color, isValid, instantiate, director, Director, tween, TweenAction, Vec3, Tween } from 'cc';
 import BaseDialog from "./BaseDialog";
+import CM from "../../channel/CM";
 // 原始导入语句
 // import { _decorator, Component, Node, EventTouch, isValid, Rect, Vec2 } from 'cc';
 
@@ -151,13 +152,14 @@ export default class ViewManager extends Component {
         showAction = null as Tween<Node>,
         showActionTarget = null as  Node,
         dismissAction = null as Tween<Node>,
-        dismissActionTarget = null as  Node
+        dismissActionTarget = null as  Node,
+        showAd = true //是否显示广告
     }): PopupView {
         if (! isValid(node)) {
-            return;
+            return null;
         }
         if (!ViewManager.checkValid() || ! isValid(ViewManager.mViewManager.PopupView)) {
-            return;
+            return null;
         }
         // 修改后的PopupView获取方式 - 使用类型安全的组件访问
         let popupView: PopupView = node.getComponent(PopupView);
@@ -195,6 +197,30 @@ export default class ViewManager extends Component {
             dismissAction,
             dismissActionTarget
         });
+
+        // 后台拉取插屏广告（根据渠道），不影响界面显示
+        if (showAd && CM.mainCH && typeof CM.mainCH.showInterstitialAd === 'function') {
+            try {
+                // 异步拉取广告，不阻塞界面显示
+                CM.mainCH.showInterstitialAd(() => {
+                    // 广告显示完成后的回调，可以在这里添加相关逻辑
+                });
+            } catch (error) {
+                console.error('ViewManager.show: Failed to show interstitial ad:', error);
+            }
+        }
+        
+        // 后台拉取 banner 广告（根据渠道），不影响界面显示
+        if (showAd && CM.mainCH && typeof CM.mainCH.showBannerAd === 'function') {
+            try {
+                // 异步拉取广告，不阻塞界面显示
+                CM.mainCH.showBannerAd();
+            } catch (error) {
+                console.error('ViewManager.show: Failed to show banner ad:', error);
+            }
+        }
+
+        
 
         return popupView;
     }
@@ -409,7 +435,8 @@ export default class ViewManager extends Component {
             name: ViewManager.View.ToastView,
             localZOrder: ViewManager.LocalZOrder.Toast,
             mask: false,
-            transitionDismiss: false
+            transitionDismiss: false,
+            showAd: false
         });
     }
 

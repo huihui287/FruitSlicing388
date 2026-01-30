@@ -7,6 +7,9 @@ import { BaseINT } from "./BaseINT";
  * 通用渠道接口
  */
 export default class BaseCH implements BaseINT {
+    showInterstitialAd(arg0: () => void) {
+        throw new Error("Method not implemented.");
+    }
     postMessage() {
         throw new Error('Method not implemented.');
     }

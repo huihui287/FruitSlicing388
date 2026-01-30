@@ -14,7 +14,6 @@ export class gridDownCmpt extends Component {
 
     /** 水果方块类型：用于标识不同种类的水果方块 */
     public type: GridType = GridType.STRAWBERRY;
-
     /** 血量：用于标识水果方块的生命值 */
     public health: number = 1;
     /** 最大血量：水果方块的初始最大血量 */

@@ -17,10 +17,23 @@ export default class TTCH extends BaseCH implements BaseINT {
     //banner
     public bannerAd = null;
     public banIndex = 0;
-    public bannerId = ["2h43c55imi7a1j0355"];
+    public bannerId = ["2h43c55imi7a1j0355",
+        "43fhd3bb89i0eae57f","col6bcbkbgqb616062","167h0j0dwr1895k0ee"];  
     //插屏广告
     public insertAd = null;
-    public insertId = "35e9gsqo2nt1iqvov0";
+    public insertId = "g4ri74adl741qjk5dk";
+    // 插屏广告刷新定时器
+    private insertAdRefreshTimer = null;
+    // 插屏广告创建时间
+    private insertAdCreateTime = 0;
+    // 插屏广告上次展示时间
+    private lastInsertAdShowTime = 0;
+    // 插屏广告可展示时间（30秒，冷启动时间）
+    private readonly INSERT_AD_AVAILABLE_TIME = 30 * 1000;
+    // 插屏广告刷新间隔（60秒）
+    private readonly INSERT_AD_REFRESH_INTERVAL = 60 * 1000;
+    // 插屏广告展示冷却时间（60秒）
+    private readonly INSERT_AD_SHOW_COOLDOWN = 60 * 1000;
 
     //更多游戏组件
     public btnMoreGame = null;
@@ -33,6 +46,8 @@ export default class TTCH extends BaseCH implements BaseINT {
     public recordingBeginTime = 0;
     //录制结束时间
     public recordingEndTime = 0;
+    //banner 广告创建时间
+    public bannerAdCreateTime = 0;
     //剪辑索引列表
     public clipIndexList = [];
     //录制结束时获得的视频信息
@@ -221,9 +236,20 @@ export default class TTCH extends BaseCH implements BaseINT {
             });
 
             this.bannerAd.onResize(res => {
-                this.bannerAd.style.top = ChannelDB.screenHeight - res.height
-                this.bannerAd.style.left = (ChannelDB.screenWidth - res.width) / 2 // 水平居中
-            })
+                try {
+                    // 尝试修改样式，添加错误处理
+                    if (this.bannerAd && typeof this.bannerAd.style === 'object') {
+                        this.bannerAd.style.top = ChannelDB.screenHeight - res.height;
+                        this.bannerAd.style.left = (ChannelDB.screenWidth - res.width) / 2; // 水平居中
+                    }
+                } catch (error) {
+                    console.warn('TTCH.onResize: Failed to update banner style:', error);
+                    // 样式修改失败不影响其他功能，继续执行
+                }
+            });
+            
+            // 更新 banner 广告创建时间
+            this.bannerAdCreateTime = Date.now();
         }
     }
 
@@ -256,6 +282,14 @@ export default class TTCH extends BaseCH implements BaseINT {
     /**显示banner*/
     showBannerAd() {
         if (this.ch && this.bannerAd) {
+            // 检查 banner 广告创建时间是否超过 2 分钟
+            const now = Date.now();
+            const twoMinutes = 1 * 60 * 1000;
+            if (now - this.bannerAdCreateTime > twoMinutes) {
+                // 如果超过 2 分钟，重置 banner 广告
+                this.resetBannerAd();
+                return;
+            }
             //console.log("显示 banner");
             this.bannerAd.show();
         }
@@ -271,44 +305,107 @@ export default class TTCH extends BaseCH implements BaseINT {
 
     /**创建插屏广告*/
     createInterstitialAd() {
-        const isToutiaio = ChannelDB.appName === "Toutiao";
-        //console.log("ChannelDB.appName:", ChannelDB.appName)
-        //console.log("isToutiaio:", isToutiaio)
-        // 插屏广告仅今日头条安卓客户端支持
-        if (this.ch && isToutiaio) {
-            this.insertAd = this.ch.createInterstitialAd({
-                adUnitId: this.insertId
+        console.log("TTCH.createInterstitialAd: 创建插屏广告");
+        
+        // 销毁之前的插屏广告实例
+        this.destroyInterstitialAd();
+        
+        // 延迟1秒后创建新的插屏广告
+        setTimeout(() => {
+            console.log("TTCH.createInterstitialAd: 延迟1秒后创建新的插屏广告");
+            
+            // 移除对应用名称的限制，尝试在所有场景下创建插屏广告
+            if (this.ch) {
+                try {
+                    this.insertAd = this.ch.createInterstitialAd({
+                        adUnitId: this.insertId
+                    });
+                    this.insertAd.onLoad(() => {
+                        this.insertAd.offLoad();
+                        console.log("TTCH.createInterstitialAd: 插屏广告加载完毕");
+                    });
+                    this.insertAd.onError((err) => {
+                        this.insertAd.offError();
+                        console.log("TTCH.createInterstitialAd: 插屏广告错误", err);
+                    });
+                    
+                    // 记录创建时间
+                    this.insertAdCreateTime = Date.now();
+                    console.log("TTCH.createInterstitialAd: 记录创建时间:", this.insertAdCreateTime);
+                } catch (error) {
+                    console.warn('TTCH.createInterstitialAd: Failed to create interstitial ad:', error);
+                }
+            }
+        }, 1000); // 延迟1秒
+    }
+
+    /**展示插屏广告*/
+    showInterstitialAd() {
+        console.log("TTCH.showInterstitialAd: 尝试显示插屏广告");
+
+        const now = Date.now();
+        // 检查是否在可展示时间内（广告创建后60秒）
+        if (now - this.insertAdCreateTime < this.INSERT_AD_AVAILABLE_TIME) {
+            const remainingTime = Math.ceil((this.INSERT_AD_AVAILABLE_TIME - (now - this.insertAdCreateTime)) / 1000);
+            console.warn(`TTCH.showInterstitialAd: 插屏广告还在创建冷却期内，还需 ${remainingTime} 秒`);
+            return;
+        }
+
+        // 检查是否在展示冷却期内（上次展示后60秒）
+        if (now - this.lastInsertAdShowTime < this.INSERT_AD_SHOW_COOLDOWN) {
+            const remainingTime = Math.ceil((this.INSERT_AD_SHOW_COOLDOWN - (now - this.lastInsertAdShowTime)) / 1000);
+            console.warn(`TTCH.showInterstitialAd: 插屏广告还在展示冷却期内，还需 ${remainingTime} 秒`);
+            return;
+        }
+
+        console.log("TTCH.showInterstitialAd: this.ch:", !!this.ch);
+        console.log("TTCH.showInterstitialAd: this.insertAd:", !!this.insertAd);
+
+        if (this.ch && this.insertAd) {
+            this.insertAd.onClose(() => {
+                console.log("TTCH.showInterstitialAd: 插屏广告关闭");
+                try {
+                    this.insertAd.offClose();
+                    
+                } catch (error) {
+                    console.warn('TTCH.showInterstitialAd: Failed to offClose:', error);
+                }
+                
+                // 记录上次展示时间
+                this.lastInsertAdShowTime = Date.now();
+                console.log("TTCH.showInterstitialAd: 记录上次展示时间:", this.lastInsertAdShowTime);
+                
+                // 广告关闭时，重新创建插屏广告
+                console.log("TTCH.showInterstitialAd: 广告关闭，重新创建插屏广告");
+                this.createInterstitialAd();
             });
-            this.insertAd.onLoad(() => {
-                this.insertAd.offLoad();
-                //console.log("插屏广告加载完毕");
-            })
-            this.insertAd.onError((err) => {
-                this.insertAd.offError();
-                //console.log("插屏广告错误", err);
-            })
+        }
+        try {
+            let promise = this.insertAd.show();
+            console.log("TTCH.showInterstitialAd: 调用 show() 方法");
+            promise.then(() => {
+                    console.log("TTCH.showInterstitialAd: 插屏广告显示成功");
+                }).catch((reject) => {
+                console.error("TTCH.showInterstitialAd: 插屏广告显示失败:", reject);
+                console.log(`errCode:${reject.errCode}, errMsg:${reject.errMsg}`);
+                // 广告显示失败时也调用回调，确保流程继续
+            });
+        } catch (error) {
 
         }
     }
 
-    /**展示插屏广告*/
-    showInterstitialAd(callback?) {
-        //console.log("显示插屏广告")
-        if (this.ch && this.insertAd) {
-            if (callback) {
-                this.insertAd.onClose(() => {
-                    //console.log("插屏广告关闭");
-                    this.insertAd.offClose();
-                    callback();
-                })
+    /**销毁插屏广告*/
+    destroyInterstitialAd() {
+        if (this.insertAd) {
+            try {
+                console.log("TTCH.destroyInterstitialAd: 销毁插屏广告");
+                this.insertAd.destroy();
+                this.insertAd = null;
+            } catch (error) {
+                console.warn('TTCH.destroyInterstitialAd: Failed to destroy:', error);
+                this.insertAd = null;
             }
-            let promise = this.insertAd.show();
-            promise.catch((reject) => {
-                //console.log("创建插屏广告失败");
-                //console.log(`errCode:${reject.errMsg},errMsg:${reject.errCode}`);
-            });
-        } else {
-            if (callback) callback();
         }
     }
 

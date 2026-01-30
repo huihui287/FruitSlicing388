@@ -3,27 +3,10 @@
  */
 import PopupView from "./PopupView";
 import ViewManager from "./ViewManager";
-// 原始导入语句
-// import GameCtr from "../../Controller/GameCtr";
-// import AudioManager from "../AudioManager";
-// import AudioConfig from "./AudioConfig";
-// import GameData from "../GameData";
-// import EventManager from "./EventManager";
-
-// 修改后的导入语句 - 添加了WXCtr导入
-//import WXCtr from "../../Controller/WXCtr";
-import AudioManager from "../AudioManager";
-import AudioConfig from "./AudioConfig";
-import GameData from "../GameData";
-import EventManager from "./EventManager";
-
-// 原始导入语句
-// import { _decorator, Component, Node } from 'cc';
-// const { ccclass, property } = _decorator;
-
+import CM from '../../channel/CM';
 // 修改后的导入语句 - 添加了必要的类型
 import { _decorator, Component, Node, Button, isValid, Event, EventHandler, Label } from 'cc';
-import { GameCtr } from "../../Controller/GameCtr";
+
 const { ccclass, property } = _decorator;
 /** 点击按钮等待时间 */
 const CLICK_WAIT_TIME = 0;
@@ -123,10 +106,21 @@ export default class BaseDialog extends Component {
 
     // 修改后的dismiss方法 - 使用类型安全的PopupView获取方式
     dismiss() {
+        // 隐藏banner广告
+        if (CM.mainCH && typeof CM.mainCH.hideBannerAd === 'function') {
+            try {
+                CM.mainCH.hideBannerAd();
+            } catch (error) {
+                console.error('BaseDialog.dismiss: Failed to hide banner ad:', error);
+            }
+        }
+        
         if (!isValid(this.node) || !isValid(this.node.parent)) {
             console.warn('BaseDialog.dismiss: node or node.parent is invalid');
             return;
         }
+        
+        
         if (this.NextUI != null) {
             // this.NextUI.showBanner();
         } else if (this.isHall == true) {

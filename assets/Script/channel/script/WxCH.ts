@@ -17,6 +17,18 @@ export default class WxCH extends BaseCH implements BaseINT {
     //插屏广告
     public insertAd = null;
     public insertId = "adunit-4b9ebda4f0b36a86";
+    // 插屏广告刷新定时器
+    private insertAdRefreshTimer = null;
+    //插屏广告创建时间
+    private insertAdCreateTime = 0;
+    // 插屏广告上次展示时间
+    private lastInsertAdShowTime = 0;
+    // 插屏广告可展示时间（30秒，冷启动时间）
+    private readonly INSERT_AD_AVAILABLE_TIME = 30 * 1000;
+    // 插屏广告刷新间隔（60秒）
+    private readonly INSERT_AD_REFRESH_INTERVAL = 60 * 1000;
+    // 插屏广告展示冷却时间（60秒）
+    private readonly INSERT_AD_SHOW_COOLDOWN = 60 * 1000;
 
     //分享 开始的时间
     private share_start_time: number = 0;
@@ -27,6 +39,8 @@ export default class WxCH extends BaseCH implements BaseINT {
 
     //banner是否是显示中
     public isBannerShow = false;
+    //banner 广告创建时间
+    public bannerAdCreateTime = 0;
 
     //显示视频回调
     public videoCallback = null;
@@ -41,7 +55,7 @@ export default class WxCH extends BaseCH implements BaseINT {
         this.onShowAlways();
         // this.createBannerAd();
         // this.createVideoAd();
-        // this.createInterstitialAd();
+        this.createInterstitialAd();
         this.setShareAppMessage();
         this.checkUpdate();
         this.onHide();
@@ -124,10 +138,25 @@ export default class WxCH extends BaseCH implements BaseINT {
                 this.bannerAd.offLoad();
             });
             this.bannerAd.onResize(() => {
-                console.log("Resize", this.bannerAd);
-                this.bannerAd.style.left = (ChannelDB.screenWidth - this.bannerAd.style.realWidth) / 2;
-                this.bannerAd.style.top = ChannelDB.screenHeight - this.bannerAd.style.realHeight;
-                this.bannerAd.offResize();
+                try {
+                    console.log("Resize", this.bannerAd);
+                    if (this.bannerAd && typeof this.bannerAd.style === 'object' && typeof this.bannerAd.style.realWidth === 'number' && typeof this.bannerAd.style.realHeight === 'number') {
+                        this.bannerAd.style.left = (ChannelDB.screenWidth - this.bannerAd.style.realWidth) / 2;
+                        this.bannerAd.style.top = ChannelDB.screenHeight - this.bannerAd.style.realHeight;
+                    }
+                } catch (error) {
+                    console.warn('WxCH.onResize: Failed to update banner style:', error);
+                    // 样式修改失败不影响其他功能，继续执行
+                } finally {
+                    // 无论是否成功，都关闭 resize 监听
+                    try {
+                        if (this.bannerAd && typeof this.bannerAd.offResize === 'function') {
+                            this.bannerAd.offResize();
+                        }
+                    } catch (offError) {
+                        console.warn('WxCH.onResize: Failed to offResize:', offError);
+                    }
+                }
             });
             this.bannerAd.onError(err => {
                 console.log("创建banner失败: ", err)
@@ -137,6 +166,9 @@ export default class WxCH extends BaseCH implements BaseINT {
             } else {
                 this.hideBannerAd();
             }
+            
+            // 更新 banner 广告创建时间
+            this.bannerAdCreateTime = Date.now();
 
         }
     }
@@ -171,6 +203,14 @@ export default class WxCH extends BaseCH implements BaseINT {
         this.isBannerShow = true;
         //&& SwitchManager.game_banner
         if (this.ch && this.bannerAd ) {
+            // 检查 banner 广告创建时间是否超过 2 分钟
+            const now = Date.now();
+            const twoMinutes = 2 * 60 * 1000;
+            if (now - this.bannerAdCreateTime > twoMinutes) {
+                // 如果超过 2 分钟，重置 banner 广告
+                this.resetBannerAd();
+                return;
+            }
             console.log("显示 banner");
             this.bannerAd.show();
         }
@@ -188,38 +228,114 @@ export default class WxCH extends BaseCH implements BaseINT {
 
     /**创建插屏广告*/
     createInterstitialAd() {
-        if (this.ch) {
-            this.insertAd = this.ch.createInterstitialAd({
-                adUnitId: this.insertId
-            });
-            this.insertAd.onLoad(() => {
-                this.insertAd.offLoad();
-                console.log("插屏广告加载完毕");
-            })
-            this.insertAd.onError((err) => {
-                this.insertAd.offError();
-                console.log("插屏广告错误", err);
-            })
-
-        }
+        console.log("WxCH.createInterstitialAd: 创建插屏广告");
+        
+        // 销毁之前的插屏广告实例
+        this.destroyInterstitialAd();
+        
+        // 延迟1秒后创建新的插屏广告
+        setTimeout(() => {
+            console.log("WxCH.createInterstitialAd: 延迟1秒后创建新的插屏广告");
+            
+            if (this.ch) {
+                try {
+                    this.insertAd = this.ch.createInterstitialAd({
+                        adUnitId: this.insertId
+                    });
+                    this.insertAd.onLoad(() => {
+                        this.insertAd.offLoad();
+                        console.log("WxCH.createInterstitialAd: 插屏广告加载完毕");
+                    });
+                    this.insertAd.onError((err) => {
+                        this.insertAd.offError();
+                        console.log("WxCH.createInterstitialAd: 插屏广告错误", err);
+                    });
+                    
+                    // 记录创建时间
+                    this.insertAdCreateTime = Date.now();
+                    console.log("WxCH.createInterstitialAd: 记录创建时间:", this.insertAdCreateTime);
+                } catch (error) {
+                    console.warn('WxCH.createInterstitialAd: Failed to create interstitial ad:', error);
+                }
+            }
+        }, 1000); // 延迟1秒
     }
 
     /**展示插屏广告*/
-    showInterstitialAd(callback = null) {
-        console.log("显示插屏广告")
+    showInterstitialAd() {
+        console.log("WxCH.showInterstitialAd: 尝试显示插屏广告");
+
+        const now = Date.now();
+
+        // 检查是否在可展示时间内（广告创建后60秒）
+        if (now - this.insertAdCreateTime < this.INSERT_AD_AVAILABLE_TIME) {
+            const remainingTime = Math.ceil((this.INSERT_AD_AVAILABLE_TIME - (now - this.insertAdCreateTime)) / 1000);
+            console.warn(`WxCH.showInterstitialAd: 插屏广告还在创建冷却期内，还需 ${remainingTime} 秒`);
+
+            return;
+        }
+
+        // 检查是否在展示冷却期内（上次展示后60秒）
+        if (now - this.lastInsertAdShowTime < this.INSERT_AD_SHOW_COOLDOWN) {
+            const remainingTime = Math.ceil((this.INSERT_AD_SHOW_COOLDOWN - (now - this.lastInsertAdShowTime)) / 1000);
+            console.warn(`WxCH.showInterstitialAd: 插屏广告还在展示冷却期内，还需 ${remainingTime} 秒`);
+
+            return;
+        }
+
+        console.log("WxCH.showInterstitialAd: this.ch:", !!this.ch);
+        console.log("WxCH.showInterstitialAd: this.insertAd:", !!this.insertAd);
+
         if (this.ch && this.insertAd) {
-            if (callback) {
-                this.insertAd.onClose(() => {
-                    console.log("插屏广告关闭");
+            this.insertAd.onClose(() => {
+                console.log("WxCH.showInterstitialAd: 插屏广告关闭");
+                try {
                     this.insertAd.offClose();
-                    if (callback) callback();
-                })
-            }
-            let promise = this.insertAd.show();
-            promise.catch((reject) => {
-                console.log("创建插屏广告失败");
-                console.log(`errCode:${reject.errMsg},errMsg:${reject.errCode}`);
+                } catch (error) {
+                    console.warn('WxCH.showInterstitialAd: Failed to offClose:', error);
+                }
+                
+                // 记录上次展示时间
+                this.lastInsertAdShowTime = Date.now();
+                console.log("WxCH.showInterstitialAd: 记录上次展示时间:", this.lastInsertAdShowTime);
+                
+                // 广告关闭时，重新创建插屏广告
+                console.log("WxCH.showInterstitialAd: 广告关闭，重新创建插屏广告");
+                this.createInterstitialAd();
+
             });
+        }
+        try {
+            let promise = this.insertAd.show();
+            console.log("WxCH.showInterstitialAd: 调用 show() 方法");
+            promise.then(() => {
+                    console.log("WxCH.showInterstitialAd: 插屏广告显示成功");
+                    
+                    // 插屏广告实例仅能展示一次，成功展示后需销毁重建才可再次展示
+                    // 但根据用户要求，这里不销毁实例，由定时器管理广告的创建和刷新
+                }).catch((reject) => {
+                console.error("WxCH.showInterstitialAd: 插屏广告显示失败:", reject);
+                console.log(`errCode:${reject.errCode}, errMsg:${reject.errMsg}`);
+                // 广告显示失败时也调用回调，确保流程继续
+
+            });
+        } catch (error) {
+            console.error('WxCH.showInterstitialAd: 调用 show() 方法出错:', error);
+
+        }
+    } 
+    
+    /**销毁插屏广告*/
+    destroyInterstitialAd() {
+        if (this.insertAd) {
+            try {
+                console.log("WxCH.destroyInterstitialAd: 销毁插屏广告");
+                this.insertAd.destroy();
+                this.insertAd = null;
+            } catch (error) {
+                console.warn('WxCH.destroyInterstitialAd: Failed to destroy:', error);
+                this.insertAd = null;
+            }
         }
     }
 
