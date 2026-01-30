@@ -62,6 +62,9 @@ export class ResultViewCmpt extends BaseDialog  {
             if (CM.mainCH) {
                 CM.mainCH.setImRankData_Num(LevelConfig.getCurLevel());
             }
+            if (CM.mainCH) {
+                CM.mainCH.setUserCloudStorage(LevelConfig.getCurLevel());
+            }
             this.handleWin(this.rewardBombs);
         } else {
             this.handleLose();

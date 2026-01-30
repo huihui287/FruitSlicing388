@@ -25,6 +25,7 @@ export class Start extends BaseNodeCom {
 
     //订阅按钮
     Subscribebtn: Node = null;
+
     protected start() {
         this.checkSidebarState();
         this.checkDesktopShortcut();
@@ -236,7 +237,7 @@ export class Start extends BaseNodeCom {
 
     onClick_LeaderboardBtn() {
         AudioManager.getInstance().playSound('button_click');
-        
+         console.log('当前渠道不支持排行榜功能1');
         // 根据不同渠道显示排行榜
         if (CM.isPlatform(CM.CH_ZJ)) {
             // 抖音渠道：使用原生排行榜
@@ -247,14 +248,22 @@ export class Start extends BaseNodeCom {
             }
         } else {
             // 其他渠道：可以添加对应的排行榜逻辑
-            // console.log('当前渠道不支持排行榜功能');
-            // LoaderManeger.instance.loadPrefab('prefab/ui/RankSubView').then((prefab) => {
-            //     let rankSubView = instantiate(prefab);
-            //     ViewManager.show({
-            //         node: rankSubView,
-            //         name: "RankSubView"
-            //     });
-            // });
+            CM.mainCH.getSetting((success, data, error) => {
+                if (success) {
+                    console.log('当前渠道不支持排行榜功能');
+                    LoaderManeger.instance.loadPrefab('prefab/ui/RankSubView').then((prefab) => {
+                        let rankSubView = instantiate(prefab);
+                        ViewManager.show({
+                            node: rankSubView,
+                            name: "RankSubView"
+                        });
+                    });
+                } else {
+                    console.log('用户未授权');
+                }
+            });
+
+
         }
     }
 
@@ -306,6 +315,7 @@ export class Start extends BaseNodeCom {
         // 1. 检查是否为抖音渠道
         if (!CM.isPlatform(CM.CH_ZJ)) {
             console.log('CheckDesktopShortcut: 非抖音渠道，跳过检查');
+            this.Subscribebtn.active = false;
             return;
         }
         if (CM.mainCH.CheckFeedSubscribeAllScene()) {

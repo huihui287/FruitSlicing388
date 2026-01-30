@@ -381,4 +381,54 @@ export default class WxCH extends BaseCH implements BaseINT {
         load();
     }
 
+    /**获取用户授权*/
+    getSetting(callback?: (success: boolean, data?: any, error?: any) => void) {
+        const that = this; // 保存当前实例引用
+        console.log('getSetting');
+        
+        if (that.ch) {
+            that.ch.getSetting({
+                success(res) {
+                    console.log('getSetting2', res);
+                    if (!res.authSetting['scope.WxFriendInteraction']) {
+                        that.ch.authorize({
+                            scope: 'scope.WxFriendInteraction',
+                            success() {
+                                if (callback) callback(true, null, null);
+                                console.log('用户已授权好友互动');
+                                // 用户已经同意保存到相册功能，后续调用 wx.saveImageToPhotosAlbum 接口不会弹窗询问
+                                //   wx.saveImageToPhotosAlbum()
+                            },
+                            fail(err) {
+                                console.log('授权失败：', err);
+                                if (callback) callback(false, null, err);
+                            }
+                        })
+                    } else {
+                        if (callback) callback(true, null, null);
+                        console.log('用户已授权好友互动');
+                    }
+                },
+                fail(err) {
+                    console.log('获取设置失败：', err);
+                    if (callback) callback(false, null, err);
+                }
+            })
+        } else {
+            console.log('通道未初始化');
+            if (callback) callback(false, null, { message: '通道未初始化' });
+        }
+    }
+
+    postMessage() {
+        if (!this.ch) return;
+        // 获取开放数据域实例
+        const openDataContext = this.ch.getOpenDataContext();
+        // 向开放域发送消息（触发拉取排行榜）
+        console.log('postMessage');
+        openDataContext.postMessage({
+            type: 'showFriendRank',
+            key: 'game_level'
+        });
+    }
 }

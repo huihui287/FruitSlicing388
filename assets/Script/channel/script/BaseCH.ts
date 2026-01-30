@@ -7,6 +7,15 @@ import { BaseINT } from "./BaseINT";
  * 通用渠道接口
  */
 export default class BaseCH implements BaseINT {
+    postMessage() {
+        throw new Error('Method not implemented.');
+    }
+    getOpenDataContext() {
+        throw new Error('Method not implemented.');
+    }
+    getSetting(arg0: (success: any, data: any, error: any) => void) {
+        throw new Error('Method not implemented.');
+    }
     initData() {
         throw new Error('Method not implemented.');
     }
@@ -257,22 +266,16 @@ export default class BaseCH implements BaseINT {
 
     /**
      * 写入用户云存储数据
-     * @param kvData 要写入的键值对对象，value 可以是字符串或可序列化对象
      */
-    //     kvData: {
-    //     "score": 100,
-    //     "progress": 10
-    // }
-    setUserCloudStorage(kvData?: { }) {
+    setUserCloudStorage(game_level: number) {
         if (!this.ch || !this.ch.setUserCloudStorage) {
             return;
         }
-
         this.ch.setUserCloudStorage({
             KVDataList: [
                 {
-                    key: "ONE",
-                    value: JSON.stringify(kvData),
+                    key: "game_level",
+                    value: JSON.stringify(game_level),
                 },
             ],
             success: (res) => {
