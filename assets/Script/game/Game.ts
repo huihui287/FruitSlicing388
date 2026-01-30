@@ -1210,18 +1210,43 @@ export class Game extends BaseNodeCom {
             // 存储炸弹影响的水果列表
             let bombList = [];
             let list2 = [];
-            // 获取当前炸弹影响的水果列表
-            let list: gridCmpt[] = await this.getBombList(bc);
-            bombList.push(list);
-            // 检查炸弹列表中的其他炸弹，递归处理
-            for (let i = 0; i < list.length; i++) {
-                // 跳过当前炸弹本身
-                if (list[i].h == bc.h && list[i].v == bc.v) continue;
-                // 如果列表中包含其他炸弹，递归处理
-                if (this.isBomb(list[i])) {
-                    bombList.push(await this.getBombList(list[i]));
+            // 存储已经处理过的炸弹，避免重复处理
+            let processedBombs = new Set<string>();
+            // 队列用于广度优先搜索处理所有炸弹
+            let bombQueue: gridCmpt[] = [];
+            
+            // 添加初始炸弹到队列
+            bombQueue.push(bc);
+            processedBombs.add(`${bc.h},${bc.v}`);
+            
+            // 广度优先搜索处理所有炸弹
+            while (bombQueue.length > 0) {
+                let currentBomb = bombQueue.shift();
+                if (!currentBomb || !currentBomb.node || !currentBomb.node.isValid) continue;
+                
+                // 获取当前炸弹影响的水果列表
+                let list: gridCmpt[] = await this.getBombList(currentBomb);
+                bombList.push(list);
+                
+                // 检查列表中是否有其他炸弹，添加到队列
+                for (let i = 0; i < list.length; i++) {
+                    let item = list[i];
+                    if (!item || !item.node || !item.node.isValid) continue;
+                    
+                    // 跳过当前炸弹本身
+                    if (item.h == currentBomb.h && item.v == currentBomb.v) continue;
+                    
+                    // 如果列表中包含其他炸弹，且未处理过，则添加到队列
+                    if (this.isBomb(item)) {
+                        let bombKey = `${item.h},${item.v}`;
+                        if (!processedBombs.has(bombKey)) {
+                            processedBombs.add(bombKey);
+                            bombQueue.push(item);
+                        }
+                    }
                 }
             }
+            
             // 去重处理 - 避免重复消除同一个水果
             let func = (pc: gridCmpt) => {
                 for (let i = 0; i < list2.length; i++) {
@@ -1231,10 +1256,12 @@ export class Game extends BaseNodeCom {
                 }
                 return false;
             }
+            
             // 合并所有炸弹影响的水果列表
             for (let i = 0; i < bombList.length; i++) {
                 for (let j = 0; j < bombList[i].length; j++) {
                     let item = bombList[i][j];
+                    if (!item || !item.node || !item.node.isValid) continue;
                     if (!func(item)) {
                         list2.push(item);
                     }
