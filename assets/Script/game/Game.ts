@@ -1673,6 +1673,12 @@ export class Game extends BaseNodeCom {
             samelist = this.jugetLegitimate(samelist);
             let soundList = ['combo_cool', 'combo_excellent', 'combo_good', 'combo_great', 'combo_perfect'];
             let rand = Math.floor(Math.random() * soundList.length);
+            
+            // 修复：在处理消除列表时，需要先检查是否包含炸弹道具
+            // 如果包含炸弹道具，应该触发炸弹的爆炸效果，而不是直接消除
+            // 使用Set来存储需要触发炸弹的gridCmpt，避免重复处理
+            let bombTriggerSet = new Set<gridCmpt>();
+            
             //1:移除
             for (let i = 0; i < samelist.length; i++) {
                 let item = samelist[i];
@@ -1689,6 +1695,14 @@ export class Game extends BaseNodeCom {
 
                 for (let j = 0; j < item.length; j++) {
                     let ele: gridCmpt = item[j];
+                    
+                    // 修复：检查当前元素是否是炸弹道具（type 8-11）
+                    // 如果是炸弹道具，添加到炸弹触发集合中，不直接消除
+                    if (this.isBomb(ele)) {
+                        bombTriggerSet.add(ele);
+                        continue;
+                    }
+                    
                     /** 在这里检测糖果四周的障碍物 */
                     let listAround = this.getAroundGrid(ele)
                     let obstacleList = this.getObstacleList(listAround);
@@ -1702,9 +1716,21 @@ export class Game extends BaseNodeCom {
                 }
                 
             }
-                    if (CM.mainCH && CM.mainCH.vibrateShort) {
-            CM.mainCH.vibrateShort();
-        }
+            
+            // 修复：处理所有需要触发爆炸的炸弹道具
+            // 遍历炸弹触发集合，对每个炸弹调用handleBomb方法
+            if (bombTriggerSet.size > 0) {
+                console.log(`[Game] Found ${bombTriggerSet.size} bombs in elimination, triggering bomb effects`);
+                for (let bomb of bombTriggerSet) {
+                    if (bomb && bomb.node && bomb.node.isValid) {
+                        await this.handleBomb(bomb);
+                    }
+                }
+            }
+
+            if (CM.mainCH && CM.mainCH.vibrateShort) {
+                CM.mainCH.vibrateShort();
+            }
             await ToolsHelper.delayTime(0.2);
             await this.checkMoveDown();
             resolve("");
