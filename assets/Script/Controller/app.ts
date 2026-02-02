@@ -27,7 +27,10 @@ class GameApp extends SingletonClass<GameApp> {
         // 旧代码：
         // 使用Cocos Creator的director API实现场景跳转
         // director.loadScene("home"); // 跳转到主场景
-        
+
+        if (CM.mainCH) {
+            CM.mainCH.hideBannerAd();
+        }
         // 修改为使用项目中实际存在的开始场景
         director.loadScene("startScene"); // 跳转到开始场景
     }
@@ -35,7 +38,9 @@ class GameApp extends SingletonClass<GameApp> {
         // 旧代码：
         // App.view.openView(ViewName.Single.eGameView, isStart, pageIdx);
         // App.audio.play('background', SoundType.Music, true);
-        
+        if (CM.mainCH) {
+            CM.mainCH.hideBannerAd();
+        }
         // 使用Cocos Creator的director API实现场景跳转
         director.loadScene("gameScene"); // 跳转到游戏场景
     }

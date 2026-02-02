@@ -1198,83 +1198,86 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<boolean>} 异步操作，是否成功处理炸弹
      */
     async handleBomb(bc: gridCmpt, isResult: boolean = false) {
-        // 检查是否正在处理其他消除操作
-        if (this.isChecking) {
-            return false;
-        }
+        try {
+            // 检查是否正在处理其他消除操作
+            if (this.isChecking) {
+                return false;
+            }
 
-        // 检查是否是炸弹类型
-        if (this.isBomb(bc)) {
-            // 设置检查状态，避免重复处理
-            this.isChecking = true;
-            // 存储炸弹影响的水果列表
-            let bombList = [];
-            let list2 = [];
-            // 存储已经处理过的炸弹，避免重复处理
-            let processedBombs = new Set<string>();
-            // 队列用于广度优先搜索处理所有炸弹
-            let bombQueue: gridCmpt[] = [];
-            
-            // 添加初始炸弹到队列
-            bombQueue.push(bc);
-            processedBombs.add(`${bc.h},${bc.v}`);
-            
-            // 广度优先搜索处理所有炸弹
-            while (bombQueue.length > 0) {
-                let currentBomb = bombQueue.shift();
-                if (!currentBomb || !currentBomb.node || !currentBomb.node.isValid) continue;
+            // 检查是否是炸弹类型
+            if (this.isBomb(bc)) {
+                // 设置检查状态，避免重复处理
+                this.isChecking = true;
+                // 存储炸弹影响的水果列表
+                let bombList: gridCmpt[][] = [];
+                let uniqueFruits: gridCmpt[] = [];
+                // 存储已经处理过的炸弹，避免重复处理
+                let processedBombs = new Set<string>();
+                // 存储已经处理过的水果，用于去重
+                let processedFruits = new Set<string>();
+                // 队列用于广度优先搜索处理所有炸弹
+                let bombQueue: gridCmpt[] = [];
                 
-                // 获取当前炸弹影响的水果列表
-                let list: gridCmpt[] = await this.getBombList(currentBomb);
-                bombList.push(list);
+                // 添加初始炸弹到队列
+                bombQueue.push(bc);
+                processedBombs.add(`${bc.h},${bc.v}`);
                 
-                // 检查列表中是否有其他炸弹，添加到队列
-                for (let i = 0; i < list.length; i++) {
-                    let item = list[i];
-                    if (!item || !item.node || !item.node.isValid) continue;
+                // 广度优先搜索处理所有炸弹
+                while (bombQueue.length > 0) {
+                    let currentBomb = bombQueue.shift();
+                    if (!currentBomb || !currentBomb.node || !currentBomb.node.isValid) continue;
                     
-                    // 跳过当前炸弹本身
-                    if (item.h == currentBomb.h && item.v == currentBomb.v) continue;
+                    // 获取当前炸弹影响的水果列表
+                    let list: gridCmpt[] = await this.getBombList(currentBomb);
+                    bombList.push(list);
                     
-                    // 如果列表中包含其他炸弹，且未处理过，则添加到队列
-                    if (this.isBomb(item)) {
-                        let bombKey = `${item.h},${item.v}`;
-                        if (!processedBombs.has(bombKey)) {
-                            processedBombs.add(bombKey);
-                            bombQueue.push(item);
+                    // 检查列表中是否有其他炸弹，添加到队列
+                    for (let i = 0; i < list.length; i++) {
+                        let item = list[i];
+                        if (!item || !item.node || !item.node.isValid) continue;
+                        
+                        // 跳过当前炸弹本身
+                        if (item.h == currentBomb.h && item.v == currentBomb.v) continue;
+                        
+                        // 如果列表中包含其他炸弹，且未处理过，则添加到队列
+                        if (this.isBomb(item)) {
+                            let bombKey = `${item.h},${item.v}`;
+                            if (!processedBombs.has(bombKey)) {
+                                processedBombs.add(bombKey);
+                                bombQueue.push(item);
+                            }
                         }
                     }
                 }
-            }
-            
-            // 去重处理 - 避免重复消除同一个水果
-            let func = (pc: gridCmpt) => {
-                for (let i = 0; i < list2.length; i++) {
-                    if (list2[i].h == pc.h && list2[i].v == pc.v) {
-                        return true;
+                
+                // 合并所有炸弹影响的水果列表并去重
+                for (let i = 0; i < bombList.length; i++) {
+                    for (let j = 0; j < bombList[i].length; j++) {
+                        let item = bombList[i][j];
+                        if (!item || !item.node || !item.node.isValid) continue;
+                        
+                        let fruitKey = `${item.h},${item.v}`;
+                        if (!processedFruits.has(fruitKey)) {
+                            processedFruits.add(fruitKey);
+                            uniqueFruits.push(item);
+                        }
                     }
                 }
-                return false;
-            }
-            
-            // 合并所有炸弹影响的水果列表
-            for (let i = 0; i < bombList.length; i++) {
-                for (let j = 0; j < bombList[i].length; j++) {
-                    let item = bombList[i][j];
-                    if (!item || !item.node || !item.node.isValid) continue;
-                    if (!func(item)) {
-                        list2.push(item);
-                    }
-                }
-            }
 
-            // 处理炸弹消除
-            await this.handleSamelistBomb(list2);
-            // 检查是否还有其他可消除的水果
-            await this.checkAgain(isResult);
-            return true;
+                // 处理炸弹消除
+                await this.handleSamelistBomb(uniqueFruits);
+                // 检查是否还有其他可消除的水果
+                await this.checkAgain(isResult);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error("handleBomb error:", error);
+            return false;
+        } finally {
+            // 重置检查状态，确保后续操作正常执行
+            this.isChecking = false;
         }
-        return false;
     }
 
     /**
@@ -1318,9 +1321,10 @@ export class Game extends BaseNodeCom {
                 rocket.getComponent(rocketCmpt).initData(bc.type);
                 break;
             case Bomb.bomb:
-                for (let i = bc.h - 2; i < bc.h + 2 && i < this.V; i++) {
+                for (let i = bc.h - 2; i < bc.h + 2 && i < this.H; i++) {
                     for (let j = bc.v - 2; j < bc.v + 2 && j < this.V; j++) {
-                        if (i < 0 || j < 0) continue;
+                        if (i < 0 || j < 0) 
+                            continue;
                         let item = this.blockArr[i][j];
                         if (item) {
                             list.push(item.getComponent(gridCmpt));
@@ -1332,7 +1336,7 @@ export class Game extends BaseNodeCom {
             case Bomb.allSame:
                 let curType: number = -1;
                 for (let i = 0; i < this.curTwo.length; i++) {
-                    if (this.curTwo[i].type != bc.type && this.curTwo[i].type < Constant.NormalType) {
+                    if (this.curTwo[i].type != bc.type && this.curTwo[i].type < App.gameCtr.blockCount) {
                         curType = this.curTwo[i].type;
                     }
                 }
@@ -1341,7 +1345,7 @@ export class Game extends BaseNodeCom {
                         for (let j = bc.v - 1; j < bc.v + 1 && j < this.V; j++) {
                             if (i < 0 || j < 0) continue;
                             let item = this.blockArr[i][j];
-                            if (item && curType < 0 && item.getComponent(gridCmpt).type < Constant.NormalType) {
+                            if (item && curType < 0 && item.getComponent(gridCmpt).type < App.gameCtr.blockCount) {
                                 curType = item.getComponent(gridCmpt).type;
                                 break;
                             }
@@ -1379,6 +1383,7 @@ export class Game extends BaseNodeCom {
                 await ToolsHelper.delayTime(0.7);
                 break;
         }
+                        console.log("listlistlistlist",list.length);
         return list;
     }
 
@@ -1917,12 +1922,12 @@ export class Game extends BaseNodeCom {
      * @param {any[]} samelist - 炸弹影响的水果列表
      * @returns {Promise<void>} 异步操作，完成炸弹消除
      */
-    private async handleSamelistBomb(samelist: any[]) {
-        return new Promise(async resolve => {
-            if (samelist.length < 1) {
-                resolve("");
-                return;
-            }
+    private async handleSamelistBomb(samelist: gridCmpt[]) {
+        if (samelist.length < 1) {
+            return;
+        }
+        
+        try {
             let soundList = ['combo_cool', 'combo_excellent', 'combo_good', 'combo_great', 'combo_perfect'];
             let rand = Math.floor(Math.random() * soundList.length);
             this.scheduleOnce(() => {
@@ -1930,26 +1935,31 @@ export class Game extends BaseNodeCom {
                     AudioManager.getInstance().playSound(soundList[rand])
                 }
             }, 0.2);
+            
             // 移除
             for (let i = 0; i < samelist.length; i++) {
                 let ele: gridCmpt = samelist[i];
-                if (!ele || !ele.node) continue;
+                if (!ele || !ele.node || !ele.node.isValid) continue;
+                
                 /** 在这里检测糖果四周的障碍物 */
-                let listAround = this.getAroundGrid(ele)
+                let listAround = this.getAroundGrid(ele);
                 let obstacleList = this.getObstacleList(listAround);
                 if (obstacleList.length > 0) {
                     for (let m = 0; m < obstacleList.length; m++) {
-                        this.destroyGridAndGetScore(obstacleList[m].getComponent(gridCmpt));
+                        let obstacle = obstacleList[m].getComponent(gridCmpt);
+                        if (obstacle && obstacle.node && obstacle.node.isValid) {
+                            this.destroyGridAndGetScore(obstacle);
+                        }
                     }
                 }
                 this.destroyGridAndGetScore(ele);
-
             }
 
             await ToolsHelper.delayTime(0.2);
             await this.checkMoveDown();
-            resolve("");
-        });
+        } catch (error) {
+            console.error("handleSamelistBomb error:", error);
+        }
     }
     /**
      * 合成炸弹
@@ -2292,37 +2302,71 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<void>} 异步操作，完成水果下移
      */
     async checkMoveDown() {
-        return new Promise(async resolve => {
+        return new Promise<void>(async resolve => {
+            console.log("[Game] Start checkMoveDown");
+            
             for (let i = 0; i < this.H; i++) {
                 let count = 0;
+                console.log(`[Game] Checking column ${i}`);
+                
                 for (let j = 0; j < this.V; j++) {
-                    if (!this.isValid) return;
+                    if (!this.isValid) {
+                        console.log("[Game] Node is invalid, exiting checkMoveDown");
+                        resolve();
+                        return;
+                    }
+                    
                     let block = this.blockArr[i][j];
                     let isHide = App.gameCtr.checkInHideList(i, j);
+                    
+                    console.log(`[Game] Checking position (${i}, ${j}): block=${!!block}, isHide=${isHide}, count=${count}`);
+                    
                     if (!block) {
                         if (!isHide) {
                             count++;
+                            console.log(`[Game] Empty position (${i}, ${j}), count increased to ${count}`);
                         } else {
                             //当前格子以下是不是全是边界空的，是边界空的就忽略，否则就+1
                             let bool = App.gameCtr.checkAllInHideList(i, j);
+                            console.log(`[Game] Hide position (${i}, ${j}), checkAllInHideList=${bool}, count=${count}`);
                             if (!bool && count > 0) {
                                 count++;
+                                console.log(`[Game] Hide position (${i}, ${j}) contributes to count, count increased to ${count}`);
                             }
                         }
                     }
                     else if (block && count > 0) {
+                        console.log(`[Game] Found block at (${i}, ${j}) that needs to move down by ${count} positions`);
+                        
                         let count1 = await this.getDownLastCount(i, j, count);
+                        console.log(`[Game] Calculated final move count: ${count1}`);
+                        
+                        // 检查目标位置是否已经被占用
+                        if (this.blockArr[i][j - count1]) {
+                            console.log(`[Game] WARNING: Target position (${i}, ${j - count1}) is already occupied!`);
+                            console.log(`[Game] Current block: ${block.getComponent(gridCmpt).h},${block.getComponent(gridCmpt).v}`);
+                            console.log(`[Game] Occupying block: ${this.blockArr[i][j - count1].getComponent(gridCmpt).h},${this.blockArr[i][j - count1].getComponent(gridCmpt).v}`);
+                        }
+                        
                         this.blockArr[i][j] = null;
                         this.blockArr[i][j - count1] = block;
                         block.getComponent(gridCmpt).initData(i, j - count1);
                         this.resetTimeInterval();
-                        tween(block).to(0.5, { position: this.blockPosArr[i][j - count1] }, { easing: 'backOut' }).call(resolve).start();
+                        
+                        console.log(`[Game] Moving block from (${i}, ${j}) to (${i}, ${j - count1})`);
+                        
+                        tween(block).to(0.5, { position: this.blockPosArr[i][j - count1] }, { easing: 'backOut' }).call(() => {
+                            console.log(`[Game] Block moved to (${i}, ${j - count1}) successfully`);
+                            resolve();
+                        }).start();
                     }
                 }
             }
-            // await ToolsHelper.delayTime(0.2);
+            
+            console.log("[Game] Checking replenish blocks");
             await this.checkReplenishBlock();
-            resolve("");
+            console.log("[Game] checkMoveDown completed");
+            resolve();  
         });
     }
 
@@ -2355,22 +2399,43 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<void>} 异步操作，完成水果补充
      */
     async checkReplenishBlock() {
-        return new Promise(async resolve => {
+        return new Promise<void>(async resolve => {
+            console.log("[Game] Start checkReplenishBlock");
+            
             for (let i = 0; i < this.H; i++) {
                 for (let j = 0; j < this.V; j++) {
                     let block = this.blockArr[i][j];
                     let isHide = App.gameCtr.checkInHideList(i, j);
+                    
+                    console.log(`[Game] Checking position (${i}, ${j}) for replenish: block=${!!block}, isHide=${isHide}`);
+                    
                     if (!block && !isHide) {
-                        let pos = this.blockPosArr[i][this.V - 1]
+                        console.log(`[Game] Replenishing block at (${i}, ${j})`);
+                        
+                        let pos = this.blockPosArr[i][this.V - 1];
+                        console.log(`[Game] New block starting position: (${pos.x}, ${pos.y})`);
+                        
                         let block = this.addBlock(i, j, v3(pos.x, pos.y + Constant.Width + 20, 1));
                         this.blockArr[i][j] = block;
                         this.resetTimeInterval();
-                        tween(block).to(0.5, { position: this.blockPosArr[i][j] }, { easing: 'backOut' }).call(resolve).start();
+                        
+                        console.log(`[Game] Dropping new block to (${i}, ${j})`);
+                        
+                        tween(block)
+                            .to(0.5, { position: this.blockPosArr[i][j] }, { easing: 'backOut' })
+                            .call(() => {
+                                console.log(`[Game] New block dropped to (${i}, ${j}) successfully`);
+                                resolve();
+                            })
+                            .start();
                     }
                 }
             }
+            
+            console.log("[Game] Waiting for replenish delay");
             await ToolsHelper.delayTime(0.5);
-            resolve("");
+            console.log("[Game] checkReplenishBlock completed");
+            resolve();
         });
     }
 
