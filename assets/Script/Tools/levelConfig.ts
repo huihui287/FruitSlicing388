@@ -83,12 +83,12 @@ class config {
         if (lv <= 5) {
             // 前 5 关：较慢的线性增长
             // 每关增加 5 个目标，确保增长平稳
-            count = base + (lv - 1) * 150;
+            count = base + (lv - 1) * 10;
         } else {
             // 5 关之后：较快的指数增长
             // 以第 5 关的目标数量为基础，之后每关 15% 的增长率
-            const level10Count = base + 5 * 150; // 第 5 关的目标数量
-            const growthRate = 1.35; // 15% 的增长率
+            const level10Count = base + 1 * 10; // 第 5 关的目标数量
+            const growthRate = 1.03; // 15% 的增长率
             count = Math.ceil(level10Count * Math.pow(growthRate, lv - 5));
         }
         

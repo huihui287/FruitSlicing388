@@ -955,7 +955,7 @@ export class Game extends BaseNodeCom {
         if (this.gameState === GameState.WIN || this.gameState === GameState.GAME_OVER || !this.isValid) return;
 
         // 扣除血量
-        this.playerHealth -= damage;
+        this.playerHealth -= 100;//只给一次机会
         if (this.playerHealth < 0) {
             this.playerHealth = 0;
         }
@@ -976,6 +976,7 @@ export class Game extends BaseNodeCom {
      */
     updateHealthDisplay() {
         if (this.spHealth) {
+            this.spHealth.active = false;
             const healthProgress = this.spHealth.getComponent(ProgressBar);
             if (healthProgress) {
                 healthProgress.progress = this.playerHealth / 100;
