@@ -6,6 +6,7 @@ import { gridDownCmpt } from '../item/gridDownCmpt';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
 import { App } from '../../Controller/app';
+import AudioManager from '../../Common/AudioManager';
     /**
      * 表示被回收方块的信息接口
      */
@@ -444,6 +445,7 @@ export class DownGridManager extends Component {
      * 回收水果方块到对象池
      */
     private recycleGrid(gridNode: Node) {
+         AudioManager.getInstance().playSound('freesound_community_face');
         // 从活跃列表中移除
         const index = this.activeGrids.indexOf(gridNode);
         if (index > -1) {

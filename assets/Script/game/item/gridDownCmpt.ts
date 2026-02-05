@@ -219,8 +219,8 @@ export class gridDownCmpt extends Component {
     private updateHealthDisplay(): void {
         if (this.healthBl) {
             // 2026-01-22: 用户需求，同时显示血量数值
-           this.healthBl.node.active = true;
-            this.healthBl.string = this.health.toString();
+        //    this.healthBl.node.active = true;
+        //     this.healthBl.string = this.health.toString();
         }
     }
 

@@ -1848,6 +1848,8 @@ export class Game extends BaseNodeCom {
         targetComp.takeDamage(damage, () => {
             // grid死亡，回收目标节点
             this.DownGridMgr.recycleGridByNode(target);
+
+            AudioManager.getInstance().playSound('freesound_community_slap');
         });
     }
 
