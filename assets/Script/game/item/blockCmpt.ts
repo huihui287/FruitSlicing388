@@ -5,9 +5,12 @@ const { ccclass, property } = _decorator;
 export class blockCmpt extends Component {
     public h: number = 0;
     public v: number = 0;
+
+    grid_fill: Node = null;
     initData(h: number, v: number) {
-        this.node.getChildByName("single").children.forEach(item => item.active = false);
-        this.node.getChildByName("corner").children.forEach(item => item.active = false);
+
+       this.grid_fill = this.node.getChildByName("grid_fill");
+       console.log(`Block (${h}, ${v}): grid_fill node:`, this.grid_fill);
         this.h = h;
         this.v = v;
         // this.node.getChildByName("lb").getComponent(Label).string = `(${h},${v})`;
@@ -19,16 +22,13 @@ export class blockCmpt extends Component {
         return false;
     }
 
-    handleBorders(top: Node, down: Node, left: Node, right: Node) {
-        this.node.getChildByName("single").getChildByName("top").active = !top;
-        this.node.getChildByName("single").getChildByName("down").active = !down;
-        this.node.getChildByName("single").getChildByName("left").active = !left;
-        this.node.getChildByName("single").getChildByName("right").active = !right;
-
-        this.node.getChildByName("corner").getChildByName("left_top").active = !top && !left;
-        this.node.getChildByName("corner").getChildByName("left_down").active = !down && !left;
-        this.node.getChildByName("corner").getChildByName("right_top").active = !top && !right;
-        this.node.getChildByName("corner").getChildByName("right_down").active = !down && !right;
+    setFill(isshow: boolean) {
+        if (this.grid_fill) {
+            console.log(`Block (${this.h}, ${this.v}): Setting grid_fill active to ${isshow}`);
+            this.grid_fill.active = isshow;
+        } else {
+            console.log(`Block (${this.h}, ${this.v}): grid_fill node not found, cannot set active`);
+        }
     }
 
 }

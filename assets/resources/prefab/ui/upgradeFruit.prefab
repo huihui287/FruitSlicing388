@@ -4580,12 +4580,12 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@f9941",
+      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -5400,12 +5400,12 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@f9941",
+      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -6220,12 +6220,12 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@f9941",
+      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -7040,12 +7040,12 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@f9941",
+      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -7860,12 +7860,12 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "31eeb39b-4ee4-4f43-9e0a-4f8d8486eef8@f9941",
+      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -8455,6 +8455,8 @@
       "__id__": 0
     },
     "fileId": "d3cFXI3wZISY4s4Yb7MKBS",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -8513,7 +8515,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 720,
-      "height": 1333.9999999999998
+      "height": 1334
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",

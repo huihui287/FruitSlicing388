@@ -1,4 +1,4 @@
-import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid, ProgressBar, Label } from 'cc';
+import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid, ProgressBar, Label, Layout } from 'cc';
 // 如果 enumConst.ts 已改名或迁移，请根据实际路径调整
 // 例如：'../../const/EnumConst' 或 '../../const/Enum'
 //import { Advertise } from '../../wx/advertise';//广告
@@ -55,12 +55,12 @@ export class Game extends BaseNodeCom {
     private gridNode: Node = null;
     /** 特效容器节点 */
     private effNode: Node = null;
-    /** UI引用：目标显示节点1（适用于2个及以下目标） */
-    private target1: Node = null;
     /** UI引用：目标显示节点2（适用于3个及以上目标） */
     private target2: Node = null;
     /** UI引用：目标背景节点 */
     private targetBg: Node = null;
+    /** UI引用：目标背景图片节点 */
+    private target2BackTex: Node = null;
     /** UI引用：道具1数量显示节点 */
     private lbTool1: Node = null;
     /** UI引用：道具2数量显示节点 */
@@ -261,8 +261,9 @@ export class Game extends BaseNodeCom {
 
         this.gridNode = this.viewList.get('center/gridNode');
         this.effNode = this.viewList.get('center/ParticleManager');
-        this.targetBg = this.viewList.get('top/content/targetBg');
-        this.target1 = this.viewList.get('top/target1');
+        this.targetBg = this.viewList.get('top/content/目标');
+        this.target2BackTex = this.viewList.get('top/content/目标框');
+
         this.target2 = this.viewList.get('top/target2');
         this.lbTool1 = this.viewList.get('bottom/proppenal/tool1/prompt/lbTool1');
         this.lbTool2 = this.viewList.get('bottom/proppenal/tool2/prompt/lbTool2');
@@ -597,20 +598,31 @@ export class Game extends BaseNodeCom {
      */
     updateTargetCount() {
         let arr = this.AchievetheGoal;
-        // 根据目标数量选择显示不同的目标面板
-        this.target1.active = arr.length <= 2;
-        this.target2.active = arr.length > 2;
-        let target = arr.length <= 2 ? this.target1 : this.target2;
-        
+        // 根据目标数量选择显示不同的目标面板        
         // 更新目标显示
-        target.children.forEach((item, idx) => {
+        this.target2.children.forEach((item, idx) => {
             item.active = idx < arr.length;
             if (idx < arr.length) {
                 item.getComponent(gridCmpt).setType(arr[idx][0]);
                 item.getComponent(gridCmpt).setCount(arr[idx][1]);
             }
         });
-        
+
+        // 强制刷新 layout 组件，确保布局计算完成
+        const target2Layout = this.target2.getComponent(Layout);
+        if (target2Layout && target2Layout.updateLayout) {
+            target2Layout.updateLayout();
+        }
+        if (this.isValid && this.target2 && this.target2BackTex) {
+            let target2UITransform = this.target2.getComponent(UITransform);
+            if (target2UITransform) {
+                let backTexUITransform = this.target2BackTex.getComponent(UITransform);
+                if (backTexUITransform) {
+                    backTexUITransform.width = target2UITransform.width + 20;
+                }
+            }
+        }
+
         // 检查是否达成目标
         this.checkResult();
     }
@@ -1848,8 +1860,6 @@ export class Game extends BaseNodeCom {
         targetComp.takeDamage(damage, () => {
             // grid死亡，回收目标节点
             this.DownGridMgr.recycleGridByNode(target);
-
-            AudioManager.getInstance().playSound('freesound_community_slap');
         });
     }
 
@@ -2418,7 +2428,7 @@ export class Game extends BaseNodeCom {
                         let pos = this.blockPosArr[i][this.V - 1];
                         console.log(`[Game] New block starting position: (${pos.x}, ${pos.y})`);
                         
-                        let block = this.addBlock(i, j, v3(pos.x, pos.y + Constant.Width + 20, 1));
+                        let block = this.addGrid(i, j, v3(pos.x, pos.y + Constant.Width + 20, 1));
                         this.blockArr[i][j] = block;
                         this.resetTimeInterval();
                         
@@ -2481,7 +2491,7 @@ export class Game extends BaseNodeCom {
                 for (let n = start; n < end; n++) {
                     if (count2 < len) {
                         let pos = this.blockPosArr[m][n];
-                        let block = this.addBlock(m, n, pos, obsList[0]);
+                        let block = this.addGrid(m, n, pos, obsList[0]);
                         block.setScale(v3(0, 0, 0));
                         tween(block).to(0.5, { scale: v3(1, 1, 1) }).start();
                         this.blockArr[m][n] = block;
@@ -2509,7 +2519,7 @@ export class Game extends BaseNodeCom {
                 let type = -1;
                 if (this.blockArr[i][j])
                     continue;
-                let block = this.addBlock(i, j, pos, type);
+                let block = this.addGrid(i, j, pos, type);
                 block.setScale(v3(0, 0, 0));
                 tween(block).to(count / 100, { scale: v3(1, 1, 1) }).start();
                 this.blockArr[i][j] = block;
@@ -2534,7 +2544,7 @@ export class Game extends BaseNodeCom {
      * @param {number} type - 水果水果的类型，-1表示随机类型
      * @returns {Node} 创建的水果水果节点
      */
-    addBlock(i: number, j: number, pos: Vec3 = null, type: number = -1) {
+    addGrid(i: number, j: number, pos: Vec3 = null, type: number = -1) {
         let block = instantiate(this.gridPre);
         this.gridNode.addChild(block);
         block.getComponent(gridCmpt).initData(i, j, type);
@@ -2730,18 +2740,18 @@ export class Game extends BaseNodeCom {
             });
     }
 
-    /** 暂停 */
-    async onClick_pauseBtn() {
-        AudioManager.getInstance().playSound('button_click');
-        // App.view.openView(ViewName.Single.esettingGameView);
-        LoaderManeger.instance.loadPrefab('prefab/ui/settingGameView').then((prefab) => {
-            let settingNode = instantiate(prefab);
-            ViewManager.show({
-                node: settingNode,
-                name: "SettingGameView"
-            });
-        });
-    }
+    // /** 暂停 */
+    // async onClick_pauseBtn() {
+    //     AudioManager.getInstance().playSound('button_click');
+    //     // App.view.openView(ViewName.Single.esettingGameView);
+    //     LoaderManeger.instance.loadPrefab('prefab/ui/settingGameView').then((prefab) => {
+    //         let settingNode = instantiate(prefab);
+    //         ViewManager.show({
+    //             node: settingNode,
+    //             name: "SettingGameView"
+    //         });
+    //     });
+    // }
 
     /** 添加道具，广告位 */
     onClickAddButton(btnNode: Node) {

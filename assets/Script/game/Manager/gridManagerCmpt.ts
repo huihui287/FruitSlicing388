@@ -48,32 +48,26 @@ export class gridManagerCmpt extends Component {
                     continue;
                 }
                 let block = this.addBlock(i, j, pos);
+                
+                // 设置底图显示不显示，每一行岔开显示
+                let blockCmpt1 = block.getComponent(blockCmpt);
+                if (blockCmpt1 && blockCmpt1.setFill) {
+                    // 实现9列的循环显示规则：
+                    // 第一行【0，1，0，1，0，1，0，1，0】
+                    // 第二行【1，0，1，0，1，0，1，0，1】
+                    // 然后循环依次类推
+                    // 所有行都按照规则显示，包括最后一行
+                    blockCmpt1.setFill((i + j) % 2 === 1);
+                }
+                
                 this.blockArr[i][j] = block;
             }
         }
-        /** 边框设置 */
-        this.setMapBorders();
-    }
 
-    /** 边框设置 - 仅在初始化时调用一次，已优化 */
-    setMapBorders() {
-        for (let i = 0; i < this.H; i++) {
-            for (let j = 0; j < this.V; j++) {
-                let block = this.blockArr[i][j];
-                if (block) {
-                    // 优化：直接在条件判断中赋值，减少变量声明
-                    const top = j + 1 < this.V ? this.blockArr[i][j + 1] : null;
-                    const down = j - 1 >= 0 ? this.blockArr[i][j - 1] : null;
-                    const left = i - 1 >= 0 ? this.blockArr[i - 1][j] : null;
-                    const right = i + 1 < this.H ? this.blockArr[i + 1][j] : null;
-                    
-                    block.getComponent(blockCmpt).handleBorders(top, down, left, right);
-                }
-            }
-        }
     }
+    
 
-    addBlock(i: number, j: number, pos: Vec3 = null) {
+    addBlock(i: number, j: number, pos: Vec3 = null): Node {
         let block: Node;
         if (this.blockPool.length > 0) { // 从对象池获取
             block = this.blockPool.pop();

@@ -14,8 +14,8 @@ import ViewManager from '../Common/view/ViewManager';
 import LoaderManeger from '../sysloader/LoaderManeger';
 const { ccclass, property } = _decorator;
 
-@ccclass('getGold')
-export class getGold extends BaseDialog {
+@ccclass('UpTurret')
+export class UpTurret extends BaseDialog {
     Label001: Node = null;
     maxCapacity = 50;
     description: Node = null;

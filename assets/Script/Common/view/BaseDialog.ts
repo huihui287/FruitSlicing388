@@ -6,6 +6,8 @@ import ViewManager from "./ViewManager";
 import CM from '../../channel/CM';
 // 修改后的导入语句 - 添加了必要的类型
 import { _decorator, Component, Node, Button, isValid, Event, EventHandler, Label } from 'cc';
+import EventManager from "./EventManager";
+import { EventName } from "../../Tools/eventName";
 
 const { ccclass, property } = _decorator;
 /** 点击按钮等待时间 */
@@ -114,6 +116,8 @@ export default class BaseDialog extends Component {
                 console.error('BaseDialog.dismiss: Failed to hide banner ad:', error);
             }
         }
+                // 通过消息系统恢复游戏
+        EventManager.emit(EventName.Game.Resume);
         
         if (!isValid(this.node) || !isValid(this.node.parent)) {
             console.warn('BaseDialog.dismiss: node or node.parent is invalid');

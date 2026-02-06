@@ -9,6 +9,7 @@ import { gridCmpt } from '../item/gridCmpt';
 import { DEV } from 'cc/env';
 import { App } from '../../Controller/app';
 import GameData from '../../Common/GameData';
+import ViewManager from '../../Common/view/ViewManager';
 const { ccclass, property } = _decorator;
 
 /**
@@ -226,17 +227,13 @@ export class Turret extends BaseNodeCom {
         return this._baseCapacity * GameData.loadData(GameData.TurretLevel, 1);
     }
     /**
-* 容量动画和显示
+* 容量显示
 */
-    CapacityAm: Node = null;
+    Capacity: Node = null;
 
     /** 存储的grid数据还剩多少个 */
     public gridDataCountLb: Label = null;
 
-    /** 容量显示是否正在播放动画 */
-    private isAnimatingCapacity: boolean = false;
-    /** 容量显示当前是否处于上方状态 */
-    private isCapacityUp: boolean = true;
     /**
      * 组件加载时调用
      * 初始化DownGridManager引用
@@ -266,21 +263,9 @@ export class Turret extends BaseNodeCom {
         if (!this.bulletPrefab) {
             this.bulletPrefab = await LoaderManeger.instance.loadPrefab('prefab/pieces/grid');
         }
-        this.gridDataCountLb = this.viewList.get('Label').getComponent(Label);
-        this.CapacityAm = this.viewList.get('Capacity/Mask/Am');
-        
-        // 初始化CapacityAm的位置：默认显示在上方
-        if (this.CapacityAm) {
-            // 设置为激活状态
-            this.CapacityAm.active = true;
-            // 如果默认是上方状态，确保它在上方位置
-            if (this.isCapacityUp) {
-                // 计算上方位置：向上移200
-                const targetPos = this.CapacityAm.position.clone().add(v3(0, 200, 0));
-                this.CapacityAm.position = targetPos;
-            }
-        }
-        
+        this.gridDataCountLb = this.viewList.get('Node/Label').getComponent(Label);
+
+        this.Capacity = this.viewList.get('Capacity');
         this.updateCapacityView();
     }
     
@@ -403,7 +388,6 @@ export class Turret extends BaseNodeCom {
      * @description 开始炮塔的自动攻击行为
      */
     public startAttack(): void {
-        this.showCapacityPopup();
         if (this._stateMachine.currentStateName !== TurretState.ACTIVE) return;
         
         // 攻击逻辑在ActiveState的onUpdate方法中处理
@@ -644,22 +628,31 @@ export class Turret extends BaseNodeCom {
      * 将gridDataList的数据同步显示到CapacityAm的子节点上
      */
     public updateCapacityView() {
-        if (!this.CapacityAm) return;
-        let gridData = this.getGroupedGridData();
-        const children = this.CapacityAm.children;
+        if (!this.Capacity) return;
+        
+        // 获取所有GridType类型，按照枚举顺序排列
+        const allGridTypes = Object.values(GridType).filter(value => typeof value === 'number') as GridType[];
+        
+        // 获取当前水果数据，创建映射
+        let gridDataMap = new Map<GridType, number>();
+        this.getGroupedGridData().forEach(item => {
+            gridDataMap.set(item.type, item.count);
+        });
+        
+        const children = this.Capacity.children;
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
+            const children1 = child.getChildByName('Label');
+            if (!children1) return;
             
-            if (i < gridData.length) {
-                child.active = true;
-                const gridComp = child.getComponent(gridCmpt);
-                if (gridComp) {
-                    gridComp.setType(gridData[i].type);
-                    gridComp.setCount(gridData[i].count);
-                }
+            if (i < allGridTypes.length) {
+                // 按照GridType顺序显示，没有的显示0
+                const type = allGridTypes[i];
+                const count = gridDataMap.get(type) || 0;
+                children1.getComponent(Label).string = count.toString();
             } else {
-                // 没有数据的节点隐藏
-                child.active = false;
+                // 超出GridType数量的节点显示0
+                children1.getComponent(Label).string = '0';
             }
         }
     }
@@ -709,68 +702,18 @@ export class Turret extends BaseNodeCom {
 
         return result;
     }
-    /**
-     * 显示炮塔图标弹出已经添加的水果种类和数量（公共接口）
-     * 功能：确保炮塔图标显示为弹出状态，展示已添加的水果种类和数量
-     * 
-     * 设计思路：
-     * 1. 检查是否正在动画或CapacityAm不存在
-     * 2. 检查是否已经在弹出状态
-     * 3. 如果不在弹出状态，执行弹出动画
-     * 4. 确保状态设置为弹出
-     * 
-     * @description 公共接口，用于外部触发炮塔图标弹出显示
-     */
-    public showCapacityPopup() {
-        // 检查是否正在动画或CapacityAm不存在
-        if (this.isAnimatingCapacity || !this.CapacityAm) return;
-
-        // 检查是否已经在弹出状态
-        if (this.isCapacityUp) {
-            // 已经在弹出状态，不需要任何操作
-            return;
-        }
-
-        this.isAnimatingCapacity = true;
-        
-        // 计算目标位置：向上移200到弹出状态
-        const moveDistance = 200;
-        const targetPos = this.CapacityAm.position.clone().add(v3(0, moveDistance, 0));
-
-        // 确保CapacityAm是激活状态
-        this.CapacityAm.active = true;
-
-        // 执行弹出动画
-        tween(this.CapacityAm)
-            .to(0.5, { position: targetPos }, { easing: 'sineOut' })
-            .call(() => {
-                this.isAnimatingCapacity = false;
-                this.isCapacityUp = true; // 确保状态设置为弹出
-                console.log(`Capacity popup shown. isCapacityUp: ${this.isCapacityUp}`);
-            })
-            .start();
-    }
     
-    //点击炮塔图标弹出已经添加的水果种类和数量
-    onClick_Turret() {
-        if (this.isAnimatingCapacity || !this.CapacityAm) return;
-
-        this.isAnimatingCapacity = true;
-        
-        // 计算目标位置：如果已经在上方则向下移200，否则向上移200
-        const moveDistance = this.isCapacityUp ? -200 : 200;
-        const targetPos = this.CapacityAm.position.clone().add(v3(0, moveDistance, 0));
-
-        this.CapacityAm.active = true;
-
-        tween(this.CapacityAm)
-            .to(0.5, { position: targetPos }, { easing: 'sineOut' })
-            .call(() => {
-                this.isAnimatingCapacity = false;
-                this.isCapacityUp = !this.isCapacityUp;
-                console.log(`CapacityAm animation finished. isCapacityUp: ${this.isCapacityUp}`);
-            })
-            .start();
+    // 显示炮塔升级界面
+    onClick_TurretBTN() {
+        LoaderManeger.instance.loadPrefab('prefab/ui/UpTurret').then((prefab) => {
+            let upTurret = instantiate(prefab);
+            ViewManager.show({
+                node: upTurret,
+                name: "UpTurret"
+            });
+        }).catch((error) => {
+            console.error('Failed to load UpTurret prefab:', error);
+        });
     }
     /**
      * 设置攻击间隔

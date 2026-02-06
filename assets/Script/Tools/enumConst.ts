@@ -40,8 +40,8 @@ export let Constant = {
     changeTime: 0.3,
     /** 格子行列数 */
     layCount: 9,
-    Width: 75,
-    Height: 75,
+    Width: 74,
+    Height: 74,
     NormalType: 13,
 }
 
@@ -69,10 +69,10 @@ export enum GridType {
     STRAWBERRY = 0,
     /** 青柠檬 */
     GREEN_LEMON = 1,
-    /** 蓝莓 */
-    BLUEBERRY = 2,
-    /** 樱桃 */
-    CHERRY = 3,
+    /** 西瓜 */
+    WATERMELON = 2,
+    /** 菠萝 */
+    PIANATA = 3,
     /** 橘子 */
     ORANGE = 4,
     // /** 葡萄 */

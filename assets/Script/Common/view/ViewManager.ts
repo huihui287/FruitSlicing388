@@ -19,6 +19,9 @@ import PopupView from "./PopupView";
 import { _decorator, Component, Node, Prefab, Color, isValid, instantiate, director, Director, tween, TweenAction, Vec3, Tween } from 'cc';
 import BaseDialog from "./BaseDialog";
 import CM from "../../channel/CM";
+import EventManager from "./EventManager";
+import { GameState } from "../../Tools/enumConst";
+import { EventName } from "../../Tools/eventName";
 // 原始导入语句
 // import { _decorator, Component, Node, EventTouch, isValid, Rect, Vec2 } from 'cc';
 
@@ -220,8 +223,9 @@ export default class ViewManager extends Component {
             }
         }
 
+        // 通过消息系统暂停游戏
+        EventManager.emit(EventName.Game.Pause);
         
-
         return popupView;
     }
 

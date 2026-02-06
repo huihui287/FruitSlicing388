@@ -18,8 +18,6 @@ const { ccclass, property } = _decorator;
 export class getGold extends BaseDialog {
     onLoad() {
         super.onLoad();
-        // 通过消息系统暂停游戏
-        EventManager.emit(EventName.Game.Pause);
     }
 
     onClick_guanbiBtn_End() {
@@ -34,8 +32,6 @@ export class getGold extends BaseDialog {
     }
 
     dismiss() {
-        // 通过消息系统恢复游戏
-        EventManager.emit(EventName.Game.Resume);
         super.dismiss();
     }
     /** 分享 */
