@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, v3, instantiate, tween, isValid } from 'cc';
+import { _decorator, Component, Node, Prefab, v3, instantiate, tween, isValid, CCFloat, CCInteger } from 'cc';
 import { Constant, GridType } from '../../Tools/enumConst';
 import { gridCmpt } from '../item/gridCmpt';
 import LoaderManeger from '../../sysloader/LoaderManeger';
@@ -35,25 +35,25 @@ export class DownGridManager extends Component {
     
     // 配置属性
     @property({
-        type: Number,
+        type: CCInteger,
         tooltip: "总共生成的水果方块数量"
     })
     public totalGridCount: number = 50;
 
     @property({
-        type: Number,
+        type: CCFloat,
         tooltip: "下落速度(像素/秒)"
     })
     public fallSpeed: number = 100;
 
     @property({
-        type: Number,
+        type: CCInteger,
         tooltip: "每次水果到达底部扣除的血量"
     })
     public damagePerFruit: number = 10;
 
     @property({
-        type: Number,
+        type: CCInteger,
         tooltip: "游戏结束的血量阈值"
     })
     public gameOverHealthThreshold: number = 0;

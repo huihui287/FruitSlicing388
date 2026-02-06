@@ -60,10 +60,10 @@ export class ResultViewCmpt extends BaseDialog  {
         this.goldnumlb = this.viewList.get('animNode/win/coin8/goldnumlb');
         if (isWin) {
             if (CM.mainCH) {
-                CM.mainCH.setImRankData_Num(LevelConfig.getCurLevel());
+                CM.mainCH.setImRankData_Num(GameData.getCurLevel());
             }
             if (CM.mainCH) {
-                CM.mainCH.setUserCloudStorage(LevelConfig.getCurLevel());
+                CM.mainCH.setUserCloudStorage(GameData.getCurLevel());
             }
             this.handleWin(this.rewardBombs);
         } else {
@@ -144,8 +144,8 @@ export class ResultViewCmpt extends BaseDialog  {
 
     onClick_guanbiBtn() {
         if (this.isWin) {
-            if (this.level == LevelConfig.getCurLevel()) {
-                LevelConfig.nextLevel();
+            if (this.level == GameData.getCurLevel()) {
+                GameData.nextLevel();
             }
         }
         GameData.addGold(this.goldnum);

@@ -6,24 +6,7 @@ import LoaderManeger from "../sysloader/LoaderManeger";
 import CM from "../channel/CM";
 
 class config {
-    /** 下一关，并本地缓存已通过关卡 */
-    nextLevel() {
-        let lv = +this.getCurLevel();
-        const nextLv = lv + 1;
-        GameData.saveData(GameData.Level, nextLv);
-        GameData.updateMaxLevel(nextLv);
-        App.gameCtr.curLevel = nextLv;
-        return App.gameCtr.curLevel;
-    }
 
-    getCurLevel() {
-        return GameData.loadData(GameData.Level, 1);
-    }
-    setCurLevel(lv: number) {
-        App.gameCtr.curLevel = lv;
-        GameData.saveData(GameData.Level, lv);
-        GameData.updateMaxLevel(lv);
-    }
 
     async getLevelData(id: number | string): Promise<LevelData> {
         let data = await this.getGridData(id);
@@ -72,29 +55,6 @@ class config {
         let json: JsonAsset = await LoaderManeger.instance.loadJSON(`config/${id}`) as JsonAsset;
         let loadData = json['json'] as LevelData;
         return loadData;
-    }
-
-    getLevelTargetCount() {//list: mapData[], idx
-        // 确保至少有一个
-        const lv = Math.max(1, App.gameCtr.curLevel || 1);
-        const base = 30;          // 第一关基础目标数量，确保游戏时间约 2 分钟
-        let count: number;
-        
-        if (lv <= 5) {
-            // 前 5 关：较慢的线性增长
-            // 每关增加 5 个目标，确保增长平稳
-            count = base + (lv - 1) * 10;
-        } else {
-            // 5 关之后：较快的指数增长
-            // 以第 5 关的目标数量为基础，之后每关 15% 的增长率
-            const level10Count = base + 1 * 10; // 第 5 关的目标数量
-            const growthRate = 1.03; // 15% 的增长率
-            count = Math.ceil(level10Count * Math.pow(growthRate, lv - 5));
-        }
-        
-        // 确保目标数量至少为基础值
-        count = Math.max(base, count);
-        return count;
     }
 }
 

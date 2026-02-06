@@ -10,7 +10,7 @@ export class blockCmpt extends Component {
     initData(h: number, v: number) {
 
        this.grid_fill = this.node.getChildByName("grid_fill");
-       console.log(`Block (${h}, ${v}): grid_fill node:`, this.grid_fill);
+      
         this.h = h;
         this.v = v;
         // this.node.getChildByName("lb").getComponent(Label).string = `(${h},${v})`;
@@ -24,10 +24,10 @@ export class blockCmpt extends Component {
 
     setFill(isshow: boolean) {
         if (this.grid_fill) {
-            console.log(`Block (${this.h}, ${this.v}): Setting grid_fill active to ${isshow}`);
+
             this.grid_fill.active = isshow;
         } else {
-            console.log(`Block (${this.h}, ${this.v}): grid_fill node not found, cannot set active`);
+           
         }
     }
 

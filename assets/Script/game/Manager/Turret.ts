@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, instantiate, Prefab, Vec3, tween, v3, director, Quat,Tween, Label } from 'cc';
+import { _decorator, Component, Node, instantiate, Prefab, Vec3, tween, v3, director, Quat,Tween, Label, CCFloat, CCInteger } from 'cc';
 import { BaseNodeCom } from '../BaseNodeCom';
 import { DownGridManager } from './DownGridManager';
 import { gridDownCmpt } from '../item/gridDownCmpt';
@@ -186,7 +186,7 @@ export class Turret extends BaseNodeCom {
     
     /** 攻击间隔时间（秒）：控制炮塔的攻击速度 */
     @property({
-        type: Number,
+        type: CCFloat,
         tooltip: "攻击间隔时间（秒）"
     })
     public attackInterval: number = 1.0;
@@ -196,7 +196,7 @@ export class Turret extends BaseNodeCom {
     
     /** 攻击伤害值：每次攻击对目标造成的伤害 */
     @property({
-        type: Number,
+        type: CCInteger,
         tooltip: "攻击伤害值"
     })
     public attackDamage: number = 1;

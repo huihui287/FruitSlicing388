@@ -1,6 +1,7 @@
 import { _decorator, Component, Node, sys } from 'cc';
 import { DEV } from 'cc/env';
 import { Bomb } from '../Tools/enumConst';
+import { App } from '../Controller/app';
 const { ccclass, property } = _decorator;
 
 @ccclass
@@ -192,4 +193,25 @@ static loadData(key: string, defaultValue: any): any {
         const today = new Date().toDateString();
         GameData.saveData(GameData.SidebarRewardDate, today);
     }
+
+    /** 下一关，并本地缓存已通过关卡 */
+  static  nextLevel() {
+        let lv = +this.getCurLevel();
+        const nextLv = lv + 1;
+        GameData.saveData(GameData.Level, nextLv);
+        GameData.updateMaxLevel(nextLv);
+        App.gameCtr.curLevel = nextLv;
+        return App.gameCtr.curLevel;
+    }
+
+   static getCurLevel() {
+        return GameData.loadData(GameData.Level, 1);
+    }
+
+ static   setCurLevel(lv: number) {
+        App.gameCtr.curLevel = lv;
+        GameData.saveData(GameData.Level, lv);
+        GameData.updateMaxLevel(lv);
+    }
+
 }

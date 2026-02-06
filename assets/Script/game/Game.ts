@@ -296,7 +296,7 @@ export class Game extends BaseNodeCom {
         // }
         //  LevelConfig.setCurLevel(1);
 
-        this.loadExtraData(LevelConfig.getCurLevel());
+        this.loadExtraData(GameData.getCurLevel());
         // 添加事件监听器
         this.addEvents();
     }
@@ -543,7 +543,7 @@ export class Game extends BaseNodeCom {
         
         // 初始化目标消除数量
         for (let i = 0; i < idArr.length; i++) {
-            let count = LevelConfig.getLevelTargetCount();
+            let count = this.getLevelTargetCount();
             let temp = [idArr[i], count];
             this.AchievetheGoal.push(temp);
         }
@@ -558,6 +558,30 @@ export class Game extends BaseNodeCom {
         // 更新关卡显示
         this.updateLevelLb();
     }
+
+    getLevelTargetCount() {//list: mapData[], idx
+        // 确保至少有一个
+        const lv = Math.max(1, App.gameCtr.curLevel || 1);
+        const base = 30;          // 第一关基础目标数量，确保游戏时间约 2 分钟
+        let count: number;
+
+        if (lv <= 5) {
+            // 前 5 关：较慢的线性增长
+            // 每关增加 5 个目标，确保增长平稳
+            count = base + (lv - 1) * 10;
+        } else {
+            // 5 关之后：较快的指数增长
+            // 以第 5 关的目标数量为基础，之后每关 15% 的增长率
+            const level10Count = base + 1 * 10; // 第 5 关的目标数量
+            const growthRate = 1.03; // 15% 的增长率
+            count = Math.ceil(level10Count * Math.pow(growthRate, lv - 5));
+        }
+
+        // 确保目标数量至少为基础值
+        count = Math.max(base, count);
+        return count;
+    }
+
     /**
      * 更新道具信息
      * 显示各种道具的数量
@@ -833,7 +857,7 @@ export class Game extends BaseNodeCom {
         // 恢复游戏
         EventManager.emit(EventName.Game.Resume);
         // 加载下一关
-        this.loadExtraData(LevelConfig.nextLevel());
+        this.loadExtraData(GameData.nextLevel());
         
     }
 
@@ -1047,7 +1071,7 @@ export class Game extends BaseNodeCom {
             ViewManager.show({
                 node: resultNode,
                 name: "ResultView",
-                data: { level: LevelConfig.getCurLevel(), isWin: isWin, rewardBombs: this.rewardBombs }
+                data: { level: GameData.getCurLevel(), isWin: isWin, rewardBombs: this.rewardBombs }
             });
         });
 
@@ -2316,15 +2340,15 @@ export class Game extends BaseNodeCom {
      */
     async checkMoveDown() {
         return new Promise<void>(async resolve => {
-            console.log("[Game] Start checkMoveDown");
+       
             
             for (let i = 0; i < this.H; i++) {
                 let count = 0;
-                console.log(`[Game] Checking column ${i}`);
+        
                 
                 for (let j = 0; j < this.V; j++) {
                     if (!this.isValid) {
-                        console.log("[Game] Node is invalid, exiting checkMoveDown");
+                  
                         resolve();
                         return;
                     }
@@ -2366,19 +2390,19 @@ export class Game extends BaseNodeCom {
                         block.getComponent(gridCmpt).initData(i, j - count1);
                         this.resetTimeInterval();
                         
-                        console.log(`[Game] Moving block from (${i}, ${j}) to (${i}, ${j - count1})`);
+                       
                         
                         tween(block).to(0.5, { position: this.blockPosArr[i][j - count1] }, { easing: 'backOut' }).call(() => {
-                            console.log(`[Game] Block moved to (${i}, ${j - count1}) successfully`);
+                           
                             resolve();
                         }).start();
                     }
                 }
             }
             
-            console.log("[Game] Checking replenish blocks");
+         
             await this.checkReplenishBlock();
-            console.log("[Game] checkMoveDown completed");
+         
             resolve();  
         });
     }
@@ -2560,7 +2584,7 @@ export class Game extends BaseNodeCom {
      * @description 重置游戏状态和数据，准备重新开始游戏
      */
     clearData() {
-        App.gameCtr.resetHdeList(LevelConfig.getCurLevel());
+        App.gameCtr.resetHdeList(GameData.getCurLevel());
         if (this.blockArr.length < 1) return;
         for (let i = 0; i < this.H; i++) {
             for (let j = 0; j < this.V; j++) {

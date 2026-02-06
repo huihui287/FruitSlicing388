@@ -69,7 +69,7 @@ export class gridDownCmpt extends Component {
      * @param levelCoefficient 等级系数
      * @returns 计算后的血量（整数）
      */
-    public setHealthByLevel(level: number = LevelConfig.getCurLevel(), baseHealth: number = 1, levelCoefficient: number = 0.5): void {
+    public setHealthByLevel(level: number = GameData.getCurLevel(), baseHealth: number = 1, levelCoefficient: number = 0.5): void {
         // 计算血量：基础血量 + (等级-1) * 系数，结果取整
         const calculatedHealth = Math.round(baseHealth + ((level-1) * levelCoefficient));
         // 确保血量至少为基础血量

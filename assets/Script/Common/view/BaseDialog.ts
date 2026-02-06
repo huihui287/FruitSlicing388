@@ -2,7 +2,6 @@
  * 基础弹窗
  */
 import PopupView from "./PopupView";
-import ViewManager from "./ViewManager";
 import CM from '../../channel/CM';
 // 修改后的导入语句 - 添加了必要的类型
 import { _decorator, Component, Node, Button, isValid, Event, EventHandler, Label } from 'cc';
@@ -51,9 +50,6 @@ export default class BaseDialog extends Component {
         }
         this.addEvent();
 
-        this.pos = ViewManager.findChildByName(BaseDialog.ButtonTag.POS, this.node);
-        this.showBanner();
-
         // 修改后的图集显示逻辑 - 调用提取的方法
         this._updateShareUI();
 
@@ -66,12 +62,6 @@ export default class BaseDialog extends Component {
 
     // 提取的图集显示逻辑方法
     private _updateShareUI() {
-        let video = ViewManager.findChildByName(BaseDialog.ButtonTag.video, this.node);
-        let zi = ViewManager.findChildByName(BaseDialog.ButtonTag.ZI, this.node);
-
-        if (zi != null) {
-            this.ziPos = zi.getPosition();
-        }
 
         // if (GameCtr.AppConfg.share == "1" && GameCtr.isip == 0) {
         //     if (GameData.shareNUm >= 6) {
