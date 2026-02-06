@@ -105,7 +105,7 @@ export class Load extends Component {
         // 使用App结构跳转到游戏场景
         if (GameData.isNewPlayer()==0) {
             console.log("新玩家");
-            LevelConfig.setCurLevel(1);
+            GameData.setCurLevel(1);
             App.GoGame();
         } else {
             console.log("旧玩家");

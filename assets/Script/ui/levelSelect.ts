@@ -218,7 +218,7 @@ export class levelSelect extends BaseDialog {
         }
 
         console.log("Selecting level:", level);
-        LevelConfig.setCurLevel(level);
+        GameData.setCurLevel(level);
         App.GoGame();
         this.dismiss();
     }
@@ -228,7 +228,7 @@ export class levelSelect extends BaseDialog {
      * 直接开始当前关卡（通常是最高解锁关卡或上次游玩的关卡）
      */
     onClick_playBtn() {
-        LevelConfig.setCurLevel(GameData.getMaxLevel());
+        GameData.setCurLevel(GameData.getMaxLevel());
         App.GoGame();
         this.dismiss();
     }
