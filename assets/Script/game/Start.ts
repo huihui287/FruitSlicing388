@@ -176,17 +176,6 @@ export class Start extends BaseNodeCom {
         // App.gameCtr.curLevel = LevelConfig.getCurLevel();
         // App.GoGame();
     }
-    onClick_shopBtn() {
-        AudioManager.getInstance().playSound('button_click');
-        // App.view.openView(ViewName.Single.eBuyView);
-        LoaderManeger.instance.loadPrefab('prefab/ui/getGold').then((prefab) => {
-            let getGold = instantiate(prefab);
-            ViewManager.show({
-                node: getGold,
-                name: "GetGold"
-            });
-        });
-    }
 
     onClick_settingBtn() {
         AudioManager.getInstance().playSound('button_click');

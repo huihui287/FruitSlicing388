@@ -879,7 +879,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "fa301865-1828-4ff6-ae5c-cbce6098150b@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@dca35",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -894,7 +894,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -910,8 +913,6 @@
       "__id__": 0
     },
     "fileId": "1bV4DHw1RB+rrYrWcxBjdy",
-    "instance": null,
-    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -3676,7 +3677,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "f141e252-74d7-4f0d-b9d6-b5bcae340515@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@b599a",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -3691,7 +3692,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -4074,8 +4078,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 64,
-      "height": 64
+      "width": 76,
+      "height": 76
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -4111,7 +4115,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
+      "__uuid__": "135ea54e-b3f7-4106-9321-bf5dd030821d@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -4377,7 +4381,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "2b163f4b-67f9-4fd5-a2a2-c32b4df57756@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@4a554",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -4392,7 +4396,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {

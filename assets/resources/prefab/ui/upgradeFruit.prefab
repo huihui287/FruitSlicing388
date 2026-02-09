@@ -216,7 +216,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 63.451,
+      "y": 30.206,
       "z": 0
     },
     "_lrot": {
@@ -293,7 +293,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "cd417c49-dcaa-4ed8-abe8-18fcac4f6cb0@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@229e6",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -308,7 +308,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -491,7 +494,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 394.52,
+      "y": 406.032,
       "z": 0
     },
     "_lrot": {
@@ -854,7 +857,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "fa301865-1828-4ff6-ae5c-cbce6098150b@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@dca35",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -869,7 +872,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -1177,7 +1183,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "2b163f4b-67f9-4fd5-a2a2-c32b4df57756@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@1e55b",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -1192,7 +1198,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -4098,8 +4107,6 @@
       "__id__": 0
     },
     "fileId": "4aDRiuMFJDjowqMOOuPtBB",
-    "instance": null,
-    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -4444,7 +4451,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "f141e252-74d7-4f0d-b9d6-b5bcae340515@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@b599a",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -4459,7 +4466,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -4580,7 +4590,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
+      "__uuid__": "135ea54e-b3f7-4106-9321-bf5dd030821d@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -5264,7 +5274,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "f141e252-74d7-4f0d-b9d6-b5bcae340515@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@b599a",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -5279,7 +5289,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -5400,7 +5413,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
+      "__uuid__": "135ea54e-b3f7-4106-9321-bf5dd030821d@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -6084,7 +6097,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "f141e252-74d7-4f0d-b9d6-b5bcae340515@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@b599a",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -6099,7 +6112,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -6220,7 +6236,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
+      "__uuid__": "135ea54e-b3f7-4106-9321-bf5dd030821d@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -6904,7 +6920,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "f141e252-74d7-4f0d-b9d6-b5bcae340515@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@b599a",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -6919,7 +6935,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -7040,7 +7059,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
+      "__uuid__": "135ea54e-b3f7-4106-9321-bf5dd030821d@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -7724,7 +7743,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "f141e252-74d7-4f0d-b9d6-b5bcae340515@f9941",
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@b599a",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -7739,7 +7758,10 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": null,
+    "_atlas": {
+      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
+      "__expectedType__": "cc.SpriteAtlas"
+    },
     "_id": ""
   },
   {
@@ -7860,7 +7882,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "c5a0afbc-ba7f-4c28-a3df-5677d5576c0b@f9941",
+      "__uuid__": "135ea54e-b3f7-4106-9321-bf5dd030821d@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -8455,8 +8477,6 @@
       "__id__": 0
     },
     "fileId": "d3cFXI3wZISY4s4Yb7MKBS",
-    "instance": null,
-    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
