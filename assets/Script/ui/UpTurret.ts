@@ -17,21 +17,30 @@ const { ccclass, property } = _decorator;
 @ccclass('UpTurret')
 export class UpTurret extends BaseDialog {
     Label001: Node = null;
+    Label001next: Node = null;
+
     maxCapacity = 50;
     description: Node = null;
+       descriptionnext: Node = null;
     LabelupBtn: Label = null;
     
     onLoad() {
         super.onLoad();
-        this.Label001= this.viewList.get('bg/Label001');
+        this.Label001 = this.viewList.get('bg/Label001');
+        this.Label001next = this.viewList.get('bg/Label001/Label002');
+
         this.description = this.viewList.get('bg/description');
+        this.descriptionnext = this.viewList.get('bg/description/description001');
+
         this.LabelupBtn = this.viewList.get('btn/upBtn').getChildByName('LabelupBtn').getComponent(Label);
         this.upTurretLevel();
+
     }
 
     upTurretLevel() {
         let turretLevel = GameData.loadData(GameData.TurretLevel, 1);
         this.Label001.getComponent(Label).string = '当前炮塔等级：' + turretLevel;
+        this.Label001next.getComponent(Label).string = '' + turretLevel + 1;
         
         // 计算下一级所需的金币数量
         const basePrice = 100;
@@ -41,7 +50,8 @@ export class UpTurret extends BaseDialog {
         const capacityIncrease = 50 * turretLevel;
         
         // 更新描述文本
-        this.description.getComponent(Label).string = `下一级炮塔容量增加${capacityIncrease}\n升级需要:${nextLevelPrice}金币`;
+        this.description.getComponent(Label).string = `当前炮塔容量：${this.maxCapacity}`;
+        this.descriptionnext.getComponent(Label).string = `${this.maxCapacity + capacityIncrease}`;
         
         // 更新升级按钮上的价格显示
         if (this.LabelupBtn) {

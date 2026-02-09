@@ -185,6 +185,13 @@ export class levelSelect extends BaseDialog {
                 label.node.getComponent(UITransform).node.getComponent(Label).color = new Color(200, 200, 200, 255);
             }
         }
+
+        // 处理"选择"子节点的显示/隐藏
+        const selectNode = node.getChildByName('选择');
+        if (selectNode) {
+            // 只有最新的那一关（maxUnlockedLevel）才显示"选择"子节点
+            selectNode.active = (levelIndex === this.maxUnlockedLevel);
+        }
     }
 
     update(deltaTime: number) {
