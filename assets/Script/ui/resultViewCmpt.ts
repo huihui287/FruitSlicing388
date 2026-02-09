@@ -99,8 +99,6 @@ export class ResultViewCmpt extends BaseDialog  {
     }
 
     handleWin(rewardBombs: {type: number, count: number}[]) {
-        let target = this.viewList.get('animNode/win/target');
-        target.active=false;
         this.showgoldnum();
     }
 

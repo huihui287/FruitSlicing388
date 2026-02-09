@@ -72,6 +72,9 @@ export namespace EventName {
         /** 侧边栏启动/恢复 */
         LaunchFromSidebar = "LaunchFromSidebar",
 
+        /** 桌面快捷方式添加成功 */
+        ShortcutAdded = "ShortcutAdded",
+
         /** 回收火箭到对象池 */
         RecycleRocket = "RecycleRocket",
     }

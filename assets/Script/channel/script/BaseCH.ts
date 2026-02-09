@@ -35,7 +35,7 @@ export default class BaseCH implements BaseINT {
     isShortcutexist(): boolean {
        return false;
     }
-    addShortcut(scb: (isExist: boolean) => void, fcb: (isExist: boolean) => void) {
+    addShortcut(scb: Function, fcb: Function) {
        
     }
     startGameRecorderManager() {

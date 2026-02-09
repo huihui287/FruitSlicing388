@@ -24,10 +24,13 @@ export class Start extends BaseNodeCom {
     //订阅按钮
     Subscribebtn: Node = null;
 
+    //添加到桌面快捷方式按钮
+    addShortBtn: Node = null;
+    
     protected start() {
         this.checkSidebarState();
         this.checkDesktopShortcut();
-        this.showSubscribebtn();
+        //this.showSubscribebtn();
     }
 
     protected onLoad(): void {
@@ -36,16 +39,29 @@ export class Start extends BaseNodeCom {
         this.Icon_Menu_Reword = this.viewList.get('homeView/SideBorderBtn/Icon_Menu_Reword');
         this.Icon_Menu_Guide = this.viewList.get('homeView/SideBorderBtn/Icon_Menu_Guide');
         this.Subscribebtn = this.viewList.get('homeView/Subscribebtn');
+        this.addShortBtn = this.viewList.get('homeView/addShortBtn');
         // 默认隐藏侧边栏按钮，检测后再显示
         if (this.SideBorderBtn) this.SideBorderBtn.active = false;
 
         // 监听侧边栏启动/恢复事件
         EventManager.on(EventName.Game.LaunchFromSidebar, this.onLaunchFromSidebar, this);
+        
+        // 监听桌面快捷方式添加成功事件
+        EventManager.on(EventName.Game.ShortcutAdded, this.onShortcutAdded, this);
     }
 
     public onDestroy(): void {
         super.onDestroy();
         EventManager.off(EventName.Game.LaunchFromSidebar, this.onLaunchFromSidebar, this);
+        EventManager.off(EventName.Game.ShortcutAdded, this.onShortcutAdded, this);
+    }
+
+    /**
+     * 处理桌面快捷方式添加成功事件
+     */
+    onShortcutAdded() {
+        console.log('Start: onShortcutAdded event received');
+        if (this.addShortBtn) this.addShortBtn.active = false;
     }
 
     /**
@@ -261,6 +277,7 @@ export class Start extends BaseNodeCom {
         // 1. 检查是否为抖音渠道
         if (!CM.isPlatform(CM.CH_ZJ)) {
             console.log('CheckDesktopShortcut: 非抖音渠道，跳过检查');
+            if (this.addShortBtn) this.addShortBtn.active = false;
             return;
         }
 
@@ -276,27 +293,38 @@ export class Start extends BaseNodeCom {
 
         if (!isAndroid) {
             console.log('CheckDesktopShortcut: 非安卓平台，跳过检查');
+            if (this.addShortBtn) this.addShortBtn.active = false;
             return;
         }
 
         // 3. 检查是否有桌面快捷启动的 API
         if (!CM.mainCH  || !CM.mainCH.addShortcut) {
             console.log('CheckDesktopShortcut: 抖音渠道不支持桌面快捷启动 API');
+            if (this.addShortBtn) this.addShortBtn.active = false;
             return;
         }
 
         // 4. 检查桌面上是否已经有快捷启动
         let Exist = CM.mainCH.isShortcutexist();
         if (Exist == false) {
-            LoaderManeger.instance.loadPrefab('prefab/ui/addShortcutView').then((prefab) => {
-                let addShortcutView = instantiate(prefab);
-                ViewManager.show({
-                    node: addShortcutView,
-                    name: "AddShortcutView"
-                });
-            });
+            // 未添加到桌面，显示addShortBtn
+            if (this.addShortBtn) this.addShortBtn.active = true;
+        } else {
+            // 已添加到桌面，隐藏addShortBtn
+            if (this.addShortBtn) this.addShortBtn.active = false;
         }
     }   
+    
+    onClick_addShortBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        LoaderManeger.instance.loadPrefab('prefab/ui/addShortcutView').then((prefab) => {
+            let addShortcutView = instantiate(prefab);
+            ViewManager.show({
+                node: addShortcutView,
+                name: "AddShortcutView"
+            });
+        });
+    }
 
     showSubscribebtn() {
         // 1. 检查是否为抖音渠道

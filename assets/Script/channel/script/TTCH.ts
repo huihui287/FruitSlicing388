@@ -820,7 +820,7 @@ export default class TTCH extends BaseCH implements BaseINT {
             this.ch.checkShortcut({
                 success(res) {
                     console.log("检查快捷方式", res.status);
-                    this.exist = res.status.exist;
+                    this.Shortcutexist = res.status.exist;
                 },
                 fail(res) {
                     console.log("检查快捷方式失败", res.errMsg);

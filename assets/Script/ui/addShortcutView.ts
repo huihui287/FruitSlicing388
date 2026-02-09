@@ -4,10 +4,14 @@ import AudioManager from '../Common/AudioManager';
 import CM from '../channel/CM';
 import GameData from '../Common/GameData';
 import ViewManager from '../Common/view/ViewManager';
+import EventManager from '../Common/view/EventManager';
+import { EventName } from '../Tools/eventName';
 const { ccclass, property } = _decorator;
 
 @ccclass('addShortcutView')
 export class addShortcutView extends BaseDialog {
+
+    private goldReward: number = 200;
 
     start() {
 
@@ -23,16 +27,16 @@ export class addShortcutView extends BaseDialog {
 
     onClick_addShortBtn() {
         AudioManager.getInstance().playSound('button_click');
-        let self = this;
-        let call = (resp: any) => {
-            if (resp) {
-                const goldReward = 200; // 可以根据实际需求调整奖励数量
-                GameData.addGold(goldReward);
-                ViewManager.toast(`添加成功，获得 ${goldReward} 金币`);
-                self.dismiss();
-            } else {
+        let call = () => {
 
-            }
+            // 添加成功，给予金币奖励
+            GameData.addGold(this.goldReward);
+            ViewManager.toast(`添加成功，获得 ${this.goldReward} 金币`);
+
+            // 发送事件通知，让Start.ts更新按钮状态
+            EventManager.emit(EventName.Game.ShortcutAdded);
+
+            this.dismiss();
         }
         CM.mainCH.addShortcut(call, null);
     }
