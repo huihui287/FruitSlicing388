@@ -97,7 +97,7 @@ export default class BaseDialog extends Component {
     }
 
     // 修改后的dismiss方法 - 使用类型安全的PopupView获取方式
-    dismiss() {
+    dismiss(resumeGame: boolean = true) {
         // 隐藏banner广告
         if (CM.mainCH && typeof CM.mainCH.hideBannerAd === 'function') {
             try {
@@ -106,8 +106,10 @@ export default class BaseDialog extends Component {
                 console.error('BaseDialog.dismiss: Failed to hide banner ad:', error);
             }
         }
-                // 通过消息系统恢复游戏
-        EventManager.emit(EventName.Game.Resume);
+        // 通过消息系统恢复游戏（仅当 resumeGame 为 true 时）
+        if (resumeGame) {
+            EventManager.emit(EventName.Game.Resume);
+        }
         
         if (!isValid(this.node) || !isValid(this.node.parent)) {
             console.warn('BaseDialog.dismiss: node or node.parent is invalid');
@@ -126,7 +128,7 @@ export default class BaseDialog extends Component {
         // 使用类型安全的方法获取PopupView组件
         let popupView = this.node.parent.getComponent(PopupView);
         if (!!popupView && isValid(popupView.node)) {
-            popupView.dismiss();
+            popupView.dismiss(resumeGame);
         } else {
             this.node.destroy();
         }

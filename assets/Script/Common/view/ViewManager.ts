@@ -99,7 +99,7 @@ export default class ViewManager extends Component {
         this.removeFromArray(PopupView);
     }
 
-    private show(PopupView: PopupView, parent = null as  Node) {
+    private show(PopupView: PopupView, parent = null as  Node, pauseGame: boolean = true) {
         if (! isValid(PopupView)) {
             return;
         }
@@ -115,6 +115,11 @@ export default class ViewManager extends Component {
         }
         PopupView.setOnDestroyCallback(this.onPopupViewDestroy.bind(this));
         PopupView.show(parent || ViewManager.getRoot());
+        
+        // 通过消息系统暂停游戏（仅当 pauseGame 为 true 时）
+        if (pauseGame) {
+            EventManager.emit(EventName.Game.Pause);
+        }
     }
 
     private removeFromMap(PopupView: PopupView) {
@@ -155,8 +160,9 @@ export default class ViewManager extends Component {
         showAction = null as Tween<Node>,
         showActionTarget = null as  Node,
         dismissAction = null as Tween<Node>,
-        dismissActionTarget = null as  Node,
-        showAd = true //是否显示广告
+        dismissActionTarget = null as Node,
+        showAd = true, //是否显示广告
+        pauseGame = true //是否暂停游戏
     }): PopupView {
         if (! isValid(node)) {
             return null;
@@ -198,7 +204,8 @@ export default class ViewManager extends Component {
             showAction,
             showActionTarget,
             dismissAction,
-            dismissActionTarget
+            dismissActionTarget,
+            pauseGame
         });
 
         // 后台拉取插屏广告（根据渠道），不影响界面显示
@@ -216,16 +223,12 @@ export default class ViewManager extends Component {
         // 后台拉取 banner 广告（根据渠道），不影响界面显示
         if (showAd && CM.mainCH && typeof CM.mainCH.showBannerAd === 'function') {
             try {
-                // 异步拉取广告，不阻塞界面显示
                 CM.mainCH.showBannerAd();
             } catch (error) {
                 console.error('ViewManager.show: Failed to show banner ad:', error);
             }
         }
 
-        // 通过消息系统暂停游戏
-        EventManager.emit(EventName.Game.Pause);
-        
         return popupView;
     }
 
@@ -244,7 +247,8 @@ export default class ViewManager extends Component {
         showAction = null as Tween<Node>,
         showActionTarget = null as Node,
         dismissAction = null as Tween<Node>,
-        dismissActionTarget = null as Node
+        dismissActionTarget = null as Node,
+        pauseGame = true //是否暂停游戏
     }) {
         if (!ViewManager.checkValid() || !isValid(popupView)) {
             return;
@@ -289,7 +293,7 @@ export default class ViewManager extends Component {
         popupView.name = name || popupView.name;
         popupView.localZOrder = localZOrder || 0;
 
-        ViewManager.mViewManager.show(popupView, parent);
+        ViewManager.mViewManager.show(popupView, parent, pauseGame);
     }
 
     // 原始dismissPopupView函数
@@ -440,7 +444,8 @@ export default class ViewManager extends Component {
             localZOrder: ViewManager.LocalZOrder.Toast,
             mask: false,
             transitionDismiss: false,
-            showAd: false
+            showAd: false,
+            pauseGame: false // ToastView 不需要暂停游戏
         });
     }
 

@@ -78,12 +78,12 @@ export default class ToastView extends PopupView {
                 tween(this.node).to(0.4, { position: v3(currentPos.x, currentPos.y + 150, currentPos.z) }, { easing: 'sineOut' })
             )
             .call(() => {
-                this.dismiss();
+                this.dismiss(false); // ToastView 不需要恢复游戏
             })
             .start();
     }
 
     private delayDismiss() {
-        this.dismiss();
+        this.dismiss(false); // ToastView 不需要恢复游戏
     }
 }

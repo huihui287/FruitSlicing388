@@ -222,7 +222,7 @@ export default class TTCH extends BaseCH implements BaseINT {
                 adUnitId: banId,
                 style: {
                     width: width,
-                    top: ChannelDB.screenHeight - (width / 16 * 9), // 根据系统约定尺寸计算出广告高度
+                    top: ChannelDB.screenHeight - (width / 16 * 9) - 50, // 根据系统约定尺寸计算出广告高度，向下移动10
                 },
             });
 
@@ -239,7 +239,7 @@ export default class TTCH extends BaseCH implements BaseINT {
                 try {
                     // 尝试修改样式，添加错误处理
                     if (this.bannerAd && typeof this.bannerAd.style === 'object') {
-                        this.bannerAd.style.top = ChannelDB.screenHeight - res.height;
+                        this.bannerAd.style.top = ChannelDB.screenHeight - res.height - 50;
                         this.bannerAd.style.left = (ChannelDB.screenWidth - res.width) / 2; // 水平居中
                     }
                 } catch (error) {

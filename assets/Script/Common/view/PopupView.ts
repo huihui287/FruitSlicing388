@@ -27,6 +27,7 @@ export default class PopupView extends Component {
     private _dismissAction: Tween<Node>;
     private _dismissActionTarget: Node
     private _localZOrder: number = 0;
+    private _resumeGame: boolean = true; // 是否需要恢复游戏
 
     onLoad() {
         this._maskNode = this.node.getChildByName("mask");
@@ -86,18 +87,19 @@ export default class PopupView extends Component {
     }
     
     // 修改后的dismiss方法 - 使用tween动画系统
-    dismiss() {
+    dismiss(resumeGame: boolean = true) {
+        this._resumeGame = resumeGame;
         if (!isValid(this.node)) {
             return;
         }
         if (isValid(this._dismissActionTarget) && isValid(this._dismissAction)) {
             tween(this._dismissActionTarget).stop().then(this._dismissAction).start();
         } else {
-            this.doDismiss();
+            this.doDismiss(resumeGame);
         }
     }
 
-    private doDismiss() {
+    private doDismiss(resumeGame: boolean = true) {
         this.node.destroy();
     }
 
@@ -158,7 +160,7 @@ export default class PopupView extends Component {
         if (isValid(target) && isValid(action)) {
             this._dismissAction = tween(target)
                 .then(action)
-                .call(() => { this.doDismiss(); });
+                .call(() => { this.doDismiss(this._resumeGame); });
             this._dismissActionTarget = target;
         }
     }
