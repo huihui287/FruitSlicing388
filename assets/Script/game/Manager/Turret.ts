@@ -218,7 +218,8 @@ export class Turret extends BaseNodeCom {
 
     /** 基础容量：初始值为50 */
     private _baseCapacity: number = 50;
-
+    /** 发射位置节点：用于计算子弹的初始位置和方向 */
+    private spawnPosition: Node = null;
     /**
      * 获取最大容量
      * 容量 = 基础容量 * 炮塔等级
@@ -267,6 +268,10 @@ export class Turret extends BaseNodeCom {
 
         this.Capacity = this.viewList.get('Capacity');
         this.updateCapacityView();
+
+        // 初始化发射位置节点
+        this.spawnPosition = this.viewList.get('SpawnPosition');
+
     }
     
     /**
@@ -545,7 +550,7 @@ export class Turret extends BaseNodeCom {
             bulletcom.setType(gridData.type);
             
             // 设置子弹的初始位置为炮塔的位置
-            bullet.setWorldPosition(this.node.worldPosition);
+            bullet.setWorldPosition(this.spawnPosition.worldPosition);
             // 设置子弹的初始缩放
             bullet.setScale(1, 1, 1);
             
