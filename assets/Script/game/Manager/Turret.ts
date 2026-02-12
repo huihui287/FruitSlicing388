@@ -235,6 +235,9 @@ export class Turret extends BaseNodeCom {
     /** 存储的grid数据还剩多少个 */
     public gridDataCountLb: Label = null;
 
+    /** 炮管 */
+    public gunBarrel: Node = null;
+
     /**
      * 组件加载时调用
      * 初始化DownGridManager引用
@@ -270,7 +273,7 @@ export class Turret extends BaseNodeCom {
         this.updateCapacityView();
 
         // 初始化发射位置节点
-        this.spawnPosition = this.viewList.get('SpawnPosition');
+        this.spawnPosition = this.viewList.get('coin1/SpawnPosition');
 
     }
     
