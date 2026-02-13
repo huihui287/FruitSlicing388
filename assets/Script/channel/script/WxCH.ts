@@ -237,7 +237,7 @@ export default class WxCH extends BaseCH implements BaseINT {
         setTimeout(() => {
             console.log("WxCH.createInterstitialAd: 延迟1秒后创建新的插屏广告");
             
-            if (this.ch) {
+            if (this.ch && typeof this.ch.createInterstitialAd === 'function') {
                 try {
                     this.insertAd = this.ch.createInterstitialAd({
                         adUnitId: this.insertId
@@ -257,6 +257,8 @@ export default class WxCH extends BaseCH implements BaseINT {
                 } catch (error) {
                     console.warn('WxCH.createInterstitialAd: Failed to create interstitial ad:', error);
                 }
+            } else {
+                console.warn('WxCH.createInterstitialAd: createInterstitialAd interface not available');
             }
         }, 1000); // 延迟1秒
     }

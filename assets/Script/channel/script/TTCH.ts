@@ -315,7 +315,7 @@ export default class TTCH extends BaseCH implements BaseINT {
             console.log("TTCH.createInterstitialAd: 延迟1秒后创建新的插屏广告");
             
             // 移除对应用名称的限制，尝试在所有场景下创建插屏广告
-            if (this.ch) {
+            if (this.ch && typeof this.ch.createInterstitialAd === 'function') {
                 try {
                     this.insertAd = this.ch.createInterstitialAd({
                         adUnitId: this.insertId
@@ -335,6 +335,8 @@ export default class TTCH extends BaseCH implements BaseINT {
                 } catch (error) {
                     console.warn('TTCH.createInterstitialAd: Failed to create interstitial ad:', error);
                 }
+            } else {
+                console.warn('TTCH.createInterstitialAd: createInterstitialAd interface not available');
             }
         }, 1000); // 延迟1秒
     }
