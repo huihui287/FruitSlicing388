@@ -40,8 +40,8 @@ export let Constant = {
     changeTime: 0.3,
     /** 格子行列数 */
     layCount: 9,
-    Width: 74,
-    Height: 74,
+    Width: 76,
+    Height: 76,
     NormalType: 13,
 }
 
