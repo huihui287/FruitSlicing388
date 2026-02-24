@@ -327,7 +327,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@1dfa2",
+      "__uuid__": "a376629a-d1f2-406b-b9be-44e651e1b9e2@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -342,10 +342,7 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": {
-      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
-      "__expectedType__": "cc.SpriteAtlas"
-    },
+    "_atlas": null,
     "_id": ""
   },
   {
@@ -466,7 +463,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "3eedf3ee-e240-45aa-b738-173b86b43125@f5990",
+      "__uuid__": "c1140958-9ae4-40a5-b79d-e11375dcccd9@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -552,7 +549,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@d6b6f",
+      "__uuid__": "fc869d6a-99d2-437a-9a2c-073641068660@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -567,10 +564,7 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": {
-      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
-      "__expectedType__": "cc.SpriteAtlas"
-    },
+    "_atlas": null,
     "_id": ""
   },
   {

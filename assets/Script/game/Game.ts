@@ -2356,33 +2356,33 @@ export class Game extends BaseNodeCom {
                     let block = this.blockArr[i][j];
                     let isHide = App.gameCtr.checkInHideList(i, j);
                     
-                    console.log(`[Game] Checking position (${i}, ${j}): block=${!!block}, isHide=${isHide}, count=${count}`);
+                   // console.log(`[Game] Checking position (${i}, ${j}): block=${!!block}, isHide=${isHide}, count=${count}`);
                     
                     if (!block) {
                         if (!isHide) {
                             count++;
-                            console.log(`[Game] Empty position (${i}, ${j}), count increased to ${count}`);
+                         //   console.log(`[Game] Empty position (${i}, ${j}), count increased to ${count}`);
                         } else {
                             //当前格子以下是不是全是边界空的，是边界空的就忽略，否则就+1
                             let bool = App.gameCtr.checkAllInHideList(i, j);
-                            console.log(`[Game] Hide position (${i}, ${j}), checkAllInHideList=${bool}, count=${count}`);
+                           // console.log(`[Game] Hide position (${i}, ${j}), checkAllInHideList=${bool}, count=${count}`);
                             if (!bool && count > 0) {
                                 count++;
-                                console.log(`[Game] Hide position (${i}, ${j}) contributes to count, count increased to ${count}`);
+                            //    console.log(`[Game] Hide position (${i}, ${j}) contributes to count, count increased to ${count}`);
                             }
                         }
                     }
                     else if (block && count > 0) {
-                        console.log(`[Game] Found block at (${i}, ${j}) that needs to move down by ${count} positions`);
+                      //  console.log(`[Game] Found block at (${i}, ${j}) that needs to move down by ${count} positions`);
                         
                         let count1 = await this.getDownLastCount(i, j, count);
-                        console.log(`[Game] Calculated final move count: ${count1}`);
+                     //   console.log(`[Game] Calculated final move count: ${count1}`);
                         
                         // 检查目标位置是否已经被占用
                         if (this.blockArr[i][j - count1]) {
-                            console.log(`[Game] WARNING: Target position (${i}, ${j - count1}) is already occupied!`);
-                            console.log(`[Game] Current block: ${block.getComponent(gridCmpt).h},${block.getComponent(gridCmpt).v}`);
-                            console.log(`[Game] Occupying block: ${this.blockArr[i][j - count1].getComponent(gridCmpt).h},${this.blockArr[i][j - count1].getComponent(gridCmpt).v}`);
+                        //    console.log(`[Game] WARNING: Target position (${i}, ${j - count1}) is already occupied!`);
+                        //    console.log(`[Game] Current block: ${block.getComponent(gridCmpt).h},${block.getComponent(gridCmpt).v}`);
+                         //   console.log(`[Game] Occupying block: ${this.blockArr[i][j - count1].getComponent(gridCmpt).h},${this.blockArr[i][j - count1].getComponent(gridCmpt).v}`);
                         }
                         
                         this.blockArr[i][j] = null;
@@ -2437,31 +2437,31 @@ export class Game extends BaseNodeCom {
      */
     async checkReplenishBlock() {
         return new Promise<void>(async resolve => {
-            console.log("[Game] Start checkReplenishBlock");
+           // console.log("[Game] Start checkReplenishBlock");
             
             for (let i = 0; i < this.H; i++) {
                 for (let j = 0; j < this.V; j++) {
                     let block = this.blockArr[i][j];
                     let isHide = App.gameCtr.checkInHideList(i, j);
                     
-                    console.log(`[Game] Checking position (${i}, ${j}) for replenish: block=${!!block}, isHide=${isHide}`);
+                 //   console.log(`[Game] Checking position (${i}, ${j}) for replenish: block=${!!block}, isHide=${isHide}`);
                     
                     if (!block && !isHide) {
-                        console.log(`[Game] Replenishing block at (${i}, ${j})`);
+                     //   console.log(`[Game] Replenishing block at (${i}, ${j})`);
                         
                         let pos = this.blockPosArr[i][this.V - 1];
-                        console.log(`[Game] New block starting position: (${pos.x}, ${pos.y})`);
+                     //   console.log(`[Game] New block starting position: (${pos.x}, ${pos.y})`);
                         
                         let block = this.addGrid(i, j, v3(pos.x, pos.y + Constant.Width + 20, 1));
                         this.blockArr[i][j] = block;
                         this.resetTimeInterval();
                         
-                        console.log(`[Game] Dropping new block to (${i}, ${j})`);
+                      //  console.log(`[Game] Dropping new block to (${i}, ${j})`);
                         
                         tween(block)
                             .to(0.5, { position: this.blockPosArr[i][j] }, { easing: 'backOut' })
                             .call(() => {
-                                console.log(`[Game] New block dropped to (${i}, ${j}) successfully`);
+                              //  console.log(`[Game] New block dropped to (${i}, ${j}) successfully`);
                                 resolve();
                             })
                             .start();
@@ -2469,9 +2469,9 @@ export class Game extends BaseNodeCom {
                 }
             }
             
-            console.log("[Game] Waiting for replenish delay");
+          //  console.log("[Game] Waiting for replenish delay");
             await ToolsHelper.delayTime(0.5);
-            console.log("[Game] checkReplenishBlock completed");
+          //  console.log("[Game] checkReplenishBlock completed");
             resolve();
         });
     }

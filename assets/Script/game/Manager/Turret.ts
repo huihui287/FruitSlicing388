@@ -586,10 +586,10 @@ export class Turret extends BaseNodeCom {
 
             // 仅在开发模式下输出日志
             if (DEV) {
-                console.log('Fire bullet to target:', target, 'Flight time:', flightTime);
+             //   console.log('Fire bullet to target:', target, 'Flight time:', flightTime);
             }
         } catch (error) {
-            console.error('Fire error:', error);
+         //   console.error('Fire error:', error);
         }
     }
 

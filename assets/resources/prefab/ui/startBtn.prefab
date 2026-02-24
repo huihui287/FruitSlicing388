@@ -78,7 +78,7 @@
       "__id__": 1
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 3
@@ -189,7 +189,7 @@
     "_isUnderline": false,
     "_underlineHeight": 2,
     "_cacheMode": 0,
-    "_enableOutline": true,
+    "_enableOutline": false,
     "_outlineColor": {
       "__type__": "cc.Color",
       "r": 90,
@@ -300,7 +300,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420@1e55b",
+      "__uuid__": "623d5942-ca44-4ec3-b2ac-573b63dbd44d@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -315,10 +315,7 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_useGrayscale": false,
-    "_atlas": {
-      "__uuid__": "a5d7d732-4f52-4db3-9272-25c7adbd5420",
-      "__expectedType__": "cc.SpriteAtlas"
-    },
+    "_atlas": null,
     "_id": ""
   },
   {

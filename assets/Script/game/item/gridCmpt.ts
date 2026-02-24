@@ -48,7 +48,7 @@ export class gridCmpt extends Component {
 
     getAttack() {
         this.attack = GameData.loadData('LVAttack' + this.type, 1);
-        console.log('this.attack', this.attack);
+    //    console.log('this.attack', this.attack);
         return this.attack;
     }
     
