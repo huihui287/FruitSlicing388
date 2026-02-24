@@ -11,7 +11,7 @@ const { ccclass, property } = _decorator;
 @ccclass('upgradeFruitItem')
 export class upgradeFruitItem extends BaseNodeCom {
     
-    gridTypeValue: GridType = GridType.STRAWBERRY;
+    gridTypeValue: GridType = GridType.KIWIFRUIT;
     gridNode: Node = null;
     fnt: Label = null; // 当前等级
     fntnext: Label = null; // 下一等级

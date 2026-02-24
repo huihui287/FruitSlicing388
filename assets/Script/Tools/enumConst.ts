@@ -65,14 +65,14 @@ export enum GoldType {
 
 /** 水果方块的类型 */
 export enum GridType {
-    /** 草莓*/
-    STRAWBERRY = 0,
-    /** 青柠檬 */
-    GREEN_LEMON = 1,
+    /** 奇异果*/
+    KIWIFRUIT   = 0,    
+    /** 山竹 */
+    MANGOSTEEN = 1,
     /** 西瓜 */
     WATERMELON = 2,
-    /** 菠萝 */
-    PIANATA = 3,
+    /** 苹果 */
+    APPLE = 3,
     /** 橘子 */
     ORANGE = 4,
     // /** 葡萄 */

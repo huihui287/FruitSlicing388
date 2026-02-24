@@ -251,7 +251,9 @@ export class DownGridManager extends Component {
              gridNode.active = true;
         //    console.log("创建新的水果方块节点", gridNode);
         }
-        const randomType = Math.floor(Math.random() * 5); // GridType有6种类型（0-5）
+        // 获取当前GridType的所有类型数量
+        const gridTypeCount = Object.values(GridType).filter(value => typeof value === 'number').length;
+        const randomType = Math.floor(Math.random() * gridTypeCount); // 根据实际GridType数量生成随机类型
         const gridComponent = gridNode.getComponent(gridDownCmpt);
         if (gridComponent) {
             gridComponent.initData(randomType as GridType);

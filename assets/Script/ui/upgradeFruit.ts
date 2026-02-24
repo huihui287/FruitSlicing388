@@ -28,10 +28,10 @@ export class upgradeFruit extends BaseDialog {
 
         // 按照GridType顺序获取所有水果类型
         const gridTypes = [
-            GridType.STRAWBERRY,
-            GridType.GREEN_LEMON,
+            GridType.KIWIFRUIT,
+            GridType.MANGOSTEEN,
             GridType.WATERMELON,
-            GridType.PIANATA,
+            GridType.APPLE,
             GridType.ORANGE
         ];
 
