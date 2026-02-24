@@ -1986,6 +1986,7 @@ export class Game extends BaseNodeCom {
                         let obstacle = obstacleList[m].getComponent(gridCmpt);
                         if (obstacle && obstacle.node && obstacle.node.isValid) {
                             this.destroyGridAndGetScore(obstacle);
+                            console.log("有杂物")
                         }
                     }
                 }

@@ -14,7 +14,7 @@ export class GameCtr extends SingletonClass<GameCtr> {
     public hideFullList: any = [];
     public hideList = [];
     /** 挨着旁边的障碍物列表，这里做个类型记录 */
-    public sideObstacleList: number[] = [3]
+    public sideObstacleList: number[] = [201]
     /** 是否暂停 */
     public isPause: boolean = false;
 
