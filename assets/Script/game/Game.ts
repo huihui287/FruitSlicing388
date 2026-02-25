@@ -149,6 +149,8 @@ export class Game extends BaseNodeCom {
     private rocketPoolCapacity: number = 20;
     /** 玩家血量 */
     private playerHealth: number = 100;
+    /** Alert闪烁动画 */
+    private alertTween: Tween<Node> = null;
     /** 飞grid的对象池 */
     private flyItemPool: Node[] = [];
     /** 飞grid对象池最大容量 */
@@ -790,13 +792,56 @@ export class Game extends BaseNodeCom {
             if (this.DownGridMgr.isLowestGridBelowThreshold()) {
                 if (!this.Alert.active) {
                     this.Alert.active = true;
+                    // 启动危险闪烁动画
+                    this.startAlertBlink();
                 }
             }
             else {
                 if (this.Alert.active) {
                     this.Alert.active = false;
+                    // 停止闪烁动画
+                    this.stopAlertBlink();
                 }
             }
+        }
+    }
+
+    /**
+     * 启动Alert危险闪烁动画
+     * 使用tween实现红色闪烁效果
+     */
+    private startAlertBlink() {
+        if (!this.Alert || !this.Alert.isValid) return;
+
+        // 停止之前的动画
+        this.stopAlertBlink();
+
+        // 获取Sprite组件
+        const sprite = this.Alert.getComponent(Sprite);
+        if (!sprite) return;
+
+        // 保存原始颜色
+        const originalColor = sprite.color.clone();
+
+        // 创建闪烁动画：红色闪烁
+        this.alertTween = tween(this.Alert)
+            .to(0.3, { scale: new Vec3(1.1, 1.1, 1) }, { easing: 'quadOut' })
+            .to(0.3, { scale: new Vec3(1.0, 1.0, 1) }, { easing: 'quadIn' })
+            .union()
+            .repeatForever()
+            .start();
+    }
+
+    /**
+     * 停止Alert闪烁动画
+     */
+    private stopAlertBlink() {
+        if (this.alertTween) {
+            this.alertTween.stop();
+            this.alertTween = null;
+        }
+        if (this.Alert && this.Alert.isValid) {
+            this.Alert.setScale(1, 1, 1);
         }
     }
     /**
