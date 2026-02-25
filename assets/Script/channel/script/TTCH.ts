@@ -360,36 +360,36 @@ export default class TTCH extends BaseCH implements BaseINT {
             return;
         }
 
-        console.log("TTCH.showInterstitialAd: this.ch:", !!this.ch);
-        console.log("TTCH.showInterstitialAd: this.insertAd:", !!this.insertAd);
+        //console.log("TTCH.showInterstitialAd: this.ch:", !!this.ch);
+      //  console.log("TTCH.showInterstitialAd: this.insertAd:", !!this.insertAd);
 
         if (this.ch && this.insertAd) {
             this.insertAd.onClose(() => {
-                console.log("TTCH.showInterstitialAd: 插屏广告关闭");
+              //  console.log("TTCH.showInterstitialAd: 插屏广告关闭");
                 try {
                     this.insertAd.offClose();
                     
                 } catch (error) {
-                    console.warn('TTCH.showInterstitialAd: Failed to offClose:', error);
+              //      console.warn('TTCH.showInterstitialAd: Failed to offClose:', error);
                 }
                 
                 // 记录上次展示时间
                 this.lastInsertAdShowTime = Date.now();
-                console.log("TTCH.showInterstitialAd: 记录上次展示时间:", this.lastInsertAdShowTime);
+               // console.log("TTCH.showInterstitialAd: 记录上次展示时间:", this.lastInsertAdShowTime);
                 
                 // 广告关闭时，重新创建插屏广告
-                console.log("TTCH.showInterstitialAd: 广告关闭，重新创建插屏广告");
+             //   console.log("TTCH.showInterstitialAd: 广告关闭，重新创建插屏广告");
                 this.createInterstitialAd();
             });
         }
         try {
             let promise = this.insertAd.show();
-            console.log("TTCH.showInterstitialAd: 调用 show() 方法");
+        //    console.log("TTCH.showInterstitialAd: 调用 show() 方法");
             promise.then(() => {
                     console.log("TTCH.showInterstitialAd: 插屏广告显示成功");
                 }).catch((reject) => {
-                console.error("TTCH.showInterstitialAd: 插屏广告显示失败:", reject);
-                console.log(`errCode:${reject.errCode}, errMsg:${reject.errMsg}`);
+                // console.error("TTCH.showInterstitialAd: 插屏广告显示失败:", reject);
+                // console.log(`errCode:${reject.errCode}, errMsg:${reject.errMsg}`);
                 // 广告显示失败时也调用回调，确保流程继续
             });
         } catch (error) {
@@ -401,11 +401,11 @@ export default class TTCH extends BaseCH implements BaseINT {
     destroyInterstitialAd() {
         if (this.insertAd) {
             try {
-                console.log("TTCH.destroyInterstitialAd: 销毁插屏广告");
+                //console.log("TTCH.destroyInterstitialAd: 销毁插屏广告");
                 this.insertAd.destroy();
                 this.insertAd = null;
             } catch (error) {
-                console.warn('TTCH.destroyInterstitialAd: Failed to destroy:', error);
+             //   console.warn('TTCH.destroyInterstitialAd: Failed to destroy:', error);
                 this.insertAd = null;
             }
         }
