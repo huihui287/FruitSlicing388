@@ -3498,7 +3498,7 @@
       "__id__": 194
     },
     "_children": [],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 204
@@ -3618,8 +3618,6 @@
       "__id__": 0
     },
     "fileId": "9e9fILF3VIaYTvBygrVM1B",
-    "instance": null,
-    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -5026,7 +5024,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 720,
+      "width": 719.9999999999999,
       "height": 1334
     },
     "_anchorPoint": {
